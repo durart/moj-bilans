@@ -1,0 +1,1249 @@
+{
+  "schema": "moj-bilans-produce-v1",
+  "unit": "100 g części jadalnej",
+  "carbs": "ogółem minus błonnik (orientacyjnie)",
+  "reference": "USDA FDC SR Legacy – adaptacja; każda pozycja orientacyjna",
+  "items": [
+    {
+      "id": "fruit:banana",
+      "name": "Banan, miąższ",
+      "kcal": 89.0,
+      "protein": 1.1,
+      "fat": 0.3,
+      "carbs": 20.2,
+      "fiber": 2.6,
+      "aliases": [
+        "banany",
+        "banan bez skórki"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:apple",
+      "name": "Jabłko ze skórką",
+      "kcal": 52.0,
+      "protein": 0.3,
+      "fat": 0.2,
+      "carbs": 11.4,
+      "fiber": 2.4,
+      "aliases": [
+        "jabłka",
+        "jablko",
+        "jablka",
+        "jabłko"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:mandarin",
+      "name": "Mandarynka, bez skórki",
+      "kcal": 53.0,
+      "protein": 0.8,
+      "fat": 0.3,
+      "carbs": 11.5,
+      "fiber": 1.8,
+      "aliases": [
+        "mandarynki",
+        "mandarynka",
+        "klementynka",
+        "klementynki"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:orange",
+      "name": "Pomarańcza, bez skórki",
+      "kcal": 47.0,
+      "protein": 0.9,
+      "fat": 0.1,
+      "carbs": 9.3,
+      "fiber": 2.4,
+      "aliases": [
+        "pomarańcze",
+        "pomarancza",
+        "pomarancze"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:pear",
+      "name": "Gruszka ze skórką",
+      "kcal": 57.0,
+      "protein": 0.4,
+      "fat": 0.1,
+      "carbs": 12.1,
+      "fiber": 3.1,
+      "aliases": [
+        "gruszki",
+        "gruszka"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:white-grape",
+      "name": "Winogrona jasne",
+      "kcal": 69.0,
+      "protein": 0.7,
+      "fat": 0.2,
+      "carbs": 17.2,
+      "fiber": 0.9,
+      "aliases": [
+        "winogrona",
+        "winogrono",
+        "winogrona białe",
+        "winogrona zielone"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:red-grape",
+      "name": "Winogrona czerwone",
+      "kcal": 69.0,
+      "protein": 0.7,
+      "fat": 0.2,
+      "carbs": 17.2,
+      "fiber": 0.9,
+      "aliases": [
+        "winogrona",
+        "winogrona ciemne"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:kiwi",
+      "name": "Kiwi zielone, miąższ",
+      "kcal": 61.0,
+      "protein": 1.1,
+      "fat": 0.5,
+      "carbs": 11.7,
+      "fiber": 3.0,
+      "aliases": [
+        "kiwi",
+        "kiwi zielone"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:strawberry",
+      "name": "Truskawki świeże",
+      "kcal": 32.0,
+      "protein": 0.7,
+      "fat": 0.3,
+      "carbs": 5.7,
+      "fiber": 2.0,
+      "aliases": [
+        "truskawka",
+        "truskawki"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:blueberry",
+      "name": "Borówki amerykańskie",
+      "kcal": 57.0,
+      "protein": 0.7,
+      "fat": 0.3,
+      "carbs": 12.1,
+      "fiber": 2.4,
+      "aliases": [
+        "borówka",
+        "borówki",
+        "borowki",
+        "borówka amerykańska"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:raspberry",
+      "name": "Maliny świeże",
+      "kcal": 52.0,
+      "protein": 1.2,
+      "fat": 0.7,
+      "carbs": 5.4,
+      "fiber": 6.5,
+      "aliases": [
+        "maliny",
+        "malina"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:blackberry",
+      "name": "Jeżyny świeże",
+      "kcal": 43.0,
+      "protein": 1.4,
+      "fat": 0.5,
+      "carbs": 4.3,
+      "fiber": 5.3,
+      "aliases": [
+        "jeżyna",
+        "jezyny",
+        "jeżyny"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:pineapple",
+      "name": "Ananas świeży, miąższ",
+      "kcal": 50.0,
+      "protein": 0.5,
+      "fat": 0.1,
+      "carbs": 11.7,
+      "fiber": 1.4,
+      "aliases": [
+        "ananas",
+        "ananas świeży"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:watermelon",
+      "name": "Arbuz czerwony, miąższ",
+      "kcal": 30.0,
+      "protein": 0.6,
+      "fat": 0.1,
+      "carbs": 7.1,
+      "fiber": 0.4,
+      "aliases": [
+        "arbuz",
+        "arbuzy"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:melon-cantaloupe",
+      "name": "Melon kantalupa, miąższ",
+      "kcal": 34.0,
+      "protein": 0.8,
+      "fat": 0.2,
+      "carbs": 7.3,
+      "fiber": 0.9,
+      "aliases": [
+        "melon",
+        "melony",
+        "kantalupa"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:melon-honeydew",
+      "name": "Melon miodowy, miąższ",
+      "kcal": 36.0,
+      "protein": 0.5,
+      "fat": 0.1,
+      "carbs": 8.3,
+      "fiber": 0.8,
+      "aliases": [
+        "melon",
+        "melon zielony"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:peach",
+      "name": "Brzoskwinia ze skórką",
+      "kcal": 39.0,
+      "protein": 0.9,
+      "fat": 0.2,
+      "carbs": 8.0,
+      "fiber": 1.5,
+      "aliases": [
+        "brzoskwinie",
+        "brzoskwinia"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:nectarine",
+      "name": "Nektarynka ze skórką",
+      "kcal": 44.0,
+      "protein": 1.1,
+      "fat": 0.3,
+      "carbs": 8.9,
+      "fiber": 1.7,
+      "aliases": [
+        "nektarynki",
+        "nektarynka"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:plum",
+      "name": "Śliwka świeża",
+      "kcal": 46.0,
+      "protein": 0.7,
+      "fat": 0.3,
+      "carbs": 10.0,
+      "fiber": 1.4,
+      "aliases": [
+        "śliwki",
+        "sliwka",
+        "sliwki"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:apricot",
+      "name": "Morela świeża",
+      "kcal": 48.0,
+      "protein": 1.4,
+      "fat": 0.4,
+      "carbs": 9.1,
+      "fiber": 2.0,
+      "aliases": [
+        "morele",
+        "morela"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:cherry",
+      "name": "Czereśnie świeże",
+      "kcal": 63.0,
+      "protein": 1.1,
+      "fat": 0.2,
+      "carbs": 13.9,
+      "fiber": 2.1,
+      "aliases": [
+        "czereśnie",
+        "czeresnie",
+        "czereśnia"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:sour-cherry",
+      "name": "Wiśnie świeże",
+      "kcal": 50.0,
+      "protein": 1.0,
+      "fat": 0.3,
+      "carbs": 10.6,
+      "fiber": 1.6,
+      "aliases": [
+        "wiśnie",
+        "wisnie",
+        "wiśnia"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:mango",
+      "name": "Mango, miąższ",
+      "kcal": 60.0,
+      "protein": 0.8,
+      "fat": 0.4,
+      "carbs": 13.4,
+      "fiber": 1.6,
+      "aliases": [
+        "mango"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:pomegranate",
+      "name": "Granat, pestki jadalne",
+      "kcal": 83.0,
+      "protein": 1.7,
+      "fat": 1.2,
+      "carbs": 14.7,
+      "fiber": 4.0,
+      "aliases": [
+        "granat",
+        "owoc granatu"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:pink-grapefruit",
+      "name": "Grejpfrut różowy, miąższ",
+      "kcal": 42.0,
+      "protein": 0.8,
+      "fat": 0.1,
+      "carbs": 9.1,
+      "fiber": 1.6,
+      "aliases": [
+        "grejpfrut",
+        "grejpfruty",
+        "grapefruit"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:lemon",
+      "name": "Cytryna, miąższ",
+      "kcal": 29.0,
+      "protein": 1.1,
+      "fat": 0.3,
+      "carbs": 6.5,
+      "fiber": 2.8,
+      "aliases": [
+        "cytryna",
+        "cytryny"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:lime",
+      "name": "Limonka, miąższ",
+      "kcal": 30.0,
+      "protein": 0.7,
+      "fat": 0.2,
+      "carbs": 7.7,
+      "fiber": 2.8,
+      "aliases": [
+        "limonka",
+        "limonki"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:fig",
+      "name": "Figa świeża",
+      "kcal": 74.0,
+      "protein": 0.8,
+      "fat": 0.3,
+      "carbs": 16.3,
+      "fiber": 2.9,
+      "aliases": [
+        "figi",
+        "figa"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:persimmon",
+      "name": "Kaki (persymona), miąższ",
+      "kcal": 70.0,
+      "protein": 0.6,
+      "fat": 0.2,
+      "carbs": 15.0,
+      "fiber": 3.6,
+      "aliases": [
+        "kaki",
+        "persymona",
+        "hurma"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:papaya",
+      "name": "Papaja, miąższ",
+      "kcal": 43.0,
+      "protein": 0.5,
+      "fat": 0.3,
+      "carbs": 9.1,
+      "fiber": 1.7,
+      "aliases": [
+        "papaja",
+        "papaya"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:lychee",
+      "name": "Liczi, miąższ",
+      "kcal": 66.0,
+      "protein": 0.8,
+      "fat": 0.4,
+      "carbs": 15.2,
+      "fiber": 1.3,
+      "aliases": [
+        "liczi",
+        "lychee"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:cranberry",
+      "name": "Żurawina świeża",
+      "kcal": 46.0,
+      "protein": 0.5,
+      "fat": 0.1,
+      "carbs": 8.6,
+      "fiber": 3.6,
+      "aliases": [
+        "żurawina",
+        "zurawina",
+        "żurawiny"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:redcurrant",
+      "name": "Porzeczka czerwona",
+      "kcal": 56.0,
+      "protein": 1.4,
+      "fat": 0.2,
+      "carbs": 9.5,
+      "fiber": 4.3,
+      "aliases": [
+        "porzeczki czerwone",
+        "porzeczka",
+        "porzeczki"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:blackcurrant",
+      "name": "Porzeczka czarna",
+      "kcal": 63.0,
+      "protein": 1.4,
+      "fat": 0.4,
+      "carbs": 11.1,
+      "fiber": 4.3,
+      "aliases": [
+        "czarna porzeczka",
+        "porzeczki czarne"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:chokeberry",
+      "name": "Aronia świeża",
+      "kcal": 47.0,
+      "protein": 1.4,
+      "fat": 0.5,
+      "carbs": 4.3,
+      "fiber": 5.3,
+      "aliases": [
+        "aronia",
+        "aronie"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:gooseberry",
+      "name": "Agrest świeży",
+      "kcal": 44.0,
+      "protein": 0.9,
+      "fat": 0.6,
+      "carbs": 5.9,
+      "fiber": 4.3,
+      "aliases": [
+        "agrest"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "fruit:avocado",
+      "name": "Awokado, miąższ",
+      "kcal": 160.0,
+      "protein": 2.0,
+      "fat": 14.7,
+      "carbs": 1.8,
+      "fiber": 6.7,
+      "aliases": [
+        "awokado",
+        "avocado"
+      ],
+      "category": "fruit"
+    },
+    {
+      "id": "veg:tomato",
+      "name": "Pomidor surowy",
+      "kcal": 18.0,
+      "protein": 0.9,
+      "fat": 0.2,
+      "carbs": 2.7,
+      "fiber": 1.2,
+      "aliases": [
+        "pomidor",
+        "pomidory"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:cucumber",
+      "name": "Ogórek zielony ze skórką",
+      "kcal": 15.0,
+      "protein": 0.7,
+      "fat": 0.1,
+      "carbs": 3.1,
+      "fiber": 0.5,
+      "aliases": [
+        "ogórek",
+        "ogórek świeży",
+        "ogórki",
+        "ogorek"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:carrot",
+      "name": "Marchew surowa",
+      "kcal": 41.0,
+      "protein": 0.9,
+      "fat": 0.2,
+      "carbs": 6.8,
+      "fiber": 2.8,
+      "aliases": [
+        "marchew",
+        "marchewka",
+        "marchewki"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:broccoli-boiled",
+      "name": "Brokuły gotowane, bez dodatków",
+      "kcal": 35.0,
+      "protein": 2.4,
+      "fat": 0.4,
+      "carbs": 3.9,
+      "fiber": 3.3,
+      "aliases": [
+        "brokuły",
+        "brokuł",
+        "brokuly",
+        "brokuł gotowany"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:broccoli-raw",
+      "name": "Brokuły surowe",
+      "kcal": 34.0,
+      "protein": 2.8,
+      "fat": 0.4,
+      "carbs": 4.0,
+      "fiber": 2.6,
+      "aliases": [
+        "brokuły",
+        "brokuly",
+        "brokuł surowy"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:cauliflower-raw",
+      "name": "Kalafior surowy",
+      "kcal": 25.0,
+      "protein": 1.9,
+      "fat": 0.3,
+      "carbs": 3.0,
+      "fiber": 2.0,
+      "aliases": [
+        "kalafior",
+        "kalafiory"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:cauliflower-boiled",
+      "name": "Kalafior gotowany, bez dodatków",
+      "kcal": 23.0,
+      "protein": 1.8,
+      "fat": 0.5,
+      "carbs": 1.8,
+      "fiber": 2.3,
+      "aliases": [
+        "kalafior",
+        "kalafiory",
+        "kalafior gotowany"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:cabbage-white",
+      "name": "Kapusta biała surowa",
+      "kcal": 25.0,
+      "protein": 1.3,
+      "fat": 0.1,
+      "carbs": 3.3,
+      "fiber": 2.5,
+      "aliases": [
+        "kapusta",
+        "kapusta biała"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:cabbage-red",
+      "name": "Kapusta czerwona surowa",
+      "kcal": 31.0,
+      "protein": 1.4,
+      "fat": 0.2,
+      "carbs": 5.3,
+      "fiber": 2.1,
+      "aliases": [
+        "kapusta",
+        "kapusta czerwona"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:sauerkraut",
+      "name": "Kapusta kiszona, bez oleju",
+      "kcal": 19.0,
+      "protein": 0.9,
+      "fat": 0.1,
+      "carbs": 1.4,
+      "fiber": 2.9,
+      "aliases": [
+        "kapusta kiszona",
+        "kiszona kapusta"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:lettuce-iceberg",
+      "name": "Sałata lodowa",
+      "kcal": 14.0,
+      "protein": 0.9,
+      "fat": 0.1,
+      "carbs": 1.8,
+      "fiber": 1.2,
+      "aliases": [
+        "sałata",
+        "salata",
+        "sałata lodowa"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:lettuce-romaine",
+      "name": "Sałata rzymska",
+      "kcal": 17.0,
+      "protein": 1.2,
+      "fat": 0.3,
+      "carbs": 1.2,
+      "fiber": 2.1,
+      "aliases": [
+        "sałata",
+        "salata",
+        "sałata rzymska"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:spinach",
+      "name": "Szpinak surowy",
+      "kcal": 23.0,
+      "protein": 2.9,
+      "fat": 0.4,
+      "carbs": 1.4,
+      "fiber": 2.2,
+      "aliases": [
+        "szpinak",
+        "liście szpinaku"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:kale",
+      "name": "Jarmuż surowy",
+      "kcal": 49.0,
+      "protein": 4.3,
+      "fat": 0.9,
+      "carbs": 5.2,
+      "fiber": 3.6,
+      "aliases": [
+        "jarmuż",
+        "jarmuz"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:arugula",
+      "name": "Rukola",
+      "kcal": 25.0,
+      "protein": 2.6,
+      "fat": 0.7,
+      "carbs": 2.0,
+      "fiber": 1.6,
+      "aliases": [
+        "rukola",
+        "rukola świeża"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:pepper-red",
+      "name": "Papryka czerwona surowa",
+      "kcal": 31.0,
+      "protein": 1.0,
+      "fat": 0.3,
+      "carbs": 3.9,
+      "fiber": 2.1,
+      "aliases": [
+        "papryka",
+        "papryka czerwona"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:pepper-green",
+      "name": "Papryka zielona surowa",
+      "kcal": 20.0,
+      "protein": 0.9,
+      "fat": 0.2,
+      "carbs": 2.9,
+      "fiber": 1.7,
+      "aliases": [
+        "papryka",
+        "papryka zielona"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:pepper-yellow",
+      "name": "Papryka żółta surowa",
+      "kcal": 27.0,
+      "protein": 1.0,
+      "fat": 0.2,
+      "carbs": 5.4,
+      "fiber": 0.9,
+      "aliases": [
+        "papryka",
+        "papryka zolta",
+        "papryka żółta"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:onion",
+      "name": "Cebula biała surowa",
+      "kcal": 40.0,
+      "protein": 1.1,
+      "fat": 0.1,
+      "carbs": 7.6,
+      "fiber": 1.7,
+      "aliases": [
+        "cebula",
+        "cebule"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:onion-red",
+      "name": "Cebula czerwona surowa",
+      "kcal": 40.0,
+      "protein": 1.1,
+      "fat": 0.1,
+      "carbs": 7.6,
+      "fiber": 1.7,
+      "aliases": [
+        "cebula",
+        "cebula czerwona"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:spring-onion",
+      "name": "Szczypior z cebulki dymki",
+      "kcal": 32.0,
+      "protein": 1.8,
+      "fat": 0.2,
+      "carbs": 4.7,
+      "fiber": 2.6,
+      "aliases": [
+        "szczypiorek",
+        "dymka",
+        "zielona cebulka"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:chives",
+      "name": "Szczypiorek surowy",
+      "kcal": 30.0,
+      "protein": 3.3,
+      "fat": 0.7,
+      "carbs": 1.8,
+      "fiber": 2.5,
+      "aliases": [
+        "szczypiorek",
+        "szczypior"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:leek",
+      "name": "Por surowy",
+      "kcal": 61.0,
+      "protein": 1.5,
+      "fat": 0.3,
+      "carbs": 12.3,
+      "fiber": 1.8,
+      "aliases": [
+        "por",
+        "pory"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:celery-stalk",
+      "name": "Seler naciowy",
+      "kcal": 14.0,
+      "protein": 0.7,
+      "fat": 0.2,
+      "carbs": 1.4,
+      "fiber": 1.6,
+      "aliases": [
+        "seler",
+        "seler naciowy"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:celery-root",
+      "name": "Seler korzeniowy",
+      "kcal": 42.0,
+      "protein": 1.5,
+      "fat": 0.3,
+      "carbs": 7.4,
+      "fiber": 1.8,
+      "aliases": [
+        "seler",
+        "seler korzeniowy"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:parsley-leaf",
+      "name": "Natka pietruszki",
+      "kcal": 36.0,
+      "protein": 3.0,
+      "fat": 0.8,
+      "carbs": 3.0,
+      "fiber": 3.3,
+      "aliases": [
+        "pietruszka",
+        "natka",
+        "natka pietruszki"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:radish",
+      "name": "Rzodkiewka surowa",
+      "kcal": 16.0,
+      "protein": 0.7,
+      "fat": 0.1,
+      "carbs": 1.8,
+      "fiber": 1.6,
+      "aliases": [
+        "rzodkiewki",
+        "rzodkiewka"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:beetroot-raw",
+      "name": "Burak czerwony surowy",
+      "kcal": 43.0,
+      "protein": 1.6,
+      "fat": 0.2,
+      "carbs": 6.8,
+      "fiber": 2.8,
+      "aliases": [
+        "buraki",
+        "burak",
+        "buraczek"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:beetroot-boiled",
+      "name": "Burak czerwony gotowany",
+      "kcal": 44.0,
+      "protein": 1.7,
+      "fat": 0.2,
+      "carbs": 8.0,
+      "fiber": 2.0,
+      "aliases": [
+        "buraki",
+        "burak",
+        "buraki gotowane"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:zucchini",
+      "name": "Cukinia surowa",
+      "kcal": 17.0,
+      "protein": 1.2,
+      "fat": 0.3,
+      "carbs": 2.1,
+      "fiber": 1.0,
+      "aliases": [
+        "cukinia",
+        "cukinie"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:white-squash",
+      "name": "Kabaczek surowy",
+      "kcal": 17.0,
+      "protein": 1.2,
+      "fat": 0.3,
+      "carbs": 2.2,
+      "fiber": 1.0,
+      "aliases": [
+        "kabaczek",
+        "kabaczki"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:pumpkin",
+      "name": "Dynia zwyczajna surowa",
+      "kcal": 26.0,
+      "protein": 1.0,
+      "fat": 0.1,
+      "carbs": 6.0,
+      "fiber": 0.5,
+      "aliases": [
+        "dynia",
+        "dynie"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:butternut",
+      "name": "Dynia piżmowa surowa",
+      "kcal": 45.0,
+      "protein": 1.0,
+      "fat": 0.1,
+      "carbs": 9.7,
+      "fiber": 2.0,
+      "aliases": [
+        "dynia",
+        "dynia piżmowa",
+        "butternut"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:sweet-potato-raw",
+      "name": "Batat surowy",
+      "kcal": 86.0,
+      "protein": 1.6,
+      "fat": 0.1,
+      "carbs": 17.1,
+      "fiber": 3.0,
+      "aliases": [
+        "batat",
+        "bataty",
+        "słodki ziemniak"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:sweet-potato-boiled",
+      "name": "Batat gotowany bez tłuszczu",
+      "kcal": 76.0,
+      "protein": 1.4,
+      "fat": 0.1,
+      "carbs": 15.2,
+      "fiber": 2.5,
+      "aliases": [
+        "batat",
+        "bataty",
+        "batat gotowany"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:mushroom",
+      "name": "Pieczarki świeże",
+      "kcal": 22.0,
+      "protein": 3.1,
+      "fat": 0.3,
+      "carbs": 2.3,
+      "fiber": 1.0,
+      "aliases": [
+        "pieczarki",
+        "pieczarka"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:mushroom-oyster",
+      "name": "Boczniaki świeże",
+      "kcal": 33.0,
+      "protein": 3.3,
+      "fat": 0.4,
+      "carbs": 3.8,
+      "fiber": 2.3,
+      "aliases": [
+        "boczniaki",
+        "boczniak"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:asparagus",
+      "name": "Szparagi surowe",
+      "kcal": 20.0,
+      "protein": 2.2,
+      "fat": 0.1,
+      "carbs": 1.8,
+      "fiber": 2.1,
+      "aliases": [
+        "szparagi",
+        "szparag"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:brussels-sprouts",
+      "name": "Brukselka surowa",
+      "kcal": 43.0,
+      "protein": 3.4,
+      "fat": 0.3,
+      "carbs": 5.1,
+      "fiber": 3.8,
+      "aliases": [
+        "brukselka",
+        "kapusta brukselska"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:kohlrabi",
+      "name": "Kalarepa surowa",
+      "kcal": 27.0,
+      "protein": 1.7,
+      "fat": 0.1,
+      "carbs": 2.6,
+      "fiber": 3.6,
+      "aliases": [
+        "kalarepa",
+        "kalarepy"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:turnip",
+      "name": "Rzepa surowa",
+      "kcal": 28.0,
+      "protein": 0.9,
+      "fat": 0.1,
+      "carbs": 4.6,
+      "fiber": 1.8,
+      "aliases": [
+        "rzepa",
+        "rzepy"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:parsnip",
+      "name": "Pasternak surowy",
+      "kcal": 75.0,
+      "protein": 1.2,
+      "fat": 0.3,
+      "carbs": 13.1,
+      "fiber": 4.9,
+      "aliases": [
+        "pasternak",
+        "pasternaki"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:fennel",
+      "name": "Fenkuł (koper włoski) surowy",
+      "kcal": 31.0,
+      "protein": 1.2,
+      "fat": 0.2,
+      "carbs": 4.2,
+      "fiber": 3.1,
+      "aliases": [
+        "fenkuł",
+        "fenkul",
+        "koper włoski"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:green-beans",
+      "name": "Fasolka szparagowa surowa",
+      "kcal": 31.0,
+      "protein": 1.8,
+      "fat": 0.2,
+      "carbs": 4.3,
+      "fiber": 2.7,
+      "aliases": [
+        "fasolka szparagowa",
+        "fasolka",
+        "zielona fasolka"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:peas",
+      "name": "Groszek zielony świeży",
+      "kcal": 81.0,
+      "protein": 5.4,
+      "fat": 0.4,
+      "carbs": 8.8,
+      "fiber": 5.7,
+      "aliases": [
+        "groszek",
+        "groszek zielony",
+        "groszek cukrowy"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:sweetcorn-boiled",
+      "name": "Kukurydza słodka gotowana",
+      "kcal": 96.0,
+      "protein": 3.4,
+      "fat": 1.5,
+      "carbs": 18.6,
+      "fiber": 2.4,
+      "aliases": [
+        "kukurydza",
+        "kukurydza gotowana"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:lentils-cooked",
+      "name": "Soczewica gotowana bez dodatków",
+      "kcal": 116.0,
+      "protein": 9.0,
+      "fat": 0.4,
+      "carbs": 12.2,
+      "fiber": 7.9,
+      "aliases": [
+        "soczewica",
+        "soczewica gotowana"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:chickpeas-cooked",
+      "name": "Ciecierzyca gotowana bez dodatków",
+      "kcal": 164.0,
+      "protein": 8.9,
+      "fat": 2.6,
+      "carbs": 19.8,
+      "fiber": 7.6,
+      "aliases": [
+        "ciecierzyca",
+        "cieciorka"
+      ],
+      "category": "veg"
+    },
+    {
+      "id": "veg:red-beans-cooked",
+      "name": "Fasola czerwona gotowana bez dodatków",
+      "kcal": 127.0,
+      "protein": 8.7,
+      "fat": 0.5,
+      "carbs": 16.4,
+      "fiber": 6.4,
+      "aliases": [
+        "fasola",
+        "fasola czerwona",
+        "czerwona fasola"
+      ],
+      "category": "veg"
+    }
+  ]
+}
