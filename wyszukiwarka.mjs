@@ -41,19 +41,22 @@ function matchFood(query, food) {
 }
 
 function localResult(food) {
-  return { id: food.id, code: null, name: food.name, brand: '',
+  return { id: food.id, code: null, name: food.name, brand: food.brand || '',
     kcal: food.kcal, protein: food.protein, fat: food.fat, carbs: food.carbs,
-    unit: food.unit, source: 'Baza podstawowa',
+    unit: food.unit, source: 'Baza podstawowa', storeKeys: food.storeKeys || [],
     category: food.category || '', edible: Boolean(food.edible),
     fiber: Number.isFinite(food.fiber) ? food.fiber : null,
     sourceName: food.sourceName || food.source || 'Baza podstawowa',
-    isEstimate: true, isIncomplete: false };
+    sourceUrl: food.sourceUrl || '', verification: food.verification || '',
+    isEstimate: food.isEstimate === undefined ? true : Boolean(food.isEstimate),
+    isIncomplete: false };
 }
 
-export function searchBasicFoods(query, limit = 30) {
+export function searchBasicFoods(query, limit = 30, store = 'all') {
   const q = normalizeText(query);
   if (q.length < 2) return [];
-  return BASIC_FOODS.map(food => ({ food, score: matchFood(q, food) }))
+  return BASIC_FOODS.filter(food => store === 'all' || (food.storeKeys || []).includes(store))
+    .map(food => ({ food, score: matchFood(q, food) }))
     .filter(it => it.score > 0)
     .sort((a, b) => b.score - a.score || a.food.name.localeCompare(b.food.name, 'pl'))
     .slice(0, limit).map(it => localResult(it.food));
@@ -176,7 +179,7 @@ export function createFoodSearcher({ fetchFn = globalThis.fetch?.bind(globalThis
   async function search(query, { online = true, limit = 35, store = 'all' } = {}) {
     const text = String(query ?? '').trim(), q = normalizeText(text);
     const barcode = isBarcode(text);
-    const local = [...searchFoodCatalog(text,{storage:safeStorage,limit,store}), ...(store==='all' && !barcode?searchBasicFoods(text,limit):[])];
+    const local = [...(!barcode ? searchBasicFoods(text,limit,store) : []), ...searchFoodCatalog(text,{storage:safeStorage,limit,store})];
     if (!barcode && q.length < 2) return { items: [], status: 'too-short', localCount: 0, remoteCount: 0 };
     if (!online) return { items: local, status: 'local-only', localCount: local.length, remoteCount: 0 };
     const cacheKey = `${barcode ? 'ean' : 'text'}:${q}:${store}`;
