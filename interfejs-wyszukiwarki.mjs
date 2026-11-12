@@ -39,12 +39,13 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       heading.append(node('strong','',item.name));
       if(item.brand) heading.append(node('small','food-brand',item.brand));
       const shops=(item.storeKeys||[]).map(storeLabel).filter(Boolean);
-      const sourceLabel=item.source==='Baza podstawowa'?(item.category==='fruit'?'Owoc · baza lokalna':item.category==='veg'?'Warzywo · baza lokalna':'Podstawowe'):
+      const sourceLabel=item.source==='Baza podstawowa'?(item.category==='fruit'?'Owoc · baza lokalna':item.category==='veg'?'Warzywo · baza lokalna':item.category==='bakery'?'Pieczywo · Biedronka':'Podstawowe'):
         shops.length?`${shops.join(', ')} · OFF`:'Open Food Facts';
       head.append(heading,node('span','food-source',sourceLabel));
       const macros=node('p','food-macros',`${fmt(item.kcal)} kcal · B ${fmt(item.protein)} g · T ${fmt(item.fat)} g · W ${fmt(item.carbs)} g / 100 ${item.unit||'g'}`);
       const description=item.isIncomplete?'Niepełne makro — przepisz dane z etykiety albo wybierz inny produkt.':
         item.isUnreliable?'⚠️ Kalorie nie zgadzają się z makro. Sprawdź etykietę przed dodaniem.':
+        item.category==='bakery' && item.verification==='retailer-website'?'Wartości na 100 g z oficjalnej strony Biedronki. Receptura może się zmienić — sprawdź etykietę zakupionego produktu.':
         item.source==='Baza podstawowa'?(item.edible?'Orientacyjne / 100 g części jadalnej; W bez błonnika (szacunkowo). Sprawdź gramaturę i sposób przygotowania.':'Orientacyjne wartości referencyjne — sprawdź produkt, sposób przygotowania i porcję.'):
         'Dane społecznościowe Open Food Facts. Kontrola liczb nie zastępuje sprawdzenia etykiety.';
       const detail=node('p','food-detail',description);
@@ -58,6 +59,11 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
         link.href=`https://world.openfoodfacts.org/product/${item.code}`;link.target='_blank';link.rel='noopener noreferrer';
         card.append(link);
       }
+      if (item.category==='bakery' && item.sourceUrl) {
+        const link=node('a','food-off-link','Dane na stronie Biedronki');
+        link.href=item.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';
+        card.append(link);
+      }
       results.append(card);
     }
   }
@@ -65,7 +71,7 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
     event?.preventDefault();
     const query=input.value.trim(),serial=++currentRequest,store=selectedStore();
     if(query.length<2){render([]);status.textContent=messages['too-short'];return;}
-    const local=[...searchFoodCatalog(query,{store}),...(store==='all'&&!isBarcode(query)?searchBasicFoods(query):[])];
+    const local=[...(!isBarcode(query)?searchBasicFoods(query,30,store):[]),...searchFoodCatalog(query,{store})];
     render(local);
     status.textContent=isBarcode(query)?'Sprawdzam kod kreskowy…':'Pokazano wyniki lokalne. Szukam też w Open Food Facts…';
     try {
