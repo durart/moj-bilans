@@ -1,5 +1,6 @@
 import { PRODUCE_FOODS } from './owoce-warzywa.mjs';
 import { BIEDRONKA_BAKERY } from './pieczywo-biedronka.mjs';
+import { YELLOW_CHEESES } from './sery-zolte.mjs';
 /**
  * Mój Bilans – baza podstawowych produktów (wartości ORIENTACYJNE na 100 g/ml).
  * Nie jest to baza produktów konkretnych marek ani dokumentacja medyczna.
@@ -56,5 +57,6 @@ const REPLACED_IDS = new Set(['base:banana','base:apple','base:tomato',
 export const BASIC_FOODS = Object.freeze([
   ...LEGACY_BASIC_FOODS.filter(food => !REPLACED_IDS.has(food.id)),
   ...PRODUCE_FOODS,
-  ...BIEDRONKA_BAKERY
+  ...BIEDRONKA_BAKERY,
+  ...YELLOW_CHEESES
 ]);
