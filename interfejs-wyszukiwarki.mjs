@@ -39,13 +39,14 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       heading.append(node('strong','',item.name));
       if(item.brand) heading.append(node('small','food-brand',item.brand));
       const shops=(item.storeKeys||[]).map(storeLabel).filter(Boolean);
-      const sourceLabel=item.source==='Baza podstawowa'?(item.category==='fruit'?'Owoc · baza lokalna':item.category==='veg'?'Warzywo · baza lokalna':item.category==='bakery'?'Pieczywo · Biedronka':'Podstawowe'):
+      const sourceLabel=item.source==='Baza podstawowa'?(item.category==='fruit'?'Owoc · baza lokalna':item.category==='veg'?'Warzywo · baza lokalna':item.category==='bakery'?'Pieczywo · Biedronka':item.category==='cheese'?'Ser żółty · baza lokalna':'Podstawowe'):
         shops.length?`${shops.join(', ')} · OFF`:'Open Food Facts';
       head.append(heading,node('span','food-source',sourceLabel));
       const macros=node('p','food-macros',`${fmt(item.kcal)} kcal · B ${fmt(item.protein)} g · T ${fmt(item.fat)} g · W ${fmt(item.carbs)} g / 100 ${item.unit||'g'}`);
       const description=item.isIncomplete?'Niepełne makro — przepisz dane z etykiety albo wybierz inny produkt.':
         item.isUnreliable?'⚠️ Kalorie nie zgadzają się z makro. Sprawdź etykietę przed dodaniem.':
         item.category==='bakery' && item.verification==='retailer-website'?'Wartości na 100 g z oficjalnej strony Biedronki. Receptura może się zmienić — sprawdź etykietę zakupionego produktu.':
+        item.category==='cheese' && item.sourceUrl?'Dane z karty produktu producenta lub sprzedawcy. Receptury mogą się różnić — porównaj z etykietą zakupionego sera.':
         item.source==='Baza podstawowa'?(item.edible?'Orientacyjne / 100 g części jadalnej; W bez błonnika (szacunkowo). Sprawdź gramaturę i sposób przygotowania.':'Orientacyjne wartości referencyjne — sprawdź produkt, sposób przygotowania i porcję.'):
         'Dane społecznościowe Open Food Facts. Kontrola liczb nie zastępuje sprawdzenia etykiety.';
       const detail=node('p','food-detail',description);
@@ -57,6 +58,11 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       if(item.code && /^\d{8,14}$/.test(item.code)){
         const link=node('a','food-off-link','Zobacz źródło OFF');
         link.href=`https://world.openfoodfacts.org/product/${item.code}`;link.target='_blank';link.rel='noopener noreferrer';
+        card.append(link);
+      }
+      if (item.category==='cheese' && item.sourceUrl) {
+        const link=node('a','food-off-link','Źródło danych o serze');
+        link.href=item.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';
         card.append(link);
       }
       if (item.category==='bakery' && item.sourceUrl) {
