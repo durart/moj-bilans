@@ -39,11 +39,17 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       heading.append(node('strong','',item.name));
       if(item.brand) heading.append(node('small','food-brand',item.brand));
       const shops=(item.storeKeys||[]).map(storeLabel).filter(Boolean);
-      const sourceLabel=item.source==='Baza podstawowa'?(item.category==='fruit'?'Owoc · baza lokalna':item.category==='veg'?'Warzywo · baza lokalna':item.category==='bakery'?'Pieczywo · Biedronka':item.category==='cheese'?'Ser żółty · baza lokalna':'Podstawowe'):
+      const sourceLabel=item.category==='dish'?'Danie domowe · szacunek':
+        item.verification==='estimated-generic'?'Produkt bazowy · szacunek':
+        item.source==='Baza podstawowa'?(item.category==='fruit'?'Owoc · baza lokalna':item.category==='veg'?'Warzywo · baza lokalna':item.category==='bakery'?'Pieczywo · Biedronka':item.category==='cheese'?'Ser żółty · baza lokalna':'Podstawowe'):
         shops.length?`${shops.join(', ')} · OFF`:'Open Food Facts';
       head.append(heading,node('span','food-source',sourceLabel));
       const macros=node('p','food-macros',`${fmt(item.kcal)} kcal · B ${fmt(item.protein)} g · T ${fmt(item.fat)} g · W ${fmt(item.carbs)} g / 100 ${item.unit||'g'}`);
-      const description=item.isIncomplete?'Niepełne makro — przepisz dane z etykiety albo wybierz inny produkt.':
+      const description=item.category==='dish' && item.recipeSummary?
+        `⚖️ SZACUNEK dla przykładowej receptury gotowej potrawy: ${item.recipeSummary}. Skład i wchłonięty tłuszcz mogą się różnić; zweryfikuj własną porcję.`:
+        item.verification==='estimated-generic'?
+        '⚖️ Orientacyjny profil produktu, bez weryfikacji etykiety konkretnej marki. Kcal oszacowane z B/T/W (4/9/4).':
+        item.isIncomplete?'Niepełne makro — przepisz dane z etykiety albo wybierz inny produkt.':
         item.isUnreliable?'⚠️ Kalorie nie zgadzają się z makro. Sprawdź etykietę przed dodaniem.':
         item.category==='bakery' && item.verification==='retailer-website'?'Wartości na 100 g z oficjalnej strony Biedronki. Receptura może się zmienić — sprawdź etykietę zakupionego produktu.':
         item.category==='cheese' && item.sourceUrl?'Dane z karty produktu producenta lub sprzedawcy. Receptury mogą się różnić — porównaj z etykietą zakupionego sera.':
