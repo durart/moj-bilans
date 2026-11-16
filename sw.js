@@ -1,4 +1,4 @@
-const CACHE = 'moj-bilans-cache-v08-cheeses-beta-1';
+const CACHE = 'moj-bilans-cache-v08-macro-layout-1';
 const STATIC = ['./', './index.html', './style.css', './wyszukiwarka.css', './app.js', './interfejs-wyszukiwarki.mjs', './wyszukiwarka.mjs', './produkty-podstawowe.mjs', './owoce-warzywa.mjs', './pieczywo-biedronka.mjs', './sery-zolte.mjs', './katalog-produktow.mjs', './walidacja-zywnosci.mjs', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', evt => {
   evt.waitUntil(caches.open(CACHE).then(cache => cache.addAll(STATIC)).then(() => self.skipWaiting()));
