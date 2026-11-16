@@ -42,6 +42,7 @@
   let activeProduct = null;
   let draftPer100 = null; // robocze wartości /100 g; formularz pokazuje wartości porcji
   let activeMode = 'search';
+  let recentDiaryView = null;
   let cameraStream = null;
   let scanLoop = 0;
   let lastDetect = 0;
@@ -232,6 +233,57 @@
     $$('.nav-item').forEach(el => { const active = el.dataset.page === page; el.classList.toggle('selected', active); if (active) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current'); });
     window.scrollTo({ top: 0, behavior: 'instant' }); renderAll();
   }
+  // "Ostatnie" powstaje WYŁĄCZNIE z już zapisanych wpisów dziennika.
+  // Nie utrzymujemy osobnej bazy ani nie zmieniamy formatu eksportów JSON.
+  function renderRecentDiary() {
+    const summary = window.MojBilansRecentDiary.recentDiary(state.entries);
+    recentDiaryView = summary;
+    const displayDate = value => toDate(value).toLocaleDateString('pl-PL', {day:'numeric',month:'short'});
+    $('#recentRange').textContent = `${displayDate(summary.from)} – ${displayDate(summary.to)} · dodajesz do ${niceDate(toDate(state.selectedDate))}`;
+    const products = summary.products.slice(0, 60);
+    $('#recentProductList').innerHTML = products.length ? products.map((entry, i) => {
+      const title = entry.brand ? `${entry.name} · ${entry.brand}` : entry.name;
+      return `<article class="recent-item"><div class="recent-item-details"><strong>${safeText(title)}</strong><small>${nf1.format(entry.grams)} g/ml · ${nf.format(Math.round(entry.kcal))} kcal · ${displayDate(entry.date)}</small></div><button type="button" data-recent-product="${i}" aria-label="Dodaj ${safeText(entry.name)}">Dodaj</button></article>`;
+    }).join('') : '<p class="empty-list">Brak produktów zapisanych w ostatnich 5 dniach. Dodaj posiłek w Dzienniku, a pojawi się tutaj.</p>';
+    const groups = summary.meals;
+    $('#recentMealList').innerHTML = groups.length ? groups.map((group, i) => {
+      const meta = MEALS.find(meal => meal.id === group.meal);
+      const names = group.items.slice(0, 3).join(', ') + (group.items.length > 3 ? ` i ${group.items.length - 3} więcej` : '');
+      return `<article class="recent-item recent-meal"><div class="recent-item-details"><strong>${meta?.icon || ''} ${safeText(meta?.name || 'Posiłek')} · ${displayDate(group.date)}</strong><small>${group.items.length} ${group.items.length === 1 ? 'produkt' : 'produktów'} · ${nf.format(Math.round(group.kcal))} kcal</small><p>${safeText(names)}</p></div><button type="button" data-recent-group="${i}" aria-label="Dodaj cały posiłek ${safeText(meta?.name || 'Posiłek')} z ${displayDate(group.date)}">Dodaj całość</button></article>`;
+    }).join('') : '<p class="empty-list">Brak gotowych posiłków w ostatnich 5 dniach.</p>';
+    $$('[data-recent-product]').forEach(button => button.addEventListener('click', () => {
+      const record = recentDiaryView?.products[Number(button.dataset.recentProduct)];
+      const entry = record && state.entries.find(item => item.id === record.id);
+      if (!entry) { toast('Nie znaleziono produktu. Otwórz Ostatnie ponownie.'); return; }
+      const target = $('#recentTargetMeal').value;
+      selectProduct(entry, { initialGrams: entry.grams, meal: mealValid(target) ? target : currentMeal });
+    }));
+    $$('[data-recent-group]').forEach(button => button.addEventListener('click', () => {
+      const group = recentDiaryView?.meals[Number(button.dataset.recentGroup)];
+      if (group) addRecentMeal(group.date, group.meal);
+    }));
+  }
+  function addRecentMeal(sourceDate, sourceMeal) {
+    const targetMeal = $('#recentTargetMeal').value;
+    if (!normalizedDate(sourceDate) || !mealValid(sourceMeal) || !mealValid(targetMeal)) return;
+    // Sprawdzenie, że pozycja nadal należy do ostatnich 5 dni.
+    if (!window.MojBilansRecentDiary.recentDiary(state.entries).meals.some(group => group.date === sourceDate && group.meal === sourceMeal)) {
+      toast('Ten posiłek nie jest już dostępny w ostatnich 5 dniach.'); renderRecentDiary(); return;
+    }
+    const products = entriesFor(sourceDate, sourceMeal).map(cloneProductEntry);
+    if (!products.length) { toast('Nie znaleziono produktów w posiłku.'); renderRecentDiary(); return; }
+    if (sourceDate === state.selectedDate && sourceMeal === targetMeal &&
+        !confirm('Dodajesz ponownie cały posiłek do tego samego dnia i kategorii. Kontynuować?')) return;
+    const rows = products.map(p => ({ ...p, id: productId(), date: state.selectedDate, meal: targetMeal }));
+    const previousEntries = state.entries, previousPortions = state.portions;
+    state.entries = [...state.entries, ...rows];
+    state.portions = { ...state.portions };
+    rows.forEach(entry => { state.portions[productKey(entry)] = entry.grams; });
+    if (!save()) { state.entries = previousEntries; state.portions = previousPortions; return; }
+    closeModal();
+    showPage('journal');
+    toast(`Dodano cały posiłek (${rows.length} produktów)`);
+  }
   function openModal(meal = 'breakfast', mode = 'search') {
     currentMeal = mealValid(meal) ? meal : 'breakfast';
     activeProduct = null;
@@ -239,6 +291,7 @@
     $('#lookupArea').classList.remove('hidden');
     $('#productForm').classList.add('hidden');
     $('#searchResults').innerHTML = ''; $('#eanResults').innerHTML = '';
+    $('#recentTargetMeal').value = currentMeal;
     feedback(''); switchMode(mode);
     $('#modalTitle').textContent = 'Dodaj produkt';
     $('#modalBackdrop').classList.remove('hidden'); $('#modalBackdrop').setAttribute('aria-hidden', 'false');
@@ -254,6 +307,7 @@
     $$('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
     $$('.mode-pane').forEach(el => el.classList.toggle('hidden', el.id !== `mode-${mode}`));
     feedback('');
+    if (mode === 'recent') renderRecentDiary();
     if (mode === 'manual') selectProduct({ name: '', nutrients: { kcal: null, protein: null, carbs: null, fat: null }, source: 'Własny' }, { manually: true });
   }
   // W formularzu wyświetlamy kcal i makro dla aktualnej ilości, lecz wpisy oraz
@@ -291,9 +345,12 @@
     $('#modalTitle').textContent = opts.manually ? 'Własny produkt' : 'Dodaj porcję';
     $('#productSource').textContent = opts.manually ? 'Produkt własny' : (product.source || 'Open Food Facts');
     $('#productName').value = activeProduct.name || '';
-    // Zawsze zaczynamy od 100 g/ml — bez odziedziczonej gramatury z historii.
-    $('#productGrams').value = '100';
-    $('#productMeal').value = currentMeal;
+    // Zwykłe wyszukiwanie zaczyna od 100 g/ml. Jedynie świadomie wybrany
+    // produkt z zakładki Ostatnie dziedziczy gramaturę faktycznie zjedzonej porcji.
+    const initialGrams = Number(opts.initialGrams);
+    $('#productGrams').value = Number.isFinite(initialGrams) && initialGrams > 0 && initialGrams <= 100000
+      ? String(initialGrams) : '100';
+    $('#productMeal').value = mealValid(opts.meal) ? opts.meal : currentMeal;
     $('#saveOwnProduct').checked = Boolean(opts.manually);
     syncProductPortionFields(); feedback('');
     setTimeout(() => $('#productGrams').focus(), 70);
