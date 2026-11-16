@@ -58,6 +58,17 @@
   const toast = text => { const el = $('#toast'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2800); };
   const feedback = text => { $('#feedback').textContent = text || ''; };
   const pct = (value, target) => Math.max(0, Math.min(100, target > 0 ? value / target * 100 : 0));
+  // Paski mają tę samą szerokość. Przy nadwyżce ciemna część obrazuje
+  // udział nadwyżki w rzeczywistym spożyciu; procent pod paskiem względem celu.
+  const macroProgress = (value, goal) => {
+    const eaten = Number.isFinite(value) ? Math.max(0, value) : 0;
+    const target = Number.isFinite(goal) ? goal : 0;
+    if (target <= 0) return { filled: 0, extra: 0, excessGrams: 0, excessPercent: 0 };
+    const excessGrams = Math.max(0, eaten - target);
+    if (excessGrams === 0) return { filled: Math.min(100, eaten / target * 100), extra: 0, excessGrams: 0, excessPercent: 0 };
+    return { filled: target / eaten * 100, extra: excessGrams / eaten * 100,
+      excessGrams, excessPercent: excessGrams / target * 100 };
+  };
   const sum = (entries, key) => entries.reduce((acc, entry) => acc + ((Number(entry.nutrients?.[key]) || 0) * (Number(entry.grams) || 0) / 100), 0);
   const totalFor = entries => ({ kcal: sum(entries, 'kcal'), protein: sum(entries, 'protein'), carbs: sum(entries, 'carbs'), fat: sum(entries, 'fat') });
   const currentEntries = () => state.entries.filter(entry => entry.date === state.selectedDate);
@@ -86,8 +97,15 @@
     for (const m of [{ key: 'protein', id: 'protein', goal: 'protein' }, { key: 'carbs', id: 'carb', goal: 'carbs' }, { key: 'fat', id: 'fat', goal: 'fat' }]) {
       const partial = current.some(entry => !isNumber(entry.nutrients?.[m.key]));
       $(`#${m.id}Value`).textContent = `${partial ? '≥ ' : ''}${nf1.format(totals[m.key])} g`;
-      $(`#${m.id}Bar`).style.width = `${pct(totals[m.key], state.goals[m.goal])}%`;
+      const progress = macroProgress(totals[m.key], state.goals[m.goal]);
+      $(`#${m.id}Bar`).style.width = `${progress.filled}%`;
+      $(`#${m.id}Over`).style.width = `${progress.extra}%`;
       $(`#${m.id}GoalLabel`).textContent = `cel ${nf.format(state.goals[m.goal])} g`;
+      $(`#${m.id}Excess`).textContent = progress.excessGrams > 0
+        ? `+${nf1.format(progress.excessGrams)} g (+${nf.format(Math.round(progress.excessPercent))}%)`
+        : '';
+      $(`#${m.id}Track`).setAttribute('aria-label',
+        `${m.key === 'protein' ? 'Białko' : m.key === 'carbs' ? 'Węglowodany' : 'Tłuszcze'}: ${nf1.format(totals[m.key])} g, cel ${nf.format(state.goals[m.goal])} g`);
     }
     $('#macroWarning').classList.toggle('hidden', !current.some(entry => ['protein', 'carbs', 'fat'].some(k => !isNumber(entry.nutrients?.[k]))));
     renderWater();
