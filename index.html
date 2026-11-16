@@ -35,9 +35,26 @@
           <div class="hero-title"><span class="eyebrow" id="kcalHeading">DZIENNY BILANS</span><span class="target-label">Cel: <b id="goalInline">2300</b> kcal</span></div>
           <div class="hero-main">
             <div class="ring" id="calorieRing"><div class="ring-center"><span class="ring-number" id="caloriesUsed">0</span><span class="ring-unit">zjedzone kcal</span></div></div>
-            <div class="hero-stats"><div><span class="stat-caption">Pozostało</span><strong class="stat-big" id="remainingCalories">2300</strong><span class="stat-caption">kcal do celu</span></div><div class="tiny-rule"></div><div><span class="stat-caption">Dzienny cel</span><strong class="stat-target" id="dailyGoal">2300 <small>kcal</small></strong></div></div>
+            <div class="macro-grid" aria-label="Dzienny bilans makroskładników">
+              <div class="macro">
+                <div class="macro-head"><span>Białko</span><b id="proteinValue">0 g</b></div>
+                <div id="proteinTrack" class="track macro-track" role="img" aria-label="Białko: 0 z 160 g"><div id="proteinBar" class="fill protein"></div><div id="proteinOver" class="macro-over protein-over"></div></div>
+                <div class="macro-footer"><small id="proteinGoalLabel">cel 160 g</small><small id="proteinExcess" class="macro-excess-note"></small></div>
+              </div>
+              <div class="macro">
+                <div class="macro-head"><span>Węglowodany</span><b id="carbValue">0 g</b></div>
+                <div id="carbTrack" class="track macro-track" role="img" aria-label="Węglowodany: 0 z 240 g"><div id="carbBar" class="fill carbs"></div><div id="carbOver" class="macro-over carbs-over"></div></div>
+                <div class="macro-footer"><small id="carbGoalLabel">cel 240 g</small><small id="carbExcess" class="macro-excess-note"></small></div>
+              </div>
+              <div class="macro">
+                <div class="macro-head"><span>Tłuszcze</span><b id="fatValue">0 g</b></div>
+                <div id="fatTrack" class="track macro-track" role="img" aria-label="Tłuszcze: 0 z 75 g"><div id="fatBar" class="fill fats"></div><div id="fatOver" class="macro-over fats-over"></div></div>
+                <div class="macro-footer"><small id="fatGoalLabel">cel 75 g</small><small id="fatExcess" class="macro-excess-note"></small></div>
+              </div>
+            </div>
           </div>
-          <div class="macro-grid"><div class="macro"><div class="macro-head"><span>Białko</span><b id="proteinValue">0 g</b></div><div class="track"><div id="proteinBar" class="fill protein"></div></div><small id="proteinGoalLabel">cel 160 g</small></div><div class="macro"><div class="macro-head"><span>Węglowodany</span><b id="carbValue">0 g</b></div><div class="track"><div id="carbBar" class="fill carbs"></div></div><small id="carbGoalLabel">cel 240 g</small></div><div class="macro"><div class="macro-head"><span>Tłuszcze</span><b id="fatValue">0 g</b></div><div class="track"><div id="fatBar" class="fill fats"></div></div><small id="fatGoalLabel">cel 75 g</small></div></div><p id="macroWarning" class="macro-warning hidden">≥ oznacza, że niektóre produkty nie mają pełnego makro. Suma może być wyższa.</p>
+          <div class="hero-stats"><div><span class="stat-caption">Pozostało</span><strong class="stat-big" id="remainingCalories">2300</strong><span class="stat-caption">kcal do celu</span></div><div><span class="stat-caption">Dzienny cel</span><strong class="stat-target" id="dailyGoal">2300 <small>kcal</small></strong></div></div>
+          <p id="macroWarning" class="macro-warning hidden">≥ oznacza, że niektóre produkty nie mają pełnego makro. Suma może być wyższa.</p>
         </section>
 
         <section class="panel water-panel" aria-labelledby="waterHeading">
