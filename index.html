@@ -79,9 +79,35 @@
       </section>
 
       <section id="page-history" class="page" aria-label="Historia">
-        <div class="page-heading"><div class="eyebrow">TWOJE POSTĘPY</div><h1>Historia</h1><p>Ostatnie 14 dni. Dotknij dnia, żeby otworzyć dziennik.</p></div>
-        <div class="panel history-overview"><div><span class="stat-caption">Średnia z zapisanych dni</span><strong id="historyAverage">—</strong><small>kcal dziennie</small></div><div><span class="stat-caption">Dni z wpisami</span><strong id="historyDays">0</strong><small>w ostatnich 14 dniach</small></div></div>
+        <div class="page-heading"><div class="eyebrow">TWOJE POSTĘPY</div><h1>Historia</h1><p>Sprawdź średnie spożycie kalorii i makroskładników. Dotknij dnia, aby otworzyć dziennik.</p></div>
+        <section class="panel history-range" aria-labelledby="historyRangeTitle">
+          <div class="history-range-title"><h2 id="historyRangeTitle">Średnie dzienne</h2><span>Wybierz okres</span></div>
+          <div class="history-periods" role="group" aria-label="Zakres historii">
+            <button type="button" data-history-period="7d" aria-pressed="false">7 dni</button>
+            <button type="button" data-history-period="14d" aria-pressed="true" class="active">14 dni</button>
+            <button type="button" data-history-period="1m" aria-pressed="false">1 miesiąc</button>
+            <button type="button" data-history-period="6m" aria-pressed="false">6 miesięcy</button>
+            <button type="button" data-history-period="1y" aria-pressed="false">1 rok</button>
+            <button type="button" data-history-period="custom" aria-pressed="false">Własny zakres</button>
+          </div>
+          <div id="historyCustomRange" class="history-custom-range hidden">
+            <label>Od dnia<input id="historyFrom" type="date" aria-label="Początek zakresu historii"></label>
+            <label>Do dnia<input id="historyTo" type="date" aria-label="Koniec zakresu historii"></label>
+          </div>
+          <p id="historyRangeDates" class="history-range-dates" aria-live="polite"></p>
+        </section>
+        <section class="panel history-summary" aria-label="Średnie wartości odżywcze">
+          <div class="history-averages">
+            <div class="history-average history-average-kcal"><span>Kalorie</span><strong id="historyAverage">—</strong><small>kcal / dzień</small></div>
+            <div class="history-average history-average-protein"><span>Białko</span><strong id="historyProtein">—</strong><small>g / dzień</small></div>
+            <div class="history-average history-average-fat"><span>Tłuszcze</span><strong id="historyFat">—</strong><small>g / dzień</small></div>
+            <div class="history-average history-average-carbs"><span>Węglowodany</span><strong id="historyCarbs">—</strong><small>g / dzień</small></div>
+          </div>
+          <div class="history-coverage"><span>Dni z wpisami: <strong id="historyDays">0</strong></span><p id="historyCoverage"></p></div>
+        </section>
+        <div class="history-list-heading"><h2>Historia dni</h2><span id="historyListScope"></span></div>
         <div id="historyList" class="history-list"></div>
+        <button type="button" id="historyShowMore" class="secondary-button wide history-show-more hidden">Pokaż kolejne dni</button>
       </section>
 
       <section id="page-weight" class="page" aria-label="Waga i obwody ciała">
@@ -187,6 +213,7 @@
     <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
   </section></div>
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script src="./historia-statystyki.js" defer></script>
   <script src="./app.js" defer></script>
 </body>
 </html>
