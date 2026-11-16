@@ -129,3 +129,42 @@
   .hero .macro-head b{font-size:11px;}
   .hero .macro-footer small{font-size:9.5px;}
 }
+
+
+/* Historia v0.9: wybór okresu i średnie dzienne kcal / B / T / W */
+.history-range{padding:19px 21px;margin:0 0 14px}
+.history-range-title{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.history-range-title h2{font-size:19px;letter-spacing:-.4px;margin:0}
+.history-range-title>span{font-size:12px;color:var(--muted)}
+.history-periods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:17px}
+.history-periods button{border:1px solid #38515c;background:#132632;color:#d5e2e7;padding:10px 5px;min-height:44px;border-radius:12px;font-size:12px;font-weight:730;line-height:1.25}
+.history-periods button.active{color:#08271c;border-color:var(--accent);background:var(--accent)}
+.history-periods button:focus-visible,.history-custom-range input:focus-visible,.history-show-more:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.history-custom-range{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:15px}
+.history-custom-range label{display:flex;flex-direction:column;gap:7px;color:#c5d3dc;font-size:12px}
+.history-custom-range input{width:100%;min-width:0;min-height:43px;background:#0c1d27;border:1px solid #37515e;border-radius:10px;color:var(--text);padding:8px 10px;color-scheme:dark}
+.history-range-dates{font-size:12px;color:var(--muted);margin:14px 0 0;line-height:1.5}
+.history-summary{padding:15px 18px 17px;margin:0 0 22px}
+.history-averages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.history-average{display:flex;flex-direction:column;gap:5px;min-width:0;padding:15px 11px 13px;border:1px solid #314755;border-radius:15px;background:#11212c}
+.history-average span{font-size:12px;color:var(--muted);font-weight:650}
+.history-average strong{font-size:clamp(21px,3vw,30px);line-height:1.15;letter-spacing:-.6px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.history-average small{font-size:11px;color:var(--muted)}
+.history-average-kcal strong{color:var(--accent)}
+.history-average-protein strong{color:var(--purple)}
+.history-average-fat strong{color:var(--orange)}
+.history-average-carbs strong{color:var(--blue)}
+.history-coverage{border-top:1px solid var(--line);margin-top:15px;padding-top:14px}
+.history-coverage>span{font-size:12px;color:#d5e3e8}
+.history-coverage strong{color:var(--accent);font-variant-numeric:tabular-nums}
+.history-coverage p{font-size:12px;color:var(--muted);line-height:1.6;margin:7px 0 0}
+.history-list-heading{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 12px}
+.history-list-heading h2{font-size:20px;margin:0}
+.history-list-heading span{font-size:11px;color:var(--muted);text-align:right}
+.history-day>span:first-child{min-width:0;flex:1}
+.history-kcal{white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:8px}
+.history-day-macros{display:block;color:var(--muted);font-size:11px;margin-top:5px;line-height:1.4}
+.history-show-more{margin-top:13px}
+@media(min-width:760px){.history-periods{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:630px){.history-range{padding:16px}.history-summary{padding:12px}.history-averages{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.history-average{padding:12px}.history-average strong{font-size:27px}.history-periods button{font-size:12px}}
+@media(max-width:365px){.history-range-title h2{font-size:17px}.history-average strong{font-size:24px}.history-day{padding:12px}.history-day-macros{font-size:10px}}
