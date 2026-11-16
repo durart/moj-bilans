@@ -53,6 +53,10 @@
   let entryPreviousFocus = null;
   let transferMode = 'copy';
   let autoBackupTimer = null;
+  let historyPeriod = '14d';
+  let historyVisible = 40;
+  let historyCustomFrom = '';
+  let historyCustomTo = '';
   const snapshot = () => ({ app: 'MojBilans', version: 5, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements })); queueAutomaticLocalCopy(); return true; } catch { toast('Nie udało się zapisać. Sprawdź pamięć urządzenia.'); return false; } };
   const toast = text => { const el = $('#toast'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2800); };
@@ -119,18 +123,85 @@
   }
   function productRow(p, group, i) { return `<div class="compact-item"><div><strong>${safeText(p.name)}</strong><small>${nf1.format(p.nutrients?.kcal ?? 0)} kcal / 100 g${p.brand ? ` · ${safeText(p.brand)}` : ''}</small></div><button type="button" data-product-group="${group}" data-index="${i}">+ Dodaj</button></div>`; }
   function renderHistory() {
-    const now = toDate(todayKey()); const days = Array.from({ length: 14 }, (_, i) => { const d = new Date(now); d.setDate(now.getDate() - i); return dateKey(d); });
-    const activeDays = days.filter(date => state.entries.some(entry => entry.date === date));
-    const total = activeDays.reduce((acc, d) => acc + sum(state.entries.filter(e => e.date === d), 'kcal'), 0);
-    $('#historyAverage').textContent = activeDays.length ? nf.format(Math.round(total / activeDays.length)) : '—';
-    $('#historyDays').textContent = activeDays.length;
-    $('#historyList').innerHTML = days.map(date => {
-      const entries = state.entries.filter(e => e.date === date), kcal = Math.round(sum(entries, 'kcal'));
-      const label = date === todayKey() ? 'Dzisiaj' : toDate(date).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'short' });
-      const water = state.water.filter(w => w.date === date).reduce((s, w) => s + (Number(w.ml) || 0), 0);
-      return `<button type="button" class="history-day" data-history="${date}"><span><strong>${safeText(label)}</strong><small>${entries.length} ${entries.length === 1 ? 'produkt' : 'produktów'} · 💧 ${nf.format(water)} ml</small></span><span class="history-kcal ${kcal > state.goals.kcal ? 'goal-met' : ''}">${entries.length ? `${nf.format(kcal)} kcal` : '—'} ›</span></button>`;
-    }).join('');
-    $$('[data-history]').forEach(b => b.addEventListener('click', () => { state.selectedDate = b.dataset.history; showPage('journal'); }));
+    const stats = window.MojBilansHistory;
+    const today = todayKey();
+    const custom = historyPeriod === 'custom';
+    $('#historyCustomRange').classList.toggle('hidden', !custom);
+    $$('[data-history-period]').forEach(button => {
+      const active = button.dataset.historyPeriod === historyPeriod;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    $('#historyFrom').max = today;
+    $('#historyTo').max = today;
+    if (custom) {
+      $('#historyFrom').value = historyCustomFrom;
+      $('#historyTo').value = historyCustomTo;
+    }
+
+    let summary;
+    try {
+      const range = custom ? { from: historyCustomFrom, to: historyCustomTo } : stats.periodRange(historyPeriod);
+      if (range.to > today || range.from > today) throw new RangeError('Daty nie mogą być z przyszłości.');
+      summary = stats.historySummary(state.entries, range.from, range.to);
+      $('#historyRangeDates').textContent = `${toDate(range.from).toLocaleDateString('pl-PL')} – ${toDate(range.to).toLocaleDateString('pl-PL')} · ${summary.rangeDays} dni`;
+    } catch (error) {
+      $('#historyRangeDates').textContent = 'Wybierz poprawny zakres: data początkowa nie może być późniejsza od końcowej ani z przyszłości.';
+      for (const id of ['historyAverage', 'historyProtein', 'historyFat', 'historyCarbs']) $('#' + id).textContent = '—';
+      $('#historyDays').textContent = '0';
+      $('#historyCoverage').textContent = 'Popraw daty „Od dnia” i „Do dnia”, aby wyświetlić średnie.';
+      $('#historyListScope').textContent = '';
+      $('#historyList').innerHTML = '';
+      $('#historyShowMore').classList.add('hidden');
+      return;
+    }
+
+    const average = summary.averages;
+    $('#historyAverage').textContent = average ? nf.format(Math.round(average.kcal)) : '—';
+    $('#historyProtein').textContent = average ? nf1.format(average.protein) : '—';
+    $('#historyFat').textContent = average ? nf1.format(average.fat) : '—';
+    $('#historyCarbs').textContent = average ? nf1.format(average.carbs) : '—';
+    $('#historyDays').textContent = `${summary.loggedDays} / ${summary.rangeDays}`;
+    if (!summary.loggedDays) {
+      $('#historyCoverage').textContent = 'Brak posiłków zapisanych w wybranym okresie. Dni bez wpisów nie są traktowane jak 0 kcal.';
+    } else {
+      $('#historyCoverage').textContent =
+        'Średnie obliczono tylko z dni, w których są zapisane posiłki. Dni bez wpisów są pominięte. Dzisiejszy dzień może być jeszcze niepełny.' +
+        (summary.incompleteEntries ? ` Uwaga: ${summary.incompleteEntries} wpisów nie ma kompletnych wartości odżywczych; część średnich może być zaniżona.` : '');
+    }
+
+    // Krótkie okresy zachowują widok wszystkich dni, również pustych.
+    // Dłuższe okresy pokazują tylko dni z wpisami, aby uniknąć setek pustych pozycji.
+    const detailed = summary.rangeDays <= 35;
+    const byDate = new Map(summary.days.map(day => [day.date, day]));
+    const rows = detailed ? (() => {
+      const dates = [], cursor = toDate(summary.to);
+      while (dateKey(cursor) >= summary.from) {
+        const key = dateKey(cursor);
+        dates.push(byDate.get(key) || { date: key, items: 0, totals: { kcal: 0, protein: 0, fat: 0, carbs: 0 } });
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return dates;
+    })() : summary.days;
+    const waterByDate = new Map();
+    for (const item of state.water) {
+      if (item.date >= summary.from && item.date <= summary.to) waterByDate.set(item.date, (waterByDate.get(item.date) || 0) + (Number(item.ml) || 0));
+    }
+    const visibleRows = rows.slice(0, historyVisible);
+    $('#historyListScope').textContent = detailed ? 'Wszystkie dni z okresu' : 'Dni z zapisanymi posiłkami';
+    $('#historyList').innerHTML = visibleRows.length ? visibleRows.map(day => {
+      const date = day.date, kcal = Math.round(day.totals.kcal);
+      const label = date === today ? 'Dzisiaj' : toDate(date).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'short' });
+      const water = waterByDate.get(date) || 0;
+      const macros = day.items ? `<span class="history-day-macros">B ${nf1.format(day.totals.protein)} g · T ${nf1.format(day.totals.fat)} g · W ${nf1.format(day.totals.carbs)} g</span>` : '';
+      return `<button type="button" class="history-day" data-history="${date}"><span><strong>${safeText(label)}</strong><small>${day.items} ${day.items === 1 ? 'produkt' : 'produktów'} · 💧 ${nf.format(water)} ml</small>${macros}</span><span class="history-kcal ${kcal > state.goals.kcal ? 'goal-met' : ''}">${day.items ? `${nf.format(kcal)} kcal` : '—'} ›</span></button>`;
+    }).join('') : '<p class="empty-list">W tym okresie nie ma dni z zapisanymi posiłkami.</p>';
+    const more = $('#historyShowMore');
+    more.classList.toggle('hidden', rows.length <= historyVisible);
+    more.textContent = `Pokaż kolejne dni (${Math.min(40, rows.length - historyVisible)} z ${Math.max(0, rows.length - historyVisible)})`;
+    $$('[data-history]').forEach(button => button.addEventListener('click', () => {
+      state.selectedDate = button.dataset.history; showPage('journal');
+    }));
   }
   function renderSettings() {
     for (const key of ['kcal', 'protein', 'carbs', 'fat', 'water']) {
@@ -977,7 +1048,31 @@
   }
 
   function bind() {
-    $$('.nav-item').forEach(el => el.addEventListener('click', () => showPage(el.dataset.page)));
+    $('.nav-item').forEach(el => el.addEventListener('click', () => showPage(el.dataset.page)));
+    const defaultHistoryRange = window.MojBilansHistory.periodRange('1m');
+    historyCustomFrom = defaultHistoryRange.from;
+    historyCustomTo = defaultHistoryRange.to;
+    $('#historyFrom').value = historyCustomFrom;
+    $('#historyTo').value = historyCustomTo;
+    $('[data-history-period]').forEach(button => button.addEventListener('click', () => {
+      historyPeriod = button.dataset.historyPeriod;
+      historyVisible = 40;
+      renderHistory();
+    }));
+    $('#historyFrom').addEventListener('change', event => {
+      historyCustomFrom = event.target.value;
+      historyVisible = 40;
+      renderHistory();
+    });
+    $('#historyTo').addEventListener('change', event => {
+      historyCustomTo = event.target.value;
+      historyVisible = 40;
+      renderHistory();
+    });
+    $('#historyShowMore').addEventListener('click', () => {
+      historyVisible += 40;
+      renderHistory();
+    });
     $('#todayButton').addEventListener('click', () => { state.selectedDate = todayKey(); showPage('journal'); });
     $('#prevDay').addEventListener('click', () => changeDay(-1));
     $('#nextDay').addEventListener('click', () => changeDay(1));
