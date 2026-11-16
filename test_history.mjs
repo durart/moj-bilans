@@ -61,8 +61,8 @@ check('daty spoza okresu są ignorowane', () => {
   assert.equal(r.loggedDays, 1);
   assert.equal(r.averages.kcal, 500);
 });
-check('nieprawidłowe daty są odrzucane', () => assert.throws(() => historySummary([], '2026-02-30', '2026-03-01'), RangeError));
-check('zły zakres dat jest odrzucany', () => assert.throws(() => historySummary([], '2026-11-16', '2026-11-10'), RangeError));
+check('nieprawidłowe daty są odrzucane', () => assert.throws(() => historySummary([], '2026-02-30', '2026-03-01'), /Nieprawidłowy/));
+check('zły zakres dat jest odrzucany', () => assert.throws(() => historySummary([], '2026-11-16', '2026-11-10'), /Nieprawidłowy/));
 const index = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
 const app = fs.readFileSync(new URL('./app.js', import.meta.url), 'utf8');
 const sw = fs.readFileSync(new URL('./sw.js', import.meta.url), 'utf8');
