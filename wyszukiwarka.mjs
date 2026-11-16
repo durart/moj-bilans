@@ -48,6 +48,7 @@ function localResult(food) {
     fiber: Number.isFinite(food.fiber) ? food.fiber : null,
     sourceName: food.sourceName || food.source || 'Baza podstawowa',
     sourceUrl: food.sourceUrl || '', verification: food.verification || '',
+    recipeSummary: food.recipeSummary || '', note: food.note || '',
     isEstimate: food.isEstimate === undefined ? true : Boolean(food.isEstimate),
     isIncomplete: false };
 }
