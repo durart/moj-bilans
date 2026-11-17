@@ -3,6 +3,7 @@ import { BIEDRONKA_BAKERY } from './pieczywo-biedronka.mjs';
 import { YELLOW_CHEESES } from './sery-zolte.mjs';
 import { POLISH_STAPLES } from './polskie-produkty.mjs';
 import { POLISH_DISHES } from './polskie-dania.mjs';
+import { LABELED_PRODUCTS } from './produkty-z-etykiet.mjs';
 /**
  * Mój Bilans – baza podstawowych produktów (wartości ORIENTACYJNE na 100 g/ml).
  * Nie jest to baza produktów konkretnych marek ani dokumentacja medyczna.
@@ -62,5 +63,6 @@ export const BASIC_FOODS = Object.freeze([
   ...BIEDRONKA_BAKERY,
   ...YELLOW_CHEESES,
   ...POLISH_STAPLES,
-  ...POLISH_DISHES
+  ...POLISH_DISHES,
+  ...LABELED_PRODUCTS
 ]);
