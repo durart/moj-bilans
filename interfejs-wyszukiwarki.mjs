@@ -86,7 +86,7 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
     event?.preventDefault();
     const query=input.value.trim(),serial=++currentRequest,store=selectedStore();
     if(query.length<2){render([]);status.textContent=messages['too-short'];return;}
-    const local=[...(!isBarcode(query)?searchBasicFoods(query,30,store):[]),...searchFoodCatalog(query,{store})];
+    const local=[...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})];
     render(local);
     status.textContent=isBarcode(query)?'Sprawdzam kod kreskowy…':'Pokazano wyniki lokalne. Szukam też w Open Food Facts…';
     try {
