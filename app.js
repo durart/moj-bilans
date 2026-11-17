@@ -463,11 +463,24 @@
     $('#eanResults').innerHTML = '<div class="empty-list">Sprawdzam kod w Open Food Facts…</div>'; feedback('');
     stopCamera();
     try {
+      // Najpierw lokalne, zweryfikowane etykiety. Skaner EAN musi działać
+      // również offline, bez zastępowania konkretnej receptury inną z OFF.
+      const { searchBasicFoods, normalizeOffProduct } = await import('./wyszukiwarka.mjs');
+      const local = searchBasicFoods(ean, 5).find(p => p.code === ean);
+      if (local) {
+        $('#eanResults').innerHTML = '';
+        selectProduct({
+          name: local.name, brand: local.brand, ean: local.code,
+          source: 'Etykieta opakowania (baza lokalna)',
+          nutrients: {kcal: local.kcal, protein: local.protein, carbs: local.carbs, fat: local.fat}
+        });
+        return;
+      }
       const fields = 'code,product_name,product_name_pl,brands,nutriments,image_front_small_url';
       const data = await jsonFetch(`https://world.openfoodfacts.org/api/v3/product/${encodeURIComponent(ean)}?fields=${fields}`);
       if (!data.product || !(data.product.product_name || data.product.product_name_pl)) { $('#eanResults').innerHTML = ''; feedback('Nie znalazłem tego produktu. Możesz dodać go ręcznie.'); return; }
       data.product.code ||= ean;
-      const { normalizeOffProduct } = await import('./wyszukiwarka.mjs');
+      // Normalizacja OFF dostępna z importu powyżej.
       const checked = normalizeOffProduct(data.product,{allowIncomplete:true});
       if (!checked || checked.isIncomplete || checked.isUnreliable) {
         $('#eanResults').innerHTML = '';
