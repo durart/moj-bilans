@@ -41,7 +41,7 @@ function matchFood(query, food) {
 }
 
 function localResult(food) {
-  return { id: food.id, code: null, name: food.name, brand: food.brand || '',
+  return { id: food.id, code: food.code || null, name: food.name, brand: food.brand || '',
     kcal: food.kcal, protein: food.protein, fat: food.fat, carbs: food.carbs,
     unit: food.unit, source: 'Baza podstawowa', storeKeys: food.storeKeys || [],
     category: food.category || '', edible: Boolean(food.edible),
@@ -54,10 +54,12 @@ function localResult(food) {
 }
 
 export function searchBasicFoods(query, limit = 30, store = 'all') {
-  const q = normalizeText(query);
+  const raw = String(query ?? '').trim();
+  const q = normalizeText(raw);
   if (q.length < 2) return [];
+  const barcode = isBarcode(raw);
   return BASIC_FOODS.filter(food => store === 'all' || (food.storeKeys || []).includes(store))
-    .map(food => ({ food, score: matchFood(q, food) }))
+    .map(food => ({ food, score: barcode ? (food.code === raw ? 500 : 0) : matchFood(q, food) }))
     .filter(it => it.score > 0)
     .sort((a, b) => b.score - a.score || a.food.name.localeCompare(b.food.name, 'pl'))
     .slice(0, limit).map(it => localResult(it.food));
@@ -180,8 +182,14 @@ export function createFoodSearcher({ fetchFn = globalThis.fetch?.bind(globalThis
   async function search(query, { online = true, limit = 35, store = 'all' } = {}) {
     const text = String(query ?? '').trim(), q = normalizeText(text);
     const barcode = isBarcode(text);
-    const local = [...(!barcode ? searchBasicFoods(text,limit,store) : []), ...searchFoodCatalog(text,{storage:safeStorage,limit,store})];
+    const local = [...searchBasicFoods(text,limit,store), ...searchFoodCatalog(text,{storage:safeStorage,limit,store})];
     if (!barcode && q.length < 2) return { items: [], status: 'too-short', localCount: 0, remoteCount: 0 };
+    // Znakowany EAN z lokalnej etykiety ma pierwszeństwo przed potencjalnie
+    // inną recepturą w OFF. Pozwala skanować bez sieci i bez opóźnienia API.
+    if (barcode && local.some(item => item.code === text)) {
+      const matches = mergeResults(text, local.filter(item => item.code === text), [], true).slice(0, limit);
+      return { items: matches, status: 'local-only', localCount: matches.length, remoteCount: 0 };
+    }
     if (!online) return { items: local, status: 'local-only', localCount: local.length, remoteCount: 0 };
     const cacheKey = `${barcode ? 'ean' : 'text'}:${q}:${store}`;
     const fresh = cached(cacheKey);
