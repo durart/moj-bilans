@@ -5,7 +5,7 @@
   const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1';
   const LOCAL_COPIES_STORE = 'copies';
   const DEFAULT_GOALS = { kcal: 2300, protein: 160, carbs: 240, fat: 75, water: 2500 };
-  const MEASURES = [{ key: 'abdomen', label: 'Brzuch', id: 'Abdomen' }, { key: 'waist', label: 'Talia', id: 'Waist' }, { key: 'chest', label: 'Klatka piersiowa', id: 'Chest' }, { key: 'biceps', label: 'Biceps', id: 'Biceps' }];
+  const MEASURES = [{ key: 'abdomen', label: 'Brzuch', id: 'Abdomen' }, { key: 'waist', label: 'Talia', id: 'Waist' }, { key: 'chest', label: 'Klatka piersiowa', id: 'Chest' }, { key: 'biceps', label: 'Biceps', id: 'Biceps' }, { key: 'thigh', label: 'Udo', id: 'Thigh' }, { key: 'calf', label: 'Łydka', id: 'Calf' }];
   const MEALS = [
     { id: 'breakfast', name: 'Śniadanie', icon: '☀️' },
     { id: 'lunch', name: 'Obiad', icon: '🍲' },
@@ -72,6 +72,8 @@
   let transferMode = 'copy';
   let autoBackupTimer = null;
   let historyPeriod = '14d';
+  let bodyPeriod = '8w';
+  let bodyTab = 'weight';
   let historyVisible = 40;
   let historyCustomFrom = '';
   let historyCustomTo = '';
@@ -909,6 +911,11 @@
     const recent = sorted.slice(-60);
     $('#weightChartCaption').textContent = recent.length ? `Ostatnie ${recent.length} ${recent.length === 1 ? 'ważenie' : 'pomiary'}${sorted.length > 60 ? ' (maks. 60 na wykresie)' : ''}. Wartości w kg. Linie pomiędzy pomiarami nie oznaczają pomiaru codziennego.` : '';
     $('#weightChart').innerHTML = recent.length ? buildWeightChart(recent) : '<p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p>';
+    window.MojBilansBody25?.render(sorted,state.weightGoal,bodyPeriod,$('#page-weight'));
+    $('[data-bp-range]').forEach(button=>{const active=button.dataset.bpRange===bodyPeriod;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+    $('[data-bp-tab]').forEach(button=>{const active=button.dataset.bpTab===bodyTab;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+    $('#bp25WeightView').classList.toggle('hidden',bodyTab!=='weight');
+    $('#bp25MeasureView').classList.toggle('hidden',bodyTab!=='measure');
     $('#weightList').innerHTML = sorted.length ? [...sorted].reverse().map(w => `<div class="compact-item"><div><strong>${nf1.format(w.kg)} kg</strong><small>${safeText(niceDate(toDate(w.date)))}</small></div><button type="button" class="danger-quiet" data-removeweight="${safeText(w.date)}">Usuń</button></div>`).join('') : '<div class="empty-list">Nie ma jeszcze pomiarów.</div>';
     $$('[data-removeweight]').forEach(b => b.addEventListener('click', () => {
       if (!confirm(`Usunąć pomiar z dnia ${b.dataset.removeweight}?`)) return;
@@ -960,9 +967,9 @@
     const sorted = sortedMeasurements();
     $('#measurementOverview').innerHTML = MEASURES.map(m => {
       const rows = sorted.filter(row => measureValue(row[m.key]) !== null);
-      const first = rows[0], last = rows.at(-1);
-      const delta = first && last && rows.length > 1 ? Number(last[m.key]) - Number(first[m.key]) : null;
-      const diffText = delta === null ? (last ? 'Pierwszy pomiar' : 'Brak pomiarów') : `${delta > 0 ? '+' : ''}${nf1.format(Math.round(delta * 10) / 10)} cm od początku`;
+      const last = rows.at(-1), previous = rows.at(-2);
+      const delta = previous && last ? Number(last[m.key]) - Number(previous[m.key]) : null;
+      const diffText = delta === null ? (last ? 'Pierwszy pomiar' : 'Brak pomiarów') : `${delta > 0 ? '+' : ''}${nf1.format(Math.round(delta * 10) / 10)} cm od poprzedniego`;
       return `<div class="panel measure-stat"><span>${safeText(m.label)}</span><strong>${last ? nf1.format(last[m.key]) + ' cm' : '—'}</strong><small>${safeText(diffText)}</small></div>`;
     }).join('');
     const type = $('#measurementChartType').value;
@@ -1489,6 +1496,8 @@
     $('#measurementDate').addEventListener('change', readMeasurementsAtDate);
     $('#measurementForm').addEventListener('submit', saveMeasurements);
     $('#measurementChartType').addEventListener('change', renderMeasurements);
+    $('[data-bp-range]').forEach(button=>button.addEventListener('click',()=>{bodyPeriod=button.dataset.bpRange;renderWeight();}));
+    $('[data-bp-tab]').forEach(button=>button.addEventListener('click',()=>{bodyTab=button.dataset.bpTab;renderWeight();}));
     $('#copyForm').addEventListener('submit', submitCopy);
     $('#copySourceDate').addEventListener('change', renderCopyPreview);
     $('#copySourceMeal').addEventListener('change', renderCopyPreview);

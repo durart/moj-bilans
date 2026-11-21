@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="./daily-focus.css?v=df2.2.0" />
   <link rel="stylesheet" href="./premium-food-search.css?v=pfs2.3.0" />
   <link rel="stylesheet" href="./premium-insights.css?v=pi2.4.0" />
+  <link rel="stylesheet" href="./body-progress.css?v=bp2.5.0" />
   <title>Mój Bilans — Premium Food Search v2.3</title>
 </head>
 <body>
@@ -172,13 +173,28 @@
         <button type="button" id="historyShowMore" class="secondary-button wide history-show-more hidden">Pokaż kolejne dni</button>
       </section>
 
-      <section id="page-weight" class="page" aria-label="Waga i obwody ciała">
-        <div class="page-heading"><div class="eyebrow">POSTĘPY REDUKCJI</div><h1>Pomiary ciała</h1><p>Obserwuj wagę, brzuch, talię, klatkę piersiową i biceps — ze zmianami na wykresach.</p></div>
+      <section id="page-weight" class="page bp25-page" aria-label="Postępy wagi i obwodów ciała">
+        <div class="page-heading bp25-heading"><div class="eyebrow">TWOJE POSTĘPY · ZAPISANE POMIARY</div><h1><span class="bp25-heading-icon" aria-hidden="true">↗</span> Body Progress</h1><p>Śledź masę ciała i obwody bez zgadywania wyników pomiędzy ważeniami.</p></div>
+        <div class="bp25-tabs" role="group" aria-label="Widok postępów"><button type="button" data-bp-tab="weight" class="active" aria-pressed="true">⚖ Waga</button><button type="button" data-bp-tab="measure" aria-pressed="false">◈ Obwody</button></div>
+        <div id="bp25WeightView">
+          <section class="bp25-stats" aria-label="Podsumowanie postępu masy ciała">
+            <div class="bp25-stat panel"><span>Aktualna waga</span><strong id="bp25Current">—</strong><small id="bp25LastDate">Brak pomiarów</small></div>
+            <div class="bp25-stat panel"><span>Twój cel</span><strong id="bp25Target">—</strong><small>docelowa masa ciała</small></div>
+            <div class="bp25-stat panel bp25-last-change"><span>Zmiana od poprzedniego</span><strong id="bp25Recent">—</strong><small>ostatnie dwa ważenia</small></div>
+          </section>
+          <section class="bp25-goal panel" aria-label="Postęp do celu wagowego">
+            <div class="bp25-goal-heading"><div><span class="bp25-eyebrow">POSTĘP DO CELU</span><h2>Twoja droga do celu</h2></div><strong id="bp25ProgressValue">—</strong></div>
+            <div class="bp25-progress-track"><div id="bp25ProgressBar" class="bp25-progress-bar"></div></div>
+            <div class="bp25-progress-stats"><span>Od początku: <strong id="bp25FromStart">—</strong></span><span>Do celu: <strong id="bp25Remaining">—</strong></span></div>
+            <p id="bp25SummaryText">Dodaj pomiar, aby rozpocząć śledzenie postępu.</p>
+          </section>
         <div class="weight-overview"><div class="panel weight-stat"><span>Ostatni pomiar</span><strong id="weightLatest">—</strong><small id="weightLatestDate">Brak danych</small></div><div class="panel weight-stat"><span>Zmiana od początku</span><strong id="weightChange">—</strong><small id="weightChangeHint">Pierwszy pomiar</small></div><div class="panel weight-stat"><span>Cel masy ciała</span><strong id="weightGoalDisplay">90 kg</strong><small id="weightToGoal">Ustaw cel poniżej</small></div><div class="panel weight-stat"><span>Od poprzedniego ważenia</span><strong id="npWeightRecent">—</strong><small id="npWeightRecentDate">Co najmniej dwa pomiary</small></div></div>
         <form id="weightEntryForm" class="panel compact-form"><h3>Zapisz pomiar</h3><div class="field-row"><label class="field-label">Data<input id="weightDate" type="date" required/></label><label class="field-label">Masa ciała (kg)<input id="weightKg" type="number" min="20" max="400" step="0.1" inputmode="decimal" placeholder="np. 102,5" required/></label></div><button type="submit" class="primary-button wide">Zapisz wagę</button><p class="help">Ponowny zapis w tym samym dniu zastąpi poprzedni pomiar.</p></form>
-        <div class="panel weight-chart-panel"><div class="section-title weight-section-title"><div><div class="eyebrow">TWOJA HISTORIA</div><h2>Wykres masy ciała</h2></div></div><div id="weightChart" class="weight-chart"><p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p></div><div id="weightChartCaption" class="chart-caption"></div></div>
+        <div class="panel weight-chart-panel bp25-chart-panel"><div class="section-title weight-section-title bp25-chart-heading"><div><div class="eyebrow">TREND MASY CIAŁA</div><h2>Trend wagi</h2></div><div class="bp25-periods" role="group" aria-label="Zakres wykresu wagi"><button type="button" class="active" data-bp-range="8w" aria-pressed="true">8 tyg.</button><button type="button" data-bp-range="3m" aria-pressed="false">3 mies.</button><button type="button" data-bp-range="all" aria-pressed="false">Wszystko</button></div></div><div id="weightChart" class="weight-chart"><p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p></div><div id="weightChartCaption" class="chart-caption"></div></div>
         <div class="panel compact-form"><form id="weightGoalForm"><h3>Twój cel</h3><label class="field-label">Docelowa masa ciała (kg)<input id="goalWeight" type="number" min="20" max="400" step="0.1" inputmode="decimal" required /></label><button class="secondary-button wide" type="submit">Zapisz cel wagi</button></form></div>
-        <h3 class="subheading">Historia wagi</h3><div id="weightList" class="compact-list"></div>
+        <h3 class="subheading bp25-subheading">Historia wagi</h3><div id="weightList" class="compact-list"></div>
+        </div>
+        <div id="bp25MeasureView" class="hidden">
         <div class="body-divider"><span class="eyebrow">NOWOŚĆ W WERSJI 0.3</span><h2>Obwody ciała</h2><p class="help">Mierz zawsze w podobnych warunkach. Każdy obwód możesz zapisać oddzielnie, bez konieczności wpisywania pozostałych.</p></div>
         <div class="measure-overview" id="measurementOverview" aria-label="Ostatnie obwody ciała"></div>
         <form id="measurementForm" class="panel compact-form" autocomplete="off">
@@ -189,6 +205,8 @@
             <label class="field-label">Talia <small>w najwęższym miejscu</small><input id="measurementWaist" type="number" min="10" max="300" step="0.1" inputmode="decimal" placeholder="np. 107,0" /></label>
             <label class="field-label">Klatka piersiowa <small>na wysokości klatki, bez wypinania</small><input id="measurementChest" type="number" min="10" max="300" step="0.1" inputmode="decimal" placeholder="np. 108,0" /></label>
             <label class="field-label">Biceps <small>to samo ramię, w napięciu</small><input id="measurementBiceps" type="number" min="10" max="300" step="0.1" inputmode="decimal" placeholder="np. 40,0" /></label>
+            <label class="field-label">Udo <small>to samo udo, w tym samym miejscu</small><input id="measurementThigh" type="number" min="10" max="300" step="0.1" inputmode="decimal" placeholder="np. 57,0" /></label>
+            <label class="field-label">Łydka <small>to samo miejsce na łydce</small><input id="measurementCalf" type="number" min="10" max="300" step="0.1" inputmode="decimal" placeholder="np. 38,0" /></label>
           </div>
           <p class="help">Wpisz co najmniej jeden obwód. Ponowny zapis z tą samą datą aktualizuje pomiary z tego dnia (puste pola usuwają wartości dla tej daty). Zmiana daty wczytuje wcześniejszy wpis do edycji.</p>
           <button type="submit" class="primary-button wide">Zapisz obwody</button>
@@ -196,12 +214,13 @@
         <div class="panel weight-chart-panel">
           <div class="section-title weight-section-title"><div><div class="eyebrow">TRENDY W CENTYMETRACH</div><h2>Wykres obwodów</h2></div></div>
           <label class="field-label measure-select-label">Wybierz obwód
-            <select id="measurementChartType"><option value="abdomen">Brzuch</option><option value="waist">Talia</option><option value="chest">Klatka piersiowa</option><option value="biceps">Biceps</option></select>
+            <select id="measurementChartType"><option value="abdomen">Brzuch</option><option value="waist">Talia</option><option value="chest">Klatka piersiowa</option><option value="biceps">Biceps</option><option value="thigh">Udo</option><option value="calf">Łydka</option></select>
           </label>
           <div id="measurementChart" class="weight-chart"><p class="empty-chart">Dodaj pomiary, aby zobaczyć wykres.</p></div>
           <div id="measurementChartCaption" class="chart-caption"></div><p id="npMeasureRecent" class="np-measure-recent" aria-live="polite"></p>
         </div>
-        <h3 class="subheading">Historia obwodów</h3><div id="measurementList" class="compact-list"></div>
+        <h3 class="subheading bp25-subheading">Historia obwodów</h3><div id="measurementList" class="compact-list"></div>
+        </div>
       </section>
 
       <section id="page-settings" class="page" aria-label="Ustawienia">
@@ -308,9 +327,10 @@
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="./historia-statystyki.js?v=pi2.4.0" defer></script>
   <script src="./np-analytics-v24.js?v=pi2.4.0" defer></script>
+  <script src="./body-progress-v25.js?v=bp2.5.0" defer></script>
   <script src="./ostatnie-dziennik.js?v=np2.1.0" defer></script>
   <script src="./np-trends.js?v=np2.1.0" defer></script>
-  <script src="./app.js?v=pi2.4.0" defer></script>
+  <script src="./app.js?v=bp2.5.0" defer></script>
   <script src="./np-ui.js?v=np2.1.0" defer></script>
   <script src="./pwa-updater.js?v=pfs2.3.0" defer></script>
 </body>
