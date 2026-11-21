@@ -1,4 +1,4 @@
-const CACHE = 'moj-bilans-np-v2-cache-stage234';
+const CACHE = 'moj-bilans-np-v2-cache-stage5';
 const STATIC = ['./', './index.html', './style.css', './np-design.css', './np-ui.js', './np-trends.js', './wyszukiwarka.css', './app.js', './historia-statystyki.js', './ostatnie-dziennik.js', './interfejs-wyszukiwarki.mjs', './wyszukiwarka.mjs', './produkty-podstawowe.mjs', './owoce-warzywa.mjs', './pieczywo-biedronka.mjs', './sery-zolte.mjs', './polskie-produkty.mjs', './polskie-dania.mjs', './produkty-z-etykiet.mjs', './baleron.mjs', './cebularz.mjs', './katalog-produktow.mjs', './walidacja-zywnosci.mjs', './manifest.webmanifest', '../icons/icon-192.png', '../icons/icon-512.png'];
 self.addEventListener('install', evt => {
   evt.waitUntil(caches.open(CACHE).then(cache => cache.addAll(STATIC)).then(() => self.skipWaiting()));
