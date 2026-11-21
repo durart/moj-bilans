@@ -8,6 +8,7 @@ on:
       - 'index.html'
       - 'sw.js'
       - 'release-tests/**'
+      - 'test_*.mjs'
       - 'package.json'
       - '.github/workflows/data-safety-stage1.yml'
   workflow_dispatch:
