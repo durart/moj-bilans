@@ -1,7 +1,7 @@
 {
-  "name": "Mój Bilans — Nutrition Performance v2.0",
-  "short_name": "Mój Bilans",
-  "description": "Dziennik kalorii, makro, wagi i obwodów ciała — Nutrition Performance v2.0",
+  "name": "Mój Bilans v2.1 TEST",
+  "short_name": "Bilans TEST",
+  "description": "Izolowany test bezpieczeństwa Mojego Bilansu",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -11,13 +11,13 @@
   "lang": "pl",
   "icons": [
     {
-      "src": "./icons/icon-192.png",
+      "src": "../icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./icons/icon-512.png",
+      "src": "../icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

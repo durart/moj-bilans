@@ -181,3 +181,14 @@ input,select,textarea{accent-color:var(--accent)}
  .np-trend-unit{display:block;margin-top:4px}
  .np-trend-legend{gap:8px}
 }
+
+/* Nutrition Performance v2.1 preview diagnostics */
+.np21-test-banner{padding:10px 14px;background:#3f3225;color:#ffe3b1;text-align:center;font-size:12px;font-weight:700;line-height:1.5}
+.np21-inline-save{border:1px solid #326451;background:#15362e;color:#b9fbd5;border-radius:12px;padding:10px 13px;margin:12px 0;font-size:12px;line-height:1.5}
+.np21-health{margin:14px 0;padding:18px 20px}
+.np21-health h3{margin:0 0 12px;font-size:18px}
+.np21-health p[role="status"]{border:1px solid #326451;background:#15362e;color:#b9fbd5;border-radius:10px;padding:10px 13px;margin:8px 0;font-size:13px;line-height:1.5}
+.np21-health p.np21-error,.np21-inline-save.np21-error{border-color:#a86868;background:#3e292a;color:#ffced0}
+.np21-health-actions{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.np21-health-actions button{min-height:44px;flex:1 1 190px}
+@media(max-width:630px){.np21-health{padding:14px}.np21-health-actions{flex-direction:column}.np21-health-actions button{width:100%}}
