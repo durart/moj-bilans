@@ -56,8 +56,22 @@ export function parseNutritionLabel(source) {
     const rowIndex=lines.findIndex(line=>isRow(line,kind));
     if(rowIndex<0){warnings.push('Nie znaleziono: '+({kcal:'energia kcal',protein:'białko',fat:'tłuszcz',carbs:'węglowodany'}[kind])+'.');continue;}
     const resolver=kind==='kcal'?energyOnLine:line=>gramsOnLine(line,kind);
-    let val=resolver(lines[rowIndex]);
-    if(val.value===null && rowIndex+1<lines.length && !all.some(x=>isRow(lines[rowIndex+1],x)))val=resolver(lines[rowIndex+1]);
+    // On a two-column label the first row may show kJ and the NEXT line kcal.
+    // Prefer the manufacturer's printed kcal to approximate kJ conversion.
+    const candidates=[lines[rowIndex]];
+    for(let offset=1;offset<=(kind==='kcal'?3:2)&&rowIndex+offset<lines.length;offset++){
+      const next=lines[rowIndex+offset],folded=fold(next);
+      if(all.some(x=>isRow(next,x))||/^(?:w tym|z czego|of which|saturat|nasycon|cukry|sugars)\b/.test(folded))break;
+      candidates.push(next);
+    }
+    let val={value:null,ambiguous:false};
+    if(kind==='kcal'){
+      const kcalLine=candidates.find(line=>/\bkcal\b/i.test(line));
+      const energyLine=kcalLine||candidates.find(line=>/\bkj\b/i.test(line))||candidates[0];
+      val=resolver(energyLine);
+    }else{
+      for(const line of candidates){val=resolver(line);if(val.value!==null)break;}
+    }
     if(val.ambiguous)warnings.push('Kilka liczb w wierszu „'+kind+'” — sprawdź, czy pierwsza kolumna dotyczy 100 g/ml.');
     if(val.converted)warnings.push('Kalorie przeliczone orientacyjnie z kJ (÷ 4,184). Sprawdź kcal na etykiecie.');
     if(val.value===null)warnings.push('Nie rozpoznano liczby: '+kind+'.');
