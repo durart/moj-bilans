@@ -406,7 +406,8 @@
     const label = mealName(mealValid(meal) ? meal : currentMeal);
     $('#pfsMealContext').textContent = 'Do posiłku: ' + label;
     const save = $('#pfsSubmit');
-    if (save) save.textContent = '+ Dodaj do ' + label.toLocaleLowerCase('pl');
+    const destination = { breakfast:'śniadania', lunch:'obiadu', dinner:'kolacji', snack:'przekąsek' }[meal] || label.toLocaleLowerCase('pl');
+    if (save) save.textContent = '+ Dodaj do ' + destination;
   }
   function updatePfsPortionControls() {
     const grams = number($('#productGrams').value);
