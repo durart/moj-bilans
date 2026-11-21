@@ -9,6 +9,31 @@ check('Polska etykieta kcal, białko, tłuszcz, węglowodany',()=>{
   assert.deepEqual(r.values,{kcal:450,protein:8,fat:15,carbs:60});
   assert.equal(r.basis,'g');assert.equal(r.complete,true);
 });
+check('Słoik ze zdjęcia: kcal pod kJ, 100 ml i druga kolumna porcji 15 ml',()=>{
+  const txt=[
+    'WARTOŚĆ ODŻYWCZA | w 100 ml | w 1 porcji (15 ml) | % RWS',
+    'Wartość energetyczna 2898 kJ 432 kJ',
+    '704 kcal 105 kcal',
+    'Tłuszcz 76,3 g 11,4 g',
+    'w tym kwasy tłuszczowe nasycone 5,3 g 0,8 g',
+    'Węglowodany 2,9 g 0,4 g',
+    'w tym cukry 2,3 g 0,3 g',
+    'Błonnik 0,0 g 0,0 g',
+    'Białko 1,5 g 0,2 g',
+    'Sól 0,60 g 0,09 g'
+  ].join('\\n');
+  const r=parseNutritionLabel(txt);
+  assert.equal(r.basis,'ml');assert.equal(r.complete,true);
+  assert.deepEqual(r.values,{kcal:704,protein:1.5,fat:76.3,carbs:2.9});
+  assert.deepEqual(calculatePortion(r.values,15),{kcal:105.6,protein:0.23,fat:11.45,carbs:0.44});
+});
+check('Rozdzielone wiersze tabeli: nazwa i liczby w osobnych liniach',()=>{
+  const txt=['w 100 ml','Wartość energetyczna','2898 kJ 432 kJ','704 kcal 105 kcal',
+    'Tłuszcz','76,3 g 11,4 g','Węglowodany','2,9 g 0,4 g','Białko','1,5 g 0,2 g'].join('\\n');
+  const r=parseNutritionLabel(txt);
+  assert.deepEqual(r.values,{kcal:704,protein:1.5,fat:76.3,carbs:2.9});
+  assert.equal(r.basis,'ml');
+});
 check('Porcja 20 g przeliczana z 100 g',()=>{
   assert.deepEqual(calculatePortion({kcal:450,protein:8,fat:15,carbs:60},20),{kcal:90,protein:1.6,fat:3,carbs:12});
 });
@@ -61,5 +86,9 @@ check('Brak połączeń z produkcyjnym magazynem danych',()=>{
   assert.doesNotMatch(html,/manifest\.webmanifest/);
   assert.match(app,/tesseract\.js@7\.0\.0/);
   assert.match(app,/createWorker\('pol\+eng'/);
+  assert.ok(app.includes('makeOcrCanvas'));
+  assert.ok(app.includes('cropSelection'));
+  assert.ok(html.includes('cropHint'));
+  assert.match(html,/app.js\?v=2/);
 });
 console.log('OCR parser: '+passed+' tests passed');
