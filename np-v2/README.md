@@ -1,34 +1,31 @@
-# Mój Bilans — Nutrition Performance v2 (etapy 0 i 1)
+# Mój Bilans — Nutrition Performance v2 (etapy 0–4, TEST)
 
-## Podgląd
+## Adres
 https://durart.github.io/moj-bilans/np-v2/
 
-To kompletna aplikacja oparta na działającej wersji produkcyjnej, ale z nową warstwą CSS i oddzielonymi danymi. W odróżnieniu od wcześniejszego statycznego prototypu zapisuje WYŁĄCZNIE dane testowe we własnej przestrzeni.
+## Bezpieczeństwo
+Zmiany dotykają wyłącznie katalogu np-v2/ i gałęzi feature/nutrition-performance-v2. Dane produkcyjne nie są wczytywane automatycznie: oddzielne nazwy localStorage, IndexedDB, cache, manifest, Service Worker ze scope './'. Nie importuj produkcyjnej kopii do testów. Produkcja / oraz katalog /preview/ są poza zakresem.
 
-## Zabezpieczenia
-- np-v2/app.js: localStorage "moj-bilans-np-v2-v1".
-- Kopie IndexedDB: "moj-bilans-np-v2-kopie-v1".
-- OFF: katalog "moj-bilans:np-v2-off-food-catalog:v1"; starszy katalog "moj-bilans:np-v2-biedronka-off:v1"; cache wyszukiwarki "moj-bilans:np-v2-off-search-cache:v1".
-- Service Worker scope "./", cache "moj-bilans-np-v2-cache-stage01", usuwane tylko starsze cache z własnym prefiksem.
-- Brak odwołań do produkcyjnych danych; brak automatycznego transferu danych z "/" i "/preview/".
-- Nie należy importować do testowej aplikacji prywatnego backupu z produkcji.
+## Etap 2 — ekran główny
+Kompaktowy bilans, cel i makroskładniki, liczba zapisanych posiłków i produktów oraz status pozostałych kcal oparty na wpisach użytkownika. Szybkie akcje, zapis porcji przy użyciu gramatury i bez zgadywania masy jednej sztuki.
+
+## Etap 3 — wyszukiwarka
+Wyniki lokalne podczas wpisywania (debounce 120 ms, bez wywołań sieciowych). Dopiero świadome kliknięcie „Sprawdź OFF” używa internetowego Open Food Facts, jego cache i limitera. Źródła i wartości orientacyjne są oznaczane. EAN, ostatnie wpisy oraz ręczne dodawanie pozostają dostępne.
+
+## Etap 4 — historia i pomiary
+SVG trendu kcal wyliczony wyłącznie z rzeczywistych wpisów; brak danych nie jest zerem. Krótkie zakresy = dzień, długie = średnia z dni mających wpisy we wspólnym przedziale. Porównanie dwóch ostatnich ważeń i dwóch ostatnich pomiarów wybranego obwodu; zachowane istniejące wykresy i formularze.
 
 ## Testy
-Z katalogu repo:
 - node np-v2/test_np_v2.mjs
+- node np-v2/test_np_v2_stages234.mjs
 - npm test
+- GitHub Actions np-v2-tests.yml na gałęzi feature/nutrition-performance-v2
 
-Kryteria odbioru: 13 kontroli izolacji, kompletności plików, nawigacji, istniejących modali i syntaktyki JS; testy regresyjne katalogu i historii.
-
-## Testy ręczne na telefonie
-1. Przy rozdzielczościach 320/375/390/430 px sprawdź bilans, makro i panel trzech szybkich akcji.
-2. Kliknij Szukaj, Ostatnie i EAN; panel powinien przełączać istniejące widoki dodawania.
-3. Wpisz fikcyjny produkt; zmień gramaturę, zapisz, edytuj i usuń; uruchom ponownie aplikację.
-4. Sprawdź dziennik i ulubione/kopiowanie, nawodnienie, historię, wagę, obwody, ustawienia i lokalne kopie.
-5. Odśwież aplikację po załadowaniu cache, następnie sprawdź działanie offline.
-6. Równolegle otwórz produkcyjny "/" i sprawdź, czy nie zmienił się jego dziennik.
-7. Sprawdź obsługę klawiatury, focus i dolny obszar bezpieczny iPhone/Android.
-
-## Zakres obecnego wydania
-Etapy 0–1: izolacja, testy, design system, nowy header, kompaktowy bilans, szybkie akcje.
-Nie obejmuje jeszcze przebudowy logiki wyszukiwarki ani nowych wykresów (etapy 2–4).
+## Odbiór ręczny (etap 5 — bez wprowadzania na produkcję)
+1. Telefon (320, 375, 390, 430 px) i desktop; nawigacja pięciu zakładek.
+2. Wpisz „ziemniaki” w wyszukiwarce: wyniki lokalne muszą się pojawić bez przycisku. Kliknij „Sprawdź OFF” dla wyników online. Filtr sklepu i tryb offline.
+3. Dodaj testowy posiłek, użyj presetów gramatury 50/100/150/200 g, edytuj i usuń. Nie powinno być przelicznika sztuk bez potwierdzonej gramatury.
+4. Przetestuj EAN, ostatnie, ulubione, wodę, kopiowanie posiłku, kopie lokalne.
+5. Historia 7/14 dni i własny zakres; słupek dla okresu bez wpisów ma być pusty, średnia nie może zawierać pustych dni.
+6. Dodaj dwa testowe ważenia i dwa obwody; sprawdź delty, wpisy i wykresy.
+7. Zamknij aplikację, uruchom ponownie, sprawdź zapis i offline; porównaj dane produkcyjne / przed i po (bez zmian).
