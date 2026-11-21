@@ -63,5 +63,5 @@ check('Makro ma trzy jednakowo szerokie tory', () => {
   assert.ok(css.includes('width:100%'));
 });
 check('Dane użytkownika i kopie JSON bez zmiany formatu', () => assert.ok(app.includes('moj-bilans-v1')));
-check('Nowa wersja cache PWA', () => assert.ok(/moj-bilans-cache-(?:v08-|np-v2-)/.test(sw)));
+check('Nowa wersja cache PWA', () => assert.ok(/moj-bilans-cache-(?:v08-|np-v2-|np-v21-)/.test(sw)));
 console.log(tests + ' testów wizualizacji makro zaliczonych.');
