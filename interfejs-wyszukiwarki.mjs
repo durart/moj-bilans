@@ -39,7 +39,8 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       heading.append(node('strong','',item.name));
       if(item.brand) heading.append(node('small','food-brand',item.brand));
       const shops=(item.storeKeys||[]).map(storeLabel).filter(Boolean);
-      const sourceLabel=item.verification==='bakery-card'?'Pieczywo · dane piekarni / sklepu':
+      const sourceLabel=item.verification==='retailer-product-card'?'Wafle · dane z karty produktu':
+        item.verification==='bakery-card'?'Pieczywo · dane piekarni / sklepu':
         item.verification==='manufacturer-example'?'Wędlina · wartości orientacyjne':
         item.verification==='label-photo'?'Wartości z etykiety · konkretny EAN':
         item.category==='dish'?'Danie domowe · szacunek':
@@ -48,7 +49,9 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
         shops.length?`${shops.join(', ')} · OFF`:'Open Food Facts';
       head.append(heading,node('span','food-source',sourceLabel));
       const macros=node('p','food-macros',`${fmt(item.kcal)} kcal · B ${fmt(item.protein)} g · T ${fmt(item.fat)} g · W ${fmt(item.carbs)} g / 100 ${item.unit||'g'}`);
-      const description=item.verification==='bakery-card'?
+      const description=item.verification==='retailer-product-card'?
+        '✓ Wartości odżywcze dla tego wariantu 130 g z karty sklepu. Inne smaki i receptury mogą mieć inne makro.':
+        item.verification==='bakery-card'?
         '✓ Wartości z karty tego konkretnego cebularza; inne piekarnie mogą stosować odmienną recepturę.':
         item.verification==='manufacturer-example'?
         '⚖️ Przykładowe wartości ze wskazanej karty producenta; Twój baleron może mieć inne makro. Sprawdź etykietę swojego opakowania.':
@@ -73,6 +76,11 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       if(item.source !== 'Baza podstawowa' && item.code && /^\d{8,14}$/.test(item.code)){
         const link=node('a','food-off-link','Zobacz źródło OFF');
         link.href=`https://world.openfoodfacts.org/product/${item.code}`;link.target='_blank';link.rel='noopener noreferrer';
+        card.append(link);
+      }
+      if (item.verification==='retailer-product-card' && item.sourceUrl) {
+        const link=node('a','food-off-link','Źródło wartości — karta produktu');
+        link.href=item.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';
         card.append(link);
       }
       if (item.verification==='manufacturer-example' && item.sourceUrl) {
