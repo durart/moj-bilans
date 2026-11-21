@@ -21,7 +21,7 @@ check('Słoik ze zdjęcia: kcal pod kJ, 100 ml i druga kolumna porcji 15 ml',()=
     'Błonnik 0,0 g 0,0 g',
     'Białko 1,5 g 0,2 g',
     'Sól 0,60 g 0,09 g'
-  ].join('\\n');
+  ].join('\n');
   const r=parseNutritionLabel(txt);
   assert.equal(r.basis,'ml');assert.equal(r.complete,true);
   assert.deepEqual(r.values,{kcal:704,protein:1.5,fat:76.3,carbs:2.9});
@@ -29,7 +29,7 @@ check('Słoik ze zdjęcia: kcal pod kJ, 100 ml i druga kolumna porcji 15 ml',()=
 });
 check('Rozdzielone wiersze tabeli: nazwa i liczby w osobnych liniach',()=>{
   const txt=['w 100 ml','Wartość energetyczna','2898 kJ 432 kJ','704 kcal 105 kcal',
-    'Tłuszcz','76,3 g 11,4 g','Węglowodany','2,9 g 0,4 g','Białko','1,5 g 0,2 g'].join('\\n');
+    'Tłuszcz','76,3 g 11,4 g','Węglowodany','2,9 g 0,4 g','Białko','1,5 g 0,2 g'].join('\n');
   const r=parseNutritionLabel(txt);
   assert.deepEqual(r.values,{kcal:704,protein:1.5,fat:76.3,carbs:2.9});
   assert.equal(r.basis,'ml');
