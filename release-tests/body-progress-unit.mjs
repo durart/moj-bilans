@@ -24,7 +24,7 @@ assert.equal(b.progress([{date:'2026-11-01',kg:90}],90).percent,100);
 const trend=b.movingAverage(data);
 assert.equal(trend.length,data.length);
 assert.equal(trend[0].trend,101);
-assert.equal(trend[2].observations,2);
+assert.equal(trend[2].observations,3);
 assert.ok(Math.abs(trend[3].trend-(100.4+99.8+99.2)/3)<1e-6);
 assert.equal(trend[4].trend,98.7);
 const windowed=b.filterPeriod(data,'8w',new Date(2026,10,19,12));
