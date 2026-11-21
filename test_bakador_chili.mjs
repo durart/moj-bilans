@@ -48,6 +48,12 @@ test('Offline name and barcode work',()=>{
  assert.equal(offlineEAN.items[0].code,EAN);
  assert.ok(offlineName.items.some(x=>x.code===EAN));
 });
+test('Search UI explicitly distinguishes exact EAN from unverified macro',()=>{
+ const ui=fs.readFileSync('interfejs-wyszukiwarki.mjs','utf8');
+ assert.ok(ui.includes("item.verification==='ean-photo-macro-estimate'"));
+ assert.ok(ui.includes('Źródło szacunku — podobny produkt'));
+ assert.ok(ui.includes('to nie odczyt z tabeli tego opakowania'));
+});
 test('PWA precaches new module and retains original diary storage keys',()=>{
  const sw=fs.readFileSync('sw.js','utf8'),app=fs.readFileSync('app.js','utf8');
  assert.ok(sw.includes("'./bakador-chili.mjs'"));
