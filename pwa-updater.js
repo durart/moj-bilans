@@ -21,7 +21,7 @@ check.addEventListener('click',async()=>{
     if(registration.waiting) {
       report('Nowa wersja jest dostępna. Zakończ edycję i odśwież aplikację.');
       reload.classList.remove('hidden');
-    } else report('Sprawdzono aktualizacje. Wersja v2.1 jest aktualna.');
+    } else report('Sprawdzono aktualizacje. Wersja v2.2 jest aktualna.');
   } catch(err){report('Nie udało się sprawdzić aktualizacji: '+err.message,true);}
   finally {check.disabled=false;}
 });
@@ -32,7 +32,7 @@ navigator.serviceWorker.addEventListener('controllerchange',()=>{
 window.addEventListener('load',async()=>{
   try {
     registration=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
-    report('Wersja 2.1. Aktualizacje możesz sprawdzić ręcznie.');
+    report('Wersja 2.2. Aktualizacje możesz sprawdzić ręcznie.');
     if(registration.waiting&&navigator.serviceWorker.controller) {
       report('Nowa wersja gotowa. Odśwież po zapisaniu danych.');
       reload.classList.remove('hidden');
