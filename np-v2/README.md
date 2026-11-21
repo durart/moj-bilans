@@ -45,3 +45,10 @@ Testy uruchamiane na osobnej gałęzi przez `.github/workflows/np-v2-browser.yml
 - Bez migracji danych, bez zapisu z panelu analiz i bez modyfikowania aplikacji produkcyjnej.
 - Testy: `node np-v2/test_np_history_24.mjs`, testy regresji, Chromium E2E oraz offline.
 - **Sprint 2 (Pomiary 2.5)** pozostaje kolejnym etapem po weryfikacji Sprintu 1.
+
+## Sprint 2 — Pomiary 2.5 / Body Progress (gałąź robocza)
+- Ekran postępu masy ciała: ostatnia waga, trend EMA wygładzany według faktycznych odstępów między ważeniami (półokres 7 dni), procent postępu od pierwszego ważenia do aktualnego celu i dystans do celu.
+- Wykres wagi: rzeczywiste pomiary, fioletowa linia trendu i linia celu, bez dopisywania sztucznych pomiarów.
+- Karty czterech obwodów: ostatnia wartość i data, różnica od pierwszego i poprzedniego pomiaru; wykres wybranego obwodu i historia nadal działają.
+- Bez nowych pól w kopiach JSON, bez modyfikacji localStorage, IndexedDB, bazy produktów i katalogu głównego produkcji. Obsługa braku danych i błędnych dat.
+- Testy: `node np-v2/test_np_body_25.mjs`, Chromium E2E oraz offline.
