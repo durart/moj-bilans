@@ -52,3 +52,12 @@ Testy uruchamiane na osobnej gałęzi przez `.github/workflows/np-v2-browser.yml
 - Karty czterech obwodów: ostatnia wartość i data, różnica od pierwszego i poprzedniego pomiaru; wykres wybranego obwodu i historia nadal działają.
 - Bez nowych pól w kopiach JSON, bez modyfikacji localStorage, IndexedDB, bazy produktów i katalogu głównego produkcji. Obsługa braku danych i błędnych dat.
 - Testy: `node np-v2/test_np_body_25.mjs`, Chromium E2E oraz offline.
+
+## Korekta zgodności layoutu — 21.11.2026
+Po zgłoszeniu różnicy względem wersji głównej przyjęto jako wzorzec **aktualny produkcyjny układ Daily Focus v2.2 i Premium Food Search v2.3**, nie wcześniejszy szablon Nutrition Performance.
+
+- Dziennik i Produkty mają identyczną strukturę HTML jak w produkcji. Przeniesiono aktualne arkusze `style.css`, `np-design.css`, `daily-focus.css`, `premium-food-search.css` oraz nową logikę kafelków i wyszukiwarki.
+- Ekrany Historia i Pomiary rozszerzają powyższy layout o zrealizowane funkcje 2.4/2.5, bez duplikacji ekranów.
+- Nadal pozostają izolowane: localStorage `moj-bilans-np-v2-v1`, IndexedDB `moj-bilans-np-v2-kopie-v1`, manifest, Service Worker scope `./` i cache `moj-bilans-np-v2-cache-layout-parity-v1`.
+- Do testów statycznych: `node np-v2/test_layout_parity.mjs`. Dodatkowe kroki akceptacyjne Chromium obejmują nawigację i modale Daily Focus/Premium Food Search. Testy przeglądarkowe wymagają wykonania w środowisku z Chromium.
+- Zmiana obejmuje tylko folder `np-v2/`. Produkcyjny dziennik pozostaje nietknięty.
