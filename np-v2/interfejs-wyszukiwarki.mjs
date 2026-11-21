@@ -42,6 +42,7 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       const sourceLabel=item.verification==='bakery-card'?'Pieczywo · dane piekarni / sklepu':
         item.verification==='manufacturer-example'?'Wędlina · wartości orientacyjne':
         item.verification==='label-photo'?'Wartości z etykiety · konkretny EAN':
+        item.verification==='ean-photo-macro-estimate'?'EAN ze zdjęcia · makro orientacyjne':
         item.category==='dish'?'Danie domowe · szacunek':
         item.verification==='estimated-generic'?'Produkt bazowy · szacunek':
         item.source==='Baza podstawowa'?(item.category==='fruit'?'Owoc · baza lokalna':item.category==='veg'?'Warzywo · baza lokalna':item.category==='bakery'?'Pieczywo · Biedronka':item.category==='cheese'?'Ser żółty · baza lokalna':'Podstawowe'):
@@ -56,7 +57,9 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
         item.verification==='manufacturer-example'?
         '⚖️ Przykładowe wartości ze wskazanej karty producenta; Twój baleron może mieć inne makro. Sprawdź etykietę swojego opakowania.':
         item.verification==='label-photo'?
-        '✓ Dane odczytane ze zdjęcia opakowania tego wariantu. Inne opakowania Sante mogą mieć zmieniony skład i makro.': 
+        '✓ Dane odczytane ze zdjęcia opakowania tego wariantu. Inne opakowania Sante mogą mieć zmieniony skład i makro.':
+        item.verification==='ean-photo-macro-estimate'?
+        '⚖️ EAN i smak potwierdzone zdjęciem. Kalorie oraz B/T/W są ORIENTACYJNE, przyjęte z podobnych orzeszków BakaD\'Or — to nie odczyt z tabeli tego opakowania.': 
         item.category==='dish' && item.recipeSummary?
         `⚖️ SZACUNEK dla przykładowej receptury gotowej potrawy: ${item.recipeSummary}. Skład i wchłonięty tłuszcz mogą się różnić; zweryfikuj własną porcję.`:
         item.verification==='estimated-generic'?
@@ -76,6 +79,11 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       if(item.source !== 'Baza podstawowa' && item.code && /^\d{8,14}$/.test(item.code)){
         const link=node('a','food-off-link','Zobacz źródło OFF');
         link.href=`https://world.openfoodfacts.org/product/${item.code}`;link.target='_blank';link.rel='noopener noreferrer';
+        card.append(link);
+      }
+      if (item.verification==='ean-photo-macro-estimate' && item.sourceUrl) {
+        const link=node('a','food-off-link','Źródło szacunku — podobny produkt');
+        link.href=item.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';
         card.append(link);
       }
       if (item.verification==='manufacturer-example' && item.sourceUrl) {
