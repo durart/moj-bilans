@@ -65,5 +65,5 @@ check('Trzy makroskładniki w pionowej kolumnie obok koła', () => {
   assert.ok(dailyFocus.includes('width:100%'));
 });
 check('Dane użytkownika i kopie JSON bez zmiany formatu', () => assert.ok(app.includes('moj-bilans-v1')));
-check('Nowa wersja cache PWA', () => assert.ok(/moj-bilans-cache-(?:v08-|np-v2-|np-v21-|daily-focus-|premium-food-)/.test(sw)));
+check('Nowa wersja cache PWA', () => assert.ok(/moj-bilans-cache-(?:v08-|np-v2-|np-v21-|daily-focus-|premium-food-|insights-)/.test(sw)));
 console.log(tests + ' testów wizualizacji makro zaliczonych.');

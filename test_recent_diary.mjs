@@ -69,7 +69,7 @@ check('zakładka Ostatnie i obie listy w HTML', () => {
   assert.ok(html.includes('data-mode="recent"'));
 });
 check('moduł ładowany przed app.js', () =>
-  assert.ok(html.indexOf('src="./ostatnie-dziennik.js"') < html.indexOf('src="./app.js?v=pfs2.3.0"')));
+  assert.ok(html.indexOf('src="./ostatnie-dziennik.js"') < html.indexOf('src="./app.js?v=pi2.4.0"')));
 check('ostatnia gramatura przekazywana do formularza produktu', () =>
   assert.ok(app.includes('initialGrams: entry.grams')));
 check('kopiowanie całego posiłku z nowymi ID', () =>
