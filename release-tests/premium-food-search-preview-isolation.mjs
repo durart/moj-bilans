@@ -21,7 +21,7 @@ try{
  await page.addInitScript(production=>{localStorage.setItem('moj-bilans-v1',production)},sentinel);
  await page.goto(URL,{waitUntil:'networkidle'});
  assert.match(await page.title(),/TEST/);
- assert.match(await page.locator('.pfs-preview-banner').innerText(),/Oddzielne dane/i);
+ assert.match(await page.locator('.pfs-preview-banner').innerText(),/Osobny dziennik/i);
  assert.match(await page.locator('#caloriesUsed').innerText(),/[1-9]/);
  assert.equal(await page.locator('#npFoodCount').innerText(),'5');
  assert.equal(await page.evaluate(()=>localStorage.getItem('moj-bilans-v1')),sentinel);
