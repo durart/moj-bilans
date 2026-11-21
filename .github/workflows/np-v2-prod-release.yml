@@ -1,0 +1,47 @@
+name: Nutrition Performance v2 - production acceptance
+on:
+  push:
+    branches:
+      - release/nutrition-performance-v2
+    paths:
+      - 'index.html'
+      - 'app.js'
+      - 'interfejs-wyszukiwarki.mjs'
+      - 'np-design.css'
+      - 'np-trends.js'
+      - 'np-ui.js'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'package.json'
+      - 'release-tests/**'
+      - '.github/workflows/np-v2-prod-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Production namespaces and PWA invariants
+        run: node release-tests/np-v2-safety.mjs
+      - name: Existing application regressions
+        run: npm test
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test dependency
+        run: npm install --no-save --package-lock=false playwright
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Production upgrade with existing local data, RWD and offline
+        run: node release-tests/np-v2-production-acceptance.mjs
