@@ -22,7 +22,7 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
   const importBtn=document.getElementById('foodCatalogImport');
   const catalogStatus=document.getElementById('foodCatalogStatus');
   const filter=document.getElementById('foodStoreFilter');
-  let currentRequest=0,importing=false;
+  let currentRequest=0,importing=false,typingTimer=null;
   const selectedStore=()=>filter?.value||'all';
   function updateCatalogStatus(message='') {
     if(!catalogStatus)return;
@@ -47,6 +47,9 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
         item.source==='Baza podstawowa'?(item.category==='fruit'?'Owoc · baza lokalna':item.category==='veg'?'Warzywo · baza lokalna':item.category==='bakery'?'Pieczywo · Biedronka':item.category==='cheese'?'Ser żółty · baza lokalna':'Podstawowe'):
         shops.length?`${shops.join(', ')} · OFF`:'Open Food Facts';
       head.append(heading,node('span','food-source',sourceLabel));
+      const label=node('div','np-food-meta');
+      label.append(node('span','np-food-chip',item.source==='Baza podstawowa'?'Baza lokalna':'Open Food Facts'));
+      if(item.isEstimate || item.category==='dish' || item.verification==='estimated-generic')label.append(node('span','np-food-chip np-food-estimate','Wartości orientacyjne'));
       const macros=node('p','food-macros',`${fmt(item.kcal)} kcal · B ${fmt(item.protein)} g · T ${fmt(item.fat)} g · W ${fmt(item.carbs)} g / 100 ${item.unit||'g'}`);
       const description=item.verification==='bakery-card'?
         '✓ Wartości z karty tego konkretnego cebularza; inne piekarnie mogą stosować odmienną recepturę.':
@@ -69,7 +72,7 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       const action=node('button','food-action',blocked?'Wymaga sprawdzenia':'Wybierz produkt');
       action.type='button';action.disabled=blocked;
       if(!blocked) action.addEventListener('click',()=>onSelect({...item}));
-      card.append(head,macros,detail,action);
+      card.append(head,label,macros,detail,action);
       if(item.source !== 'Baza podstawowa' && item.code && /^\d{8,14}$/.test(item.code)){
         const link=node('a','food-off-link','Zobacz źródło OFF');
         link.href=`https://world.openfoodfacts.org/product/${item.code}`;link.target='_blank';link.rel='noopener noreferrer';
@@ -93,8 +96,34 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       results.append(card);
     }
   }
+  // Podczas pisania filtrujemy WYŁĄCZNIE katalogi lokalne.
+  // Wyszukiwanie sieciowe działa po świadomym kliknięciu "Sprawdź OFF".
+  function showLocalSuggestions() {
+    const query=input.value.trim(),store=selectedStore();
+    if(query.length<2){
+      results.replaceChildren();
+      status.textContent=messages['too-short'];
+      return;
+    }
+    const local=[...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})];
+    const seen=new Set();
+    const unique=local.filter(item=>{
+      const key=item.code ? 'ean:'+item.code : 'name:'+String(item.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pl')+'|'+String(item.brand||'').toLocaleLowerCase('pl');
+      if(seen.has(key))return false;
+      seen.add(key);return true;
+    });
+    render(unique);
+    status.textContent=`Wyniki lokalne: ${unique.length}. Aby wyszukać także w Open Food Facts, kliknij „Sprawdź OFF”.`;
+  }
+  function onInput() {
+    currentRequest++;
+    clearTimeout(typingTimer);
+    if(input.value.trim().length<2){showLocalSuggestions();return;}
+    typingTimer=setTimeout(showLocalSuggestions,120);
+  }
   async function handleSubmit(event){
     event?.preventDefault();
+    clearTimeout(typingTimer);
     const query=input.value.trim(),serial=++currentRequest,store=selectedStore();
     if(query.length<2){render([]);status.textContent=messages['too-short'];return;}
     const local=[...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})];
@@ -124,10 +153,11 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
     }catch(e){updateCatalogStatus(`Pobieranie nie powiodło się: ${e?.message||'brak połączenia'}. Poprzednie produkty pozostają zapisane.`);}
     finally{importing=false;if(importBtn){importBtn.disabled=false;importBtn.textContent='Pobierz / odśwież produkty offline';}}
   }
-  function onFilterChanged(){currentRequest++;if(input.value.trim().length>=2)void handleSubmit();else{render([]);status.textContent='Wpisz nazwę lub kod produktu, aby wyszukać we wspólnej bazie.';}}
+  function onFilterChanged(){currentRequest++;clearTimeout(typingTimer);showLocalSuggestions();}
   form.addEventListener('submit',handleSubmit);
+  input.addEventListener('input',onInput);
   importBtn?.addEventListener('click',refreshCatalog);
   filter?.addEventListener('change',onFilterChanged);
   updateCatalogStatus();
-  return ()=>{currentRequest++;form.removeEventListener('submit',handleSubmit);importBtn?.removeEventListener('click',refreshCatalog);filter?.removeEventListener('change',onFilterChanged);};
+  return ()=>{currentRequest++;clearTimeout(typingTimer);input.removeEventListener('input',onInput);form.removeEventListener('submit',handleSubmit);importBtn?.removeEventListener('click',refreshCatalog);filter?.removeEventListener('change',onFilterChanged);};
 }
