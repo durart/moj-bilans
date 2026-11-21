@@ -53,6 +53,9 @@
     selectedDate: todayKey()
   };
   let currentMeal = 'breakfast';
+  // Ephemeral accordion state; never part of diary, localStorage or exported backups.
+  let expandedMeals = new Set();
+  let expandedMealsDate = '';
   let activeProduct = null;
   let draftPer100 = null; // robocze wartości /100 g; formularz pokazuje wartości porcji
   let activeMode = 'search';
@@ -156,14 +159,19 @@
   function renderJournal() {
     const d = toDate(state.selectedDate), current = currentEntries(), totals = totalFor(current);
     $('#dateText').textContent = niceDate(d);
-    $('#dateLabel').textContent = state.selectedDate === todayKey() ? 'Dzisiaj' : d.toLocaleDateString('pl-PL', { weekday: 'long' });
+    const isToday = state.selectedDate === todayKey();
+    $('#dateLabel').textContent = isToday ? 'Dzisiaj' : d.toLocaleDateString('pl-PL', { weekday: 'long' });
+    $('#dfTopDate').textContent = (isToday ? 'Dzisiaj · ' : '') + d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' });
+    if (expandedMealsDate !== state.selectedDate) {
+      expandedMeals = new Set();
+      expandedMealsDate = state.selectedDate;
+    }
     $('#dateInput').value = state.selectedDate;
     const eaten = Math.round(totals.kcal), remaining = Math.round(state.goals.kcal - totals.kcal);
     $('#caloriesUsed').textContent = nf.format(eaten);
     $('#remainingCalories').textContent = (remaining < 0 ? '−' : '') + nf.format(Math.abs(remaining));
     $('#remainingCalories').style.color = remaining < 0 ? 'var(--red)' : 'var(--accent)';
     $('#goalInline').textContent = nf.format(state.goals.kcal);
-    $('#dailyGoal').innerHTML = `${nf.format(state.goals.kcal)} <small>kcal</small>`;
     const deg = pct(totals.kcal, state.goals.kcal) * 3.6;
     $('#calorieRing').style.setProperty('--progress', `${deg}deg`);
     $('#npMealCount').textContent = `${new Set(current.map(e => e.meal).filter(mealValid)).size} / ${MEALS.length}`;
@@ -188,12 +196,45 @@
     $('#macroWarning').classList.toggle('hidden', !current.some(entry => ['protein', 'carbs', 'fat'].some(k => !isNumber(entry.nutrients?.[k]))));
     renderWater();
     renderFavoriteQuick();
+    const mealThumbs = { breakfast:'🥣', lunch:'🍗', dinner:'🥗', snack:'🥜' };
     $('#mealsContainer').innerHTML = MEALS.map(meal => {
       const entries = current.filter(e => e.meal === meal.id);
-      return `<article class="meal-card"><div class="meal-top"><div class="meal-name"><span class="meal-emoji">${meal.icon}</span>${meal.name}</div><div class="meal-kcal">${nf.format(Math.round(sum(entries, 'kcal')))} <small>kcal</small></div></div>` +
-        (entries.length ? `<div class="meal-items">${entries.map(entry => `<div class="meal-entry"><button class="meal-entry-open meal-entry-full" type="button" data-viewentry="${safeText(entry.id)}" aria-label="Szczegóły, edycja lub usunięcie: ${safeText(entry.name)}"><span class="meal-entry-text"><strong>${safeText(entry.name)}</strong><small>${nf1.format(entry.grams)} g/ml · B ${isNumber(entry.nutrients?.protein) ? nf1.format(entry.nutrients.protein * entry.grams / 100) : '?'} g</small></span><span class="meal-entry-kcal">${nf.format(Math.round((entry.nutrients?.kcal || 0) * entry.grams / 100))} kcal</span><span class="meal-entry-chevron" aria-hidden="true">›</span></button></div>`).join('')}</div>` : `<div class="meal-empty">Jeszcze nic tu nie ma. Dodaj pierwszy produkt.</div>`) +
-        `<div class="meal-utilities">${entries.length ? `<button type="button" data-favmeal="${meal.id}" title="Zapisz ten zestaw jako ulubiony">☆ Ulubiony</button>` : ''}<button type="button" data-copymeal="${meal.id}" title="Skopiuj produkty z innego dnia">⇄ Kopiuj</button></div><button class="meal-add" type="button" data-addmeal="${meal.id}">+ Dodaj do ${meal.name.toLowerCase()}</button></article>`;
+      const expanded = expandedMeals.has(meal.id);
+      const safeId = meal.id;
+      const count = entries.length;
+      const detail = count
+        ? '<div class="meal-items">' + entries.map(entry => `<div class="meal-entry"><button class="meal-entry-open meal-entry-full" type="button" data-viewentry="${safeText(entry.id)}" aria-label="Szczegóły, edycja lub usunięcie: ${safeText(entry.name)}"><span class="meal-entry-text"><strong>${safeText(entry.name)}</strong><small>${nf1.format(entry.grams)} g/ml · B ${isNumber(entry.nutrients?.protein) ? nf1.format(entry.nutrients.protein * entry.grams / 100) : '?'} g</small></span><span class="meal-entry-kcal">${nf.format(Math.round((entry.nutrients?.kcal || 0) * entry.grams / 100))} kcal</span><span class="meal-entry-chevron" aria-hidden="true">›</span></button></div>`).join('') + '</div>'
+        : '<div class="meal-empty">Jeszcze nic tu nie ma. Dodaj pierwszy produkt.</div>';
+      const caption = count === 0 ? 'Dodaj pierwszy produkt' : `${count} ${count===1?'produkt':count>=2&&count<=4?'produkty':'produktów'}`;
+      const kcal = nf.format(Math.round(sum(entries,'kcal')));
+      return `<article class="meal-card df-meal-card" data-meal-card="${safeId}">
+        <div class="df-meal-row">
+          <button class="df-meal-toggle" type="button" data-togglemeal="${safeId}" aria-expanded="${expanded}" aria-controls="df-meal-details-${safeId}" aria-label="${meal.name}: ${caption}, ${kcal} kcal. ${expanded ? 'Zwiń' : 'Rozwiń'} posiłek">
+            <span class="df-meal-art df-art-${safeId}" aria-hidden="true"><span class="df-food-emoji">${mealThumbs[safeId] || meal.icon}</span></span>
+            <span class="df-meal-info"><strong>${meal.name}</strong><small>${caption}</small></span>
+            <span class="df-meal-energy">${kcal} <small>kcal</small><span class="df-meal-chevron" aria-hidden="true">›</span></span>
+          </button>
+          <button class="df-meal-plus" type="button" data-addmeal="${safeId}" aria-label="Dodaj produkt: ${meal.name}" title="Dodaj do ${meal.name.toLowerCase()}">+</button>
+        </div>
+        <div class="df-meal-details" id="df-meal-details-${safeId}" ${expanded?'':'hidden'}>
+          ${detail}
+          <div class="meal-utilities">${count ? `<button type="button" data-favmeal="${safeId}" title="Zapisz ten zestaw jako ulubiony">☆ Ulubiony</button>` : ''}
+          <button type="button" data-copymeal="${safeId}" title="Skopiuj produkty z innego dnia">⇄ Kopiuj</button></div>
+          <button class="meal-add" type="button" data-addmeal="${safeId}">+ Dodaj do ${meal.name.toLowerCase()}</button>
+        </div>
+      </article>`;
     }).join('');
+    $$('[data-togglemeal]').forEach(button => button.addEventListener('click', () => {
+      const meal = button.dataset.togglemeal;
+      const expanded = button.getAttribute('aria-expanded') !== 'true';
+      if (expanded) expandedMeals.add(meal); else expandedMeals.delete(meal);
+      button.setAttribute('aria-expanded',String(expanded));
+      const info = MEALS.find(m=>m.id===meal);
+      const count = current.filter(e => e.meal === meal).length;
+      const caption = count === 0 ? 'Dodaj pierwszy produkt' : `${count} ${count===1?'produkt':count>=2&&count<=4?'produkty':'produktów'}`;
+      button.setAttribute('aria-label',`${info.name}: ${caption}. ${expanded ? 'Zwiń' : 'Rozwiń'} posiłek`);
+      document.getElementById('df-meal-details-'+meal).hidden = !expanded;
+    }));
     $$('[data-addmeal]').forEach(b => b.addEventListener('click', () => openModal(b.dataset.addmeal)));
     $$('[data-viewentry]').forEach(b => b.addEventListener('click', () => openEntryDialog(b.dataset.viewentry)));
     $$('[data-favmeal]').forEach(b => b.addEventListener('click', () => saveFavoriteMeal(b.dataset.favmeal)));
