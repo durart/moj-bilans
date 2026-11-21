@@ -76,6 +76,7 @@
     const svg='<svg viewBox="0 0 '+width+' 263" role="img" aria-label="'+desc+'" xmlns="http://www.w3.org/2000/svg">'+grid+band+cols+goalLine+avgLine+labels+'</svg>';
     mount.innerHTML='<div class="np-chart-scroll" tabindex="0" aria-label="Wykres kalorii, przewiń poziomo na małym ekranie">'+svg+'</div>'+
       '<div class="np-trend-legend"><span><i class="np-legend-logged"></i> W przedziale celu</span>'+
+      '<span><i class="np-legend-under"></i> Poniżej przedziału</span>'+ 
       '<span><i class="np-legend-over"></i> Powyżej przedziału</span>'+
       '<span><i class="np-legend-empty"></i> Brak danych</span>'+
       '<span><i class="np-legend-target"></i> Cel</span>'+
