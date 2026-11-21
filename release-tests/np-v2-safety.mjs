@@ -6,7 +6,7 @@ assert.match(a,/const KEY = 'moj-bilans-v1'/);
 assert.match(a,/const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1'/);
 assert.doesNotMatch(a,/moj-bilans-np-v2-v1|moj-bilans-np-v2-kopie-v1/);
 assert.match(a,/\$\$\('\[data-np-grams\]'\)\.forEach/);
-assert.match(sw,/const CACHE = 'moj-bilans-cache-np-v21-release1'/);
+assert.match(sw,/const CACHE = 'moj-bilans-cache-np-v21-release2'/);
 assert.match(sw,/k\.startsWith\('moj-bilans-cache-'/);
 assert.doesNotMatch(sw,/k\.startsWith\('moj-bilans-np-v2-cache-'/);
 assert.equal(manifest.id,'./');assert.equal(manifest.scope,'./');assert.equal(manifest.start_url,'./');
@@ -22,12 +22,12 @@ assert.match(read('katalog-produktow.mjs'),/moj-bilans:biedronka-off:v1/);
 for(const [path,resource] of [
   ['np-design.css','href'],['np-trends.js','src'],['app.js','src'],['np-ui.js','src']
 ]){
-  const versioned='./'+path+'?v='+'np2.1.0';
+  const versioned='./'+path+'?v='+(path==='app.js'?'np2.1.1':'np2.1.0');
   assert.ok(index.includes(resource+'="'+versioned+'"'),'HTML not versioned: '+path);
   assert.ok(sw.includes("'"+versioned+"'"),'Offline cache missing versioned asset: '+path);
 }
-assert.match(a,/import\('\.\/interfejs-wyszukiwarki\.mjs\?v=np2\.1\.0'\)/);
-assert.ok(sw.includes("'./interfejs-wyszukiwarki.mjs?v=np2.1.0'"));
+assert.match(a,/import\('\.\/interfejs-wyszukiwarki\.mjs\?v=np2\.1\.1'\)/);
+assert.ok(sw.includes("'./interfejs-wyszukiwarki.mjs?v=np2.1.1'"));
 assert.ok(sw.includes("'./bakador-chili.mjs'"));
 assert.ok(read('produkty-podstawowe.mjs').includes("import { BAKADOR_CHILI } from './bakador-chili.mjs'"));
 assert.match(index,/<strong id="npMealCount">—<\/strong>/);
