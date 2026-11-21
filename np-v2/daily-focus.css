@@ -1,0 +1,243 @@
+/* Mój Bilans — Daily Focus v2.2.0
+   Design-only layer: no storage keys, goal algorithms, data schema or import changes.
+   Recreates the approved Premium Dark visual: ring, vertical macros, meal tiles and water.
+   All layouts remain usable at 320px and when the user enlarges text. */
+
+@property --progress{syntax:"<angle>";inherits:false;initial-value:0deg}
+:root{
+  --df-bg:#0a1016;--df-card:#171e26;--df-card-2:#1b242d;
+  --df-line:rgba(181,206,208,.13);--df-copy:#f6f8fa;
+  --df-muted:#b4c0ca;--df-green:#44e57e;--df-soft:#7ff3ad;
+  --df-glow:0 18px 45px rgba(0,0,0,.28);
+  --bg:var(--df-bg);--surface:#15212a;--surface2:#1c2c35;
+  --line:#30404a;--muted:var(--df-muted);--text:var(--df-copy);
+  --accent:var(--df-green);--accent-strong:#2fcd6a;--np-focus:#bdffdf;
+  --shadow:var(--df-glow);
+}
+body{background:radial-gradient(ellipse 760px 450px at 55% -180px,#263839 0,transparent 67%),linear-gradient(180deg,#101820 0,#080e13 80%);color:var(--df-copy)}
+.app-shell{max-width:1160px}
+.topbar{max-width:1010px;margin:0 auto;height:93px;padding:8px 27px 5px;border-bottom:0}
+.brand-mark{display:none}
+.brand-copy{gap:5px}
+.brand-copy strong{font-size:clamp(26px,3vw,34px);font-weight:850;letter-spacing:-1.15px;line-height:1.1}
+.brand-copy span{font-size:14px;letter-spacing:.015em;color:var(--df-muted)}
+.topbar .icon-button{height:49px;width:49px;border-radius:15px;background:linear-gradient(150deg,#29343c,#141c22);border-color:#3b4850;box-shadow:inset 0 1px 0 #ffffff16}
+.topbar .icon-button svg{width:21px;height:21px}
+#page-journal.page{max-width:1010px;padding:0 26px 132px}
+.df-date-bar{display:flex;align-items:center;justify-content:flex-start;gap:11px;margin:3px 0 16px}
+.df-date-bar .date-center{min-width:0;width:auto;text-align:left}
+.df-date-bar .eyebrow{color:#85eab1;letter-spacing:.1em;font-size:10px}
+.df-date-bar .date-title{font-size:14px;font-weight:650;color:#dce9e9;margin-top:2px;letter-spacing:0}
+.df-date-bar .chevron{border:1px solid #33484c;border-radius:12px;width:39px;height:39px;min-height:39px;min-width:39px;background:#1a2a30;font-size:24px;line-height:1}
+.df-date-bar .small-chevron{font-size:13px;padding-left:6px}
+.df-hero{
+  border:1px solid rgba(149,191,172,.2);border-top:1px solid rgba(126,226,167,.24);
+  border-radius:26px;
+  background:radial-gradient(ellipse 590px 360px at 18% 3%,rgba(35,113,90,.20),transparent 78%),
+             linear-gradient(155deg,#1c292b 0%,#172227 54%,#131a21 100%);
+  box-shadow:0 12px 32px #0007,inset 0 1px 0 #ffffff12;
+  padding:21px 26px 18px;
+}
+.df-hero-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.df-label{font-size:11px;font-weight:800;letter-spacing:.16em;color:#9bebb9}
+.df-hero-live{display:flex;align-items:center;gap:7px;color:#a8beaf;font-size:11px}
+.df-signal-dot{width:6px;height:6px;background:#64e39c;border-radius:50%;box-shadow:0 0 10px #64e39c88}
+.df-hero .hero-main{
+  display:grid;grid-template-columns:minmax(190px,.80fr) minmax(0,1.2fr);
+  justify-content:initial;align-items:center;gap:clamp(22px,4vw,52px);
+  padding:22px 0 18px;
+}
+.df-hero .ring{
+  --progress:0deg;
+  margin:auto;
+  width:min(100%,250px);aspect-ratio:1;
+  background:conic-gradient(from -90deg,var(--df-green) 0deg,var(--df-green) var(--progress),rgba(213,225,221,.17) var(--progress),rgba(213,225,221,.17) 360deg);
+  box-shadow:0 0 54px #2deb7910,0 0 0 1px #baffcf09;
+  transition:--progress .7s cubic-bezier(.22,.8,.24,1);
+}
+.df-hero .ring:before{inset:15px;background:radial-gradient(circle at 50% 10%,#1a2b2b,#0e171b 80%);box-shadow:inset 0 0 12px #0006}
+.df-hero .ring-number{font-size:clamp(43px,5vw,56px);font-weight:850;color:#fff;letter-spacing:-2px}
+.df-hero .ring-unit{font-size:17px;letter-spacing:.02em;color:#c0ccd0}
+.df-hero-right{min-width:0;border-left:1px solid rgba(188,217,204,.23);padding-left:clamp(17px,3vw,32px)}
+.df-goals{display:grid;gap:14px;border-bottom:1px solid rgba(207,229,218,.13);padding:1px 0 18px}
+.df-goal-line{display:flex;gap:11px;align-items:center;font-size:clamp(13px,2vw,19px);line-height:1.32;color:#b7c4c9;white-space:normal}
+.df-goal-line svg{flex:0 0 23px;width:23px;height:23px;fill:none;stroke:#89f3b2;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.1}
+.df-goal-line strong{font-weight:800;color:#f5faf6;font-variant-numeric:tabular-nums}
+.df-goal-line strong.df-remaining{color:var(--df-soft);font-size:1.1em}
+.df-hero .macro-grid{
+ display:grid;grid-template-columns:minmax(0,1fr);gap:13px;
+ padding:17px 0 0;border:0;min-width:0;
+}
+.df-macro{min-width:0}
+.df-hero .macro-head{display:flex;flex-direction:row;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 7px}
+.df-hero .macro-head span{font-size:14px;font-weight:750;color:#f7faf9}
+.df-hero .macro-head b{font-size:14px;font-weight:700;color:#d6e0e3;white-space:nowrap;font-variant-numeric:tabular-nums}
+.df-hero .macro-track{height:9px;background:#3e474c;border-radius:99px}
+.df-hero .fill{background:linear-gradient(90deg,#87f6a1,#2ddd73);border-radius:99px;transition:width .35s ease}
+.df-hero .macro-over{background:#d38970}
+.df-hero .macro-footer{display:flex;align-items:center;justify-content:space-between;min-height:13px;margin-top:3px}
+.df-hero .macro-footer small{font-size:10px;color:#9fadb0}
+.df-hero .macro-footer .macro-excess-note{color:#ffb29c}
+.df-hero-actions{display:grid;grid-template-columns:1.3fr 1fr;gap:12px;margin:11px 0 0}
+.df-hero-actions button{border-radius:16px;min-height:62px;display:flex;justify-content:center;align-items:center;gap:10px;padding:12px 13px;font-size:clamp(14px,1.9vw,18px);font-weight:790;line-height:1.2;letter-spacing:-.15px;transition:transform .14s ease,filter .14s ease}
+.df-action-main{background:linear-gradient(140deg,#52ee85 0%,#1bc764 100%);border:1px solid #66f39c;color:#07381b;box-shadow:0 9px 21px #15c65f20,inset 0 1px 0 #ffffff55}
+.df-action-main .df-action-icon{height:29px;width:29px;border-radius:50%;display:grid;place-items:center;font-size:24px;font-weight:700;background:#fff;color:#25b960;line-height:1}
+.df-action-quick{background:linear-gradient(145deg,#2a3939,#1e252b);border:1px solid #596662;color:#e1ece7;box-shadow:inset 0 1px 0 #ffffff17}
+.df-flash{color:#86f2ad;font-size:31px;line-height:.9}
+.df-hero-actions button:active{transform:scale(.984)}
+.df-ean-link{display:block;text-align:center;margin:10px auto 0;padding:5px 12px;min-height:32px;color:#b7c6c7;font-size:12px;font-weight:650;border:0;background:transparent}
+.df-ean-link:hover{color:#a6f8c2}
+.df-hero .macro-warning{margin:6px 0 0;font-size:12px}
+.df-meals-heading{display:flex;align-items:end;margin:27px 2px 13px;gap:12px}
+.df-meals-heading h2{font-size:clamp(23px,2.5vw,29px);font-weight:800;letter-spacing:-.8px;margin:0}
+.df-meals-heading p{font-size:12px;color:#9eafb6;line-height:1.4;margin:5px 0 0}
+.df-meals-heading .text-button{font-size:13px;white-space:nowrap;color:#8df1b4}
+.df-meals{display:flex;flex-direction:column;gap:11px}
+.df-meal-card{border:1px solid rgba(182,205,212,.15);background:linear-gradient(125deg,#232b32,#161e25);border-radius:19px;box-shadow:inset 0 1px 0 #ffffff0b,0 7px 18px #0002;min-height:0;overflow:hidden}
+.df-meal-row{display:flex;align-items:center;min-width:0}
+.df-meal-toggle{border:0;background:transparent;color:#f6faf9;text-align:left;display:flex;align-items:center;flex:1;min-width:0;gap:clamp(9px,2vw,17px);padding:10px 12px;min-height:92px}
+.df-meal-toggle:active{background:#ffffff09}
+.df-meal-art{display:grid;place-items:center;flex:0 0 70px;width:70px;height:70px;border-radius:15px;border:1px solid #ffffff20;overflow:hidden;box-shadow:inset 0 1px 4px #ffffff14,0 3px 13px #0004;isolation:isolate;position:relative}
+.df-meal-art:before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 30% 10%,#ffffff35,transparent 55%)}
+.df-meal-art .df-food-emoji{font-size:42px;filter:drop-shadow(0 4px 2px #0009)}
+.df-art-breakfast{background:radial-gradient(circle at 50% 60%,#b4a476,#3c3429 62%,#20222a)}
+.df-art-lunch{background:radial-gradient(circle at 50% 70%,#67794d,#263b30 62%,#202a2b)}
+.df-art-dinner{background:radial-gradient(circle at 50% 65%,#56845c,#293d2e 64%,#1a2a28)}
+.df-art-snack{background:radial-gradient(circle at 50% 70%,#8d6841,#3b3129 60%,#20252a)}
+.df-meal-info{min-width:0;flex:1;display:grid;gap:4px}
+.df-meal-info strong{font-size:clamp(16px,2.4vw,20px);letter-spacing:-.3px;line-height:1.16;font-weight:800}
+.df-meal-info small{font-size:clamp(11px,1.7vw,13px);color:#b3c0c7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.df-meal-energy{display:flex;align-items:center;gap:10px;margin-left:auto;white-space:nowrap;font-size:clamp(14px,2vw,18px);font-weight:760;font-variant-numeric:tabular-nums}
+.df-meal-energy small{font-size:.78em;font-weight:500;color:#c1cbd1}
+.df-meal-chevron{font-size:26px;color:#a7b5ba;display:block;line-height:1;transition:transform .2s ease}
+.df-meal-toggle[aria-expanded="true"] .df-meal-chevron{transform:rotate(90deg)}
+.df-meal-plus{border:0;border-left:1px solid #ffffff16;background:transparent;color:#92f6b6;min-height:46px;height:58px;min-width:45px;display:grid;place-items:center;margin:0 9px 0 0;font-size:26px;line-height:1;border-radius:8px}
+.df-meal-plus:hover{background:#ffffff0b}
+.df-meal-details{border-top:1px solid #ffffff15;padding:4px 16px 14px;background:#101a2188}
+.df-meal-details[hidden]{display:none!important}
+.df-meal-details .meal-items{padding:0}
+.df-meal-details .meal-entry{border-color:#ffffff12}
+.df-meal-details .meal-entry-open{min-height:52px}
+.df-meal-details .meal-entry-text strong{font-size:13px}
+.df-meal-details .meal-entry-text small{font-size:11px}
+.df-meal-details .meal-utilities{padding:6px 0;margin-top:8px}
+.df-meal-details .meal-add{width:100%;margin:10px 0 0;min-height:44px}
+.df-meal-details .meal-empty{padding:13px 0;font-size:13px}
+.df-water{margin:19px 0 13px;padding:18px 20px;border:1px solid rgba(173,199,202,.16);background:linear-gradient(125deg,#222b31,#161e25);border-radius:22px;box-shadow:inset 0 1px 0 #ffffff12}
+.df-water .water-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.df-water-title{display:flex;align-items:center;gap:12px;min-width:0}
+.df-water-icon{width:56px;height:56px;border-radius:17px;display:grid;place-items:center;font-size:34px;color:#c3f8da;flex:0 0 56px;background:linear-gradient(160deg,#386f4e,#193d35);border:1px solid #ffffff19}
+.df-water h2{font-size:19px;letter-spacing:-.3px;margin:0 0 4px}
+.df-water-numbers{display:flex;align-items:baseline;font-size:14px;color:#aebfc7;white-space:nowrap}
+.df-water-numbers strong{font-size:19px;color:#e9f9f1;font-variant-numeric:tabular-nums}
+.df-water .water-actions{display:flex;flex:0 0 auto;gap:9px;margin:0}
+.df-water .water-actions .secondary-button{background:linear-gradient(120deg,#234a38,#202d2b);border:1px solid #50735e;color:#e0fae9;font-weight:750;font-size:13px;min-height:44px;padding:9px 13px;margin:0;border-radius:12px}
+.df-water .water-track{height:10px;margin:15px 0 0;background:#3d474c;border-radius:99px}
+.df-water .water-fill{background:linear-gradient(90deg,#8ef7ab,#24d36f);border-radius:99px;transition:width .3s ease}
+.df-water-more{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;color:#b3c2c8;font-size:11px}
+.df-water-more .water-form{display:flex;align-items:center;gap:8px;max-width:210px;margin:0 auto 0 0}
+.df-water-more .water-form input{min-width:80px;width:90px;margin:0;min-height:41px}
+.df-water-more .water-form button{padding:8px 12px;min-height:41px}
+.df-water-more #undoWater{margin-left:auto}
+.df-diary-facts{margin:16px 0 4px;grid-template-columns:1fr 1fr 1.4fr}
+.df-diary-facts .np-snapshot-item{background:#151e26;border:1px solid #ffffff12;padding:10px 13px;border-radius:12px}
+.df-diary-facts .np-snapshot-item span{font-size:11px}
+.df-diary-facts .np-snapshot-item strong{font-size:15px}
+.df-save-state{font-size:11px!important;background:#142923!important;color:#b9e8cd!important;border:1px solid #2a5b47!important;margin:13px 0 10px!important}
+.df-save-state.np21-error{background:#3e292a!important;color:#ffd3d3!important;border-color:#ae7676!important}
+.df-bottom-nav{min-height:76px;border-top:1px solid #334348;background:rgba(12,18,23,.96);box-shadow:0 -9px 30px #0004;padding:8px 0 max(9px,env(safe-area-inset-bottom))}
+.df-bottom-nav .nav-item{position:relative;width:clamp(65px,18.7vw,138px);min-height:59px;gap:6px;padding:5px 0 7px;color:#b4bec3;font-size:12px;font-weight:650}
+.df-bottom-nav .nav-item.selected{color:#63ee95}
+.df-bottom-nav .nav-item.selected:after{content:"";position:absolute;bottom:0;left:31%;right:31%;height:3px;border-radius:99px;background:#57ed8e}
+.df-nav-icon{display:block;width:24px;height:24px;flex-shrink:0}
+.df-bottom-nav .nav-symbol{display:none}
+#page-journal .bottom-hint{font-size:11px;line-height:1.5}
+@media(hover:hover){.df-meal-toggle:hover,.df-bottom-nav .nav-item:hover{background:#ffffff07}.df-hero-actions button:hover{filter:brightness(1.08)}}
+@media(max-width:630px){
+ .topbar{height:80px;padding:8px 18px 0}
+ .brand-copy strong{font-size:27px}
+ .brand-copy span{font-size:13px}
+ #page-journal.page{padding:0 13px 122px}
+ .df-date-bar{margin:0 0 12px;gap:9px}
+ .df-date-bar .date-title{font-size:12px}
+ .df-date-bar .eyebrow{font-size:9px}
+ .df-hero{padding:14px 14px 12px;border-radius:22px}
+ .df-label{font-size:10px}
+ .df-hero .hero-main{grid-template-columns:minmax(0,41%) minmax(0,59%);gap:0;padding:15px 0 10px}
+ .df-hero .ring{width:min(100%,153px)}
+ .df-hero .ring:before{inset:10px}
+ .df-hero .ring-number{font-size:clamp(29px,8.1vw,41px)}
+ .df-hero .ring-unit{font-size:12px}
+ .df-hero-right{padding-left:12px}
+ .df-goals{gap:8px;padding-bottom:11px}
+ .df-goal-line{font-size:12px;gap:6px}
+ .df-goal-line svg{width:16px;height:16px;flex-basis:16px;stroke-width:2}
+ .df-hero .macro-grid{gap:9px;padding-top:10px}
+ .df-hero .macro-head{margin:0 0 5px;gap:4px}
+ .df-hero .macro-head span{font-size:11px}
+ .df-hero .macro-head b{font-size:11px}
+ .df-hero .macro-track{height:7px}
+ .df-hero .macro-footer{min-height:12px}
+ .df-hero .macro-footer small{font-size:9px}
+ .df-hero-actions{gap:8px;margin-top:12px}
+ .df-hero-actions button{min-height:52px;font-size:13px;border-radius:13px;padding:8px 7px;gap:6px}
+ .df-action-main .df-action-icon{width:23px;height:23px;font-size:19px}
+ .df-flash{font-size:23px}
+ .df-ean-link{font-size:11px}
+ .df-meals-heading{margin:21px 2px 12px}
+ .df-meals-heading h2{font-size:22px}
+ .df-meals-heading p{font-size:11px}
+ .df-meal-toggle{min-height:76px;padding:8px 10px;gap:10px}
+ .df-meal-art{flex-basis:58px;width:58px;height:58px;border-radius:13px}
+ .df-meal-art .df-food-emoji{font-size:35px}
+ .df-meal-info strong{font-size:16px}
+ .df-meal-info small{font-size:11px}
+ .df-meal-energy{gap:5px;font-size:15px}
+ .df-meal-plus{min-width:39px;font-size:22px;margin:0 6px 0 0}
+ .df-meals{gap:9px}
+ .df-water{padding:15px 14px;border-radius:18px;margin:15px 0}
+ .df-water .water-actions{gap:6px}
+ .df-water .water-actions .secondary-button{font-size:12px;padding:8px 8px;min-height:43px}
+ .df-water-icon{height:43px;width:43px;flex-basis:43px;font-size:26px;border-radius:12px}
+ .df-water h2{font-size:16px}
+ .df-water-numbers strong{font-size:15px}
+ .df-water-numbers{font-size:12px}
+ .df-bottom-nav .nav-item{font-size:10px;min-height:56px}
+ .df-nav-icon{height:23px;width:23px}
+}
+@media(max-width:380px){
+ .df-hero .hero-main{grid-template-columns:minmax(0,39%) minmax(0,61%)}
+ .df-hero-right{padding-left:9px}
+ .df-hero .ring-number{font-size:29px}
+ .df-goal-line{font-size:11px}
+ .df-hero .macro-head span{font-size:10.5px}
+ .df-hero .macro-head b{font-size:10.5px}
+ .df-hero .macro-footer small{font-size:8.5px}
+ .df-meal-art{flex-basis:48px;width:48px;height:48px}
+ .df-meal-art .df-food-emoji{font-size:29px}
+ .df-meal-toggle{gap:7px;padding:8px}
+ .df-meal-energy{font-size:13px}
+ .df-meal-info strong{font-size:14px}
+ .df-meal-plus{min-width:32px;margin-right:4px}
+ .df-water .water-top{flex-wrap:wrap}
+ .df-water .water-actions{width:100%;justify-content:flex-end}
+}
+@media(max-width:338px){
+ .df-hero .hero-main{grid-template-columns:minmax(0,1fr);gap:13px}
+ .df-hero .ring{width:165px}
+ .df-hero-right{border-left:0;border-top:1px solid #ffffff25;padding:13px 0 0}
+ .df-goals{grid-template-columns:1fr 1fr}
+ .df-goal-line{font-size:11px}
+ .df-goal-line svg{display:none}
+ .df-hero-actions{grid-template-columns:1fr}
+ .df-meal-info strong{font-size:13px}
+ .df-meal-energy{font-size:12px}
+ .df-meal-energy small{display:none}
+ .df-meal-plus{min-width:30px}
+}
+@media(prefers-reduced-motion:reduce){
+ .df-hero .ring,.df-hero .fill,.df-water .water-fill,.df-meal-chevron,.df-hero-actions button{transition:none!important}
+}
+
+/* Original local SVG meal art: consistent imagery with no network requests. */
+.df-meal-art .df-meal-photo{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
