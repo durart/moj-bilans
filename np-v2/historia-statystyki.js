@@ -30,9 +30,9 @@
     const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12);
     if (Number.isNaN(end.getTime())) throw new RangeError('Nieprawidłowa data.');
     let start;
-    if (period === '7d' || period === '14d') {
+    if (period === '7d' || period === '14d' || period === '30d') {
       start = new Date(end);
-      start.setDate(start.getDate() - (period === '7d' ? 6 : 13));
+      start.setDate(start.getDate() - (period === '7d' ? 6 : period === '14d' ? 13 : 29));
     } else if (period === '1m' || period === '6m' || period === '1y') {
       start = shiftMonths(end, period === '1m' ? -1 : period === '6m' ? -6 : -12);
       start.setDate(start.getDate() + 1);
@@ -49,14 +49,14 @@
       if (!entry || typeof entry.date !== 'string' || entry.date < from || entry.date > to || !parseDate(entry.date)) continue;
       const grams = Number(entry.grams);
       if (!Number.isFinite(grams) || grams <= 0) continue;
-      if (!days.has(entry.date)) days.set(entry.date, { date: entry.date, items: 0, totals: zero() });
+      if (!days.has(entry.date)) days.set(entry.date, { date: entry.date, items: 0, totals: zero(), kcalComplete: true });
       const day = days.get(entry.date);
       day.items += 1;
       let incomplete = false;
       for (const key of KEYS) {
         const value = entry.nutrients?.[key];
         const per100 = value === null || value === undefined || value === '' ? NaN : Number(value);
-        if (!Number.isFinite(per100) || per100 < 0) { incomplete = true; continue; }
+        if (!Number.isFinite(per100) || per100 < 0) { incomplete = true; if (key === 'kcal') day.kcalComplete = false; continue; }
         day.totals[key] += per100 * grams / 100;
       }
       if (incomplete) incompleteEntries += 1;
