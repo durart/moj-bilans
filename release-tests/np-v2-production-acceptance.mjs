@@ -38,6 +38,8 @@ try{
  });
  await verify('Existing saved meal, goals, weights and measurements display',async()=>{
   assert.equal(await page.locator('#npFoodCount').innerText(),'1');
+  assert.equal(await page.locator('#npMealCount').innerText(),'1 / 4');
+  assert.match(await page.locator('#npBudgetStatus').innerText(),/kcal do celu/);
   assert.match(await page.locator('#goalInline').innerText(),/2.?150/);
   assert.match(await page.locator('#mealsContainer').innerText(),/Poprzedni wpis - zachowaj/);
   await page.locator('.nav-item[data-page="weight"]').click();
@@ -89,7 +91,7 @@ try{
   await page.reload({waitUntil:'networkidle'});
   assert.equal(await page.locator('#npFoodCount').innerText(),'2');
   await page.waitForFunction(async()=>{
-   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-np-v2-release1');
+   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-np-v2-release2');
   },null,{timeout:30000});
   const reg=await page.evaluate(async()=>{
    const r=await navigator.serviceWorker.getRegistration('./');return {scope:r?.scope,script:r?.active?.scriptURL};

@@ -1,5 +1,5 @@
-const CACHE = 'moj-bilans-cache-np-v2-release1';
-const STATIC = ['./', './index.html', './style.css', './np-design.css', './np-trends.js', './np-ui.js', './wyszukiwarka.css', './app.js', './historia-statystyki.js', './ostatnie-dziennik.js', './interfejs-wyszukiwarki.mjs', './wyszukiwarka.mjs', './produkty-podstawowe.mjs', './owoce-warzywa.mjs', './pieczywo-biedronka.mjs', './sery-zolte.mjs', './polskie-produkty.mjs', './polskie-dania.mjs', './produkty-z-etykiet.mjs', './baleron.mjs', './cebularz.mjs', './katalog-produktow.mjs', './walidacja-zywnosci.mjs', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE = 'moj-bilans-cache-np-v2-release2';
+const STATIC = ['./', './index.html', './style.css', './np-design.css?v=np2.0.1', './np-trends.js?v=np2.0.1', './np-ui.js?v=np2.0.1', './wyszukiwarka.css', './app.js?v=np2.0.1', './historia-statystyki.js', './ostatnie-dziennik.js', './interfejs-wyszukiwarki.mjs?v=np2.0.1', './wyszukiwarka.mjs', './produkty-podstawowe.mjs', './owoce-warzywa.mjs', './pieczywo-biedronka.mjs', './sery-zolte.mjs', './polskie-produkty.mjs', './polskie-dania.mjs', './produkty-z-etykiet.mjs', './baleron.mjs', './cebularz.mjs', './katalog-produktow.mjs', './walidacja-zywnosci.mjs', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', evt => {
   evt.waitUntil(caches.open(CACHE).then(cache => cache.addAll(STATIC)).then(() => self.skipWaiting()));
 });

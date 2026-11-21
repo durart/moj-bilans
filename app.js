@@ -1206,7 +1206,7 @@
     // v0.6: podłącz zintegrowaną wyszukiwarkę (ziemniaki/produkty podstawowe + OFF).
     // Jeśli moduł się nie załaduje, zachowaj starą wyszukiwarkę, aby nie blokować dziennika.
     $('#searchForm').addEventListener('submit', searchName);
-    import('./interfejs-wyszukiwarki.mjs').then(({ mountFoodSearch }) => {
+    import('./interfejs-wyszukiwarki.mjs?v=np2.0.1').then(({ mountFoodSearch }) => {
       $('#searchForm').removeEventListener('submit', searchName);
       mountFoodSearch({
         form: $('#searchForm'), input: $('#searchName'), results: $('#searchResults'),

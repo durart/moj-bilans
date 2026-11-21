@@ -25,3 +25,8 @@ Nowy Design System, podsumowanie dnia, szybkie akcje, gramatury 50/100/150/200 g
 
 ## Po publikacji
 Otwórz produkcję (również z ikony PWA), sprawdź stare wpisy i masę ciała. Następnie przetestuj nowy produkt i zrób kopię JSON. Gdy widoczny jest stary interfejs, zamknij i otwórz PWA ponownie; nie czyść danych aplikacji.
+
+## Hotfix 2.0.1 — synchronizacja zasobów PWA
+Po zmianie wizualnej z 2.0 część urządzeń mogła połączyć nowy HTML ze starszą wersją `app.js`. Nowe kafelki były wtedy wyświetlane z wartościami domyślnymi 0/4, 0 i „—”, podczas gdy główny bilans działał poprawnie. To problem plików interfejsu, a nie reset danych.
+
+Hotfix zmienia adresy nowych skryptów i arkusza CSS na `?v=np2.0.1`, aktualizuje precache usługi Service Worker do `moj-bilans-cache-np-v2-release2` i wyświetla „—” zamiast fałszywych zer, dopóki JavaScript nie odczyta danych. Zachowane klucze localStorage/IndexedDB, manifest PWA, format kopii i dziennika. Dla zainstalowanej PWA po publikacji należy ją zamknąć i ponownie uruchomić przy aktywnym internecie. Nie usuwać danych aplikacji.
