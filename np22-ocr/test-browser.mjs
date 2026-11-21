@@ -82,6 +82,54 @@ try{
     assert.equal(await page.locator('#kcal').inputValue(),'450');
     assert.equal(await page.locator('#resultKcal').innerText(),'90');
   });
+  await verify('Kadrowanie palcem i drugi przebieg OCR odzyskują tabelę 100 ml oraz porcję 15 ml',async()=>{
+    await page.reload({waitUntil:'networkidle'});
+    await page.evaluate(()=>{
+      window.__ocrCalls=[];
+      window.Tesseract={createWorker:async()=>({
+        setParameters:async()=>{},
+        recognize:async(canvas)=>{
+          window.__ocrCalls.push({width:canvas.width,height:canvas.height});
+          if(window.__ocrCalls.length===1)return {data:{text:'Winiary butelka spożywcza'}};
+          return {data:{text:[
+            'w 100 ml | w 1 porcji (15 ml)',
+            'Wartość energetyczna 2898 kJ 432 kJ',
+            '704 kcal 105 kcal',
+            'Tłuszcz 76,3 g 11,4 g',
+            'Węglowodany 2,9 g 0,4 g',
+            'Białko 1,5 g 0,2 g'
+          ].join('\n')}};
+        },terminate:async()=>{}
+      })};
+    });
+    const photo=Buffer.from(await page.evaluate(()=>{
+      const canvas=document.createElement('canvas');canvas.width=900;canvas.height=1200;
+      const c=canvas.getContext('2d');c.fillStyle='#f8f1de';c.fillRect(0,0,900,1200);
+      c.fillStyle='#111';c.font='26px sans-serif';c.fillText('Wartość energetyczna',270,460);
+      return canvas.toDataURL('image/png').split(',')[1];
+    }),'base64');
+    await page.locator('#photoInput').setInputFiles({name:'etykieta.png',mimeType:'image/png',buffer:photo});
+    await page.waitForFunction(()=>!document.getElementById('recognizeBtn').disabled);
+    const rect=await page.locator('#photoCanvas').boundingBox();
+    assert.ok(rect.width>150 && rect.height>150);
+    await page.mouse.move(rect.x+rect.width*.15,rect.y+rect.height*.15);
+    await page.mouse.down();
+    await page.mouse.move(rect.x+rect.width*.85,rect.y+rect.height*.85,{steps:5});
+    await page.mouse.up();
+    assert.equal(await page.locator('#cropSelection').isVisible(),true);
+    await page.locator('#recognizeBtn').click();
+    await page.waitForFunction(()=>document.getElementById('ocrStatus').textContent.includes('4/4'),null,{timeout:20000});
+    assert.equal(await page.locator('#kcal').inputValue(),'704');
+    assert.equal(await page.locator('#protein').inputValue(),'1.5');
+    assert.equal(await page.locator('#fat').inputValue(),'76.3');
+    assert.equal(await page.locator('#carbs').inputValue(),'2.9');
+    assert.equal(await page.locator('#basis').inputValue(),'ml');
+    const calls=await page.evaluate(()=>window.__ocrCalls);
+    assert.equal(calls.length,2);
+    assert.ok(calls.every(x=>x.width>0&&x.height>0));
+    await page.locator('#clearCropBtn').click();
+    assert.equal(await page.locator('#cropSelection').isVisible(),false);
+  });
   await verify('Nie ma błędów JS, PWA ani niekontrolowanej synchronizacji z produkcją',async()=>{
     assert.deepEqual(errors,[]);
     assert.equal(await page.evaluate(()=>localStorage.getItem('moj-bilans-v1')),'production-diary-sentinel');
