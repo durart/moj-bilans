@@ -1,0 +1,26 @@
+{
+  "name": "Mój Bilans — Nutrition Performance v2 TEST",
+  "short_name": "Bilans NP TEST",
+  "description": "Oddzielna testowa aplikacja NP v2 — własny dziennik i cache",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a1420",
+  "theme_color": "#0a1420",
+  "lang": "pl",
+  "icons": [
+    {
+      "src": "../icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
