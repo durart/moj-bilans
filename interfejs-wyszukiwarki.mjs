@@ -86,7 +86,7 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
         card.append(link);
       }
       if (item.category==='bakery' && item.sourceUrl) {
-        const link=node('a','food-off-link',item.verification==='bakery-card'?'Źródło wartości odżywczych':'Dane na stronie Biedronki');
+        const link=node('a','food-off-link',item.verification==='bakery-card'?'Źródło wartości odżywczych':item.verification==='estimated-generic'?'Podstawa szacunku':'Dane na stronie Biedronki');
         link.href=item.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';
         card.append(link);
       }
