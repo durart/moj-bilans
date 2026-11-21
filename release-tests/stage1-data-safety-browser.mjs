@@ -65,7 +65,7 @@ try{
    assert.equal(item.verification,'ean-photo-macro-estimate');
    assert.equal(item.nutrients.kcal,515);
    assert.deepEqual(data.entries.find(e=>e.id===existing.id),existing);
-   await page.locator('[data-togglemeal="breakfast"]').click();
+   if(await page.locator('[data-togglemeal="breakfast"]').getAttribute('aria-expanded')!=='true') await page.locator('[data-togglemeal="breakfast"]').click();
    await page.locator('[data-viewentry="'+item.id+'"]').click();
    assert.match(await page.locator('#entrySummary').innerText(),/Wartości orientacyjne/);
    await page.locator('#closeEntry').click();
@@ -84,7 +84,7 @@ try{
  });
  await verify('Failed edit does not mutate saved entry or close dialog',async()=>{
    const data=await stored(),item=data.entries.find(e=>e.ean==='5900571906099');
-   await page.locator('[data-togglemeal="breakfast"]').click();
+   if(await page.locator('[data-togglemeal="breakfast"]').getAttribute('aria-expanded')!=='true') await page.locator('[data-togglemeal="breakfast"]').click();
    await page.locator('[data-viewentry="'+item.id+'"]').click();
    await page.locator('#entryEdit').click();
    await page.locator('#entryGrams').fill('200');
