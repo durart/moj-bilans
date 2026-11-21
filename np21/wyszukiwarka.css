@@ -1,0 +1,29 @@
+/* Minimalne style komponentu wyszukiwarki Mój Bilans v0.6.
+   Można je nadpisać istniejącym motywem aplikacji. */
+.food-card {
+  border: 1px solid var(--mb-border, #60758b);
+  background: var(--mb-card, #192435);
+  color: var(--mb-text, #f1f5fb);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 10px 0;
+}
+.food-head { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.food-brand { display:block; opacity:.7; font-size:.78em; margin-top:2px; }
+.food-source { font-size:.72em; border:1px solid currentColor; border-radius:20px; padding:2px 7px; opacity:.75; }
+.food-macros { font-variant-numeric:tabular-nums; line-height:1.4; margin:10px 0 4px; }
+.food-detail { opacity:.7; font-size:.82em; margin:0 0 9px; }
+.food-action { cursor:pointer; border:0; border-radius:10px; padding:8px 14px; font:inherit; background:#c6e6ff; color:#15304a; }
+.food-action:disabled { opacity:.5; cursor:default; }
+.empty { opacity:.7; }
+
+/* v0.8 beta: jeden wspólny katalog, opcjonalne filtrowanie sklepów. */
+.food-catalog-panel { margin: 14px 0; padding: 14px; border:1px solid rgba(115,217,184,.3); border-radius:15px; background:rgba(30,60,55,.2); }
+.food-catalog-head { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+.food-catalog-head small { opacity:.7; }
+.food-catalog-panel p.help { margin:9px 0 11px; }
+.food-filter-label {display:block;margin:12px 0 5px;font-weight:600;font-size:.9em;}
+.food-filter-select {width:100%;min-height:46px;padding:8px 12px;border:1px solid #47616f;border-radius:11px;background:#0d1e2a;color:#e1e9ef;font:inherit;}
+.food-off-link {display:inline-block;font-size:.8em;margin-left:12px;color:#a0edda;}
+.food-action {background:#76e2bd;color:#102322;}
+.food-card:has(.food-action:disabled) {border-color:#a0785e;}
