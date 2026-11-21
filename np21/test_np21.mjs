@@ -24,7 +24,7 @@ check('Potwierdzony zapis i uczciwe komunikaty',()=>{
  assert.match(app,/saveStatus\('Dziennik zapisany/);
  for(const id of ['np21SaveStatus','np21SaveInline','np21BackupHealth'])
    assert.ok(html.includes('id="'+id+'"'));
- assert.match(app,/Kopia lokalna może być nieaktualna/);
+ assert.match(app,/Lokalna kopia może być nieaktualna/);
 });
 check('Kontrola zapisu punktu przywracania i integralności',()=>{
  assert.match(app,/readback\.json !== record\.json/);
