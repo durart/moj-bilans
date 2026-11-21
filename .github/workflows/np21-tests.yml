@@ -1,0 +1,37 @@
+name: Moj Bilans v2.1 isolated acceptance
+on:
+  push:
+    branches:
+      - feature/moj-bilans-v2.1
+    paths:
+      - 'np21/**'
+      - '.github/workflows/np21-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static isolation and code checks
+        run: node np21/test_np21.mjs
+      - name: Existing production regression
+        run: npm test
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright test dependency
+        run: npm install --no-save --package-lock=false playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: E2E isolated data, backup, PWA and corruption test
+        run: node np21/test_browser_np21.mjs
