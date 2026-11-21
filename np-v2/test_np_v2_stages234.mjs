@@ -17,6 +17,11 @@ check('Stage 2: gram presets route to the existing portion calculation',()=>{
  assert.match(app,/syncProductPortionFields\(\)/);
  assert.match(html,/Nie przeliczamy na sztuki bez potwierdzonej masy/);
 });
+check('UI events: all portion preset buttons are bound before later forms',()=>{
+ assert.match(app,/\$\$\('\[data-np-grams\]'\)\.forEach/);
+ assert.doesNotMatch(app,/(?<!\$)\$\('[^']+'\)\.forEach/);
+ assert.match(app,/\$\('#weightEntryForm'\)\.addEventListener\('submit', saveWeight\)/);
+});
 check('Stage 3: no network in input handler, online on submit only',()=>{
  const live=ui.slice(ui.indexOf('function showLocalSuggestions()'),ui.indexOf('async function handleSubmit(event)'));
  assert.ok(live.includes('searchBasicFoods')&&live.includes('searchFoodCatalog'));
