@@ -88,6 +88,19 @@ try {
     }
     await page.setViewportSize({width:390,height:844});
   });
+  verify('Layout parity: Daily Focus and Premium Food Search, all sprint sections',async ()=>{
+    assert.equal(await page.locator('#page-journal.df-journal').isVisible(),true);
+    assert.equal(await page.locator('.df-hero').count(),1);
+    assert.ok(await page.locator('.df-bottom-nav').count()>0);
+    await page.locator('#npQuickAdd').click();
+    assert.equal(await page.locator('.pfs-modal').isVisible(),true);
+    await page.locator('#modalClose').click();
+    await page.locator('[data-page="history"]').click();
+    assert.equal(await page.locator('#npAnalyticsTitle').isVisible(),true);
+    await page.locator('[data-page="weight"]').click();
+    assert.equal(await page.locator('#npBodyTitle').isVisible(),true);
+    await page.locator('[data-page="journal"]').click();
+  });
   verify('Quick actions: Ostatnie i EAN uruchamiają poprawne zakładki',async ()=>{
     await page.locator('#npQuickRecent').click();
     assert.equal(await page.locator('#mode-recent').isVisible(),true);
@@ -192,7 +205,7 @@ try {
       if(!('serviceWorker' in navigator))return false;
       const keys=await caches.keys();
       return !!navigator.serviceWorker.controller &&
-        keys.includes('moj-bilans-np-v2-cache-body25');
+        keys.includes('moj-bilans-np-v2-cache-layout-parity-v1');
     },null,{timeout:30000});
     const reg=await page.evaluate(async ()=>{
       const x=await navigator.serviceWorker.getRegistration('./');
