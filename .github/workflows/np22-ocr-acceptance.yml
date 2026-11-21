@@ -1,0 +1,36 @@
+name: OCR v2.2 - isolated acceptance
+on:
+  push:
+    branches:
+      - fix/np22-ocr-crop-parser-20261121
+    paths:
+      - 'np22-ocr/**'
+      - '.github/workflows/np22-ocr-acceptance.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  parser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify split energy rows, two columns and safety
+        run: node np22-ocr/test-parser.mjs
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Isolated browser dependency
+        run: npm install --no-save --package-lock=false playwright
+      - name: Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Test crop and OCR fallback on mobile
+        run: node np22-ocr/test-browser.mjs
