@@ -1,10 +1,10 @@
-import {parseNutritionLabel,calculatePortion,validateNutrition} from './label-parser.js?v=1';
+import {parseNutritionLabel,calculatePortion,validateNutrition} from './label-parser.js?v=2';
 const $=id=>document.getElementById(id);
 const STORE='moj-bilans-np22-ocr-tests-v1';
 const CDN='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
 const MAX_PHOTO=12*1024*1024;
 const format=new Intl.NumberFormat('pl-PL',{maximumFractionDigits:2});
-const state={image:null,angle:0,running:false,worker:null,warnings:[]};
+const state={image:null,angle:0,running:false,worker:null,warnings:[],crop:null,drag:null};
 const number=v=>{const t=String(v??'').trim().replace(',','.');return t&&Number.isFinite(Number(t))?Number(t):null;};
 function message(id,value,type=''){const el=$(id);el.textContent=value;el.classList.remove('error','success');if(type)el.classList.add(type);}
 function getValues(){return Object.fromEntries(['kcal','protein','fat','carbs'].map(k=>[k,number($(k).value)]));}
@@ -41,6 +41,59 @@ async function loadImage(file){
     img.src=url;
   });
 }
+const clamp01=v=>Math.max(0,Math.min(1,v));
+function renderCrop(){
+  const el=$('cropSelection'),crop=state.crop;
+  el.hidden=!crop;
+  if(crop){
+    el.style.left=(crop.x*100)+'%';el.style.top=(crop.y*100)+'%';
+    el.style.width=(crop.w*100)+'%';el.style.height=(crop.h*100)+'%';
+  }
+  $('clearCropBtn').hidden=!crop;
+  $('cropHint').textContent=crop
+    ? 'Zaznaczona część zdjęcia będzie użyta do OCR. Możesz zaznaczyć tabelę ponownie.'
+    : 'Przeciągnij palcem po zdjęciu, aby zaznaczyć samą tabelę. Bez zaznaczenia skanowane jest całe zdjęcie.';
+}
+const photoPoint=e=>{
+  const rect=$('photoCanvas').getBoundingClientRect();
+  return {x:clamp01((e.clientX-rect.left)/rect.width),y:clamp01((e.clientY-rect.top)/rect.height)};
+};
+$('photoCanvas').addEventListener('pointerdown',e=>{
+  if(!state.image||state.running)return;
+  e.preventDefault();state.drag={point:photoPoint(e),id:e.pointerId};
+  state.crop=null;renderCrop();$('photoCanvas').setPointerCapture(e.pointerId);
+});
+$('photoCanvas').addEventListener('pointermove',e=>{
+  if(!state.drag||state.drag.id!==e.pointerId)return;
+  const start=state.drag.point,end=photoPoint(e);
+  state.crop={x:Math.min(start.x,end.x),y:Math.min(start.y,end.y),w:Math.abs(end.x-start.x),h:Math.abs(end.y-start.y)};
+  renderCrop();
+});
+function endCrop(e){
+  if(!state.drag||state.drag.id!==e.pointerId)return;
+  state.drag=null;if(!state.crop||state.crop.w<.08||state.crop.h<.08)state.crop=null;
+  renderCrop();
+}
+$('photoCanvas').addEventListener('pointerup',endCrop);
+$('photoCanvas').addEventListener('pointercancel',endCrop);
+$('clearCropBtn').addEventListener('click',()=>{state.crop=null;renderCrop();});
+function makeOcrCanvas(enhanced=false){
+  const src=$('photoCanvas'),r=state.crop||{x:0,y:0,w:1,h:1};
+  const sx=Math.max(0,Math.floor(r.x*src.width)),sy=Math.max(0,Math.floor(r.y*src.height));
+  const sw=Math.max(1,Math.min(src.width-sx,Math.ceil(r.w*src.width)));
+  const sh=Math.max(1,Math.min(src.height-sy,Math.ceil(r.h*src.height)));
+  const scale=Math.min(3.5,Math.max(1,1550/Math.max(sw,sh)),2500/Math.max(sw,sh));
+  const cv=document.createElement('canvas');cv.width=Math.round(sw*scale);cv.height=Math.round(sh*scale);
+  const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.drawImage(src,sx,sy,sw,sh,0,0,cv.width,cv.height);
+  const pixels=ctx.getImageData(0,0,cv.width,cv.height),d=pixels.data;
+  for(let i=0;i<d.length;i+=4){
+    const gray=d[i]*.299+d[i+1]*.587+d[i+2]*.114;
+    const value=Math.max(0,Math.min(255,enhanced?(gray-125)*2.05+156:(gray-125)*1.18+132));
+    d[i]=value;d[i+1]=value;d[i+2]=value;
+  }
+  ctx.putImageData(pixels,0,0);return cv;
+}
 function draw(){
   const img=state.image;if(!img)return;
   const scale=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));
@@ -57,16 +110,19 @@ function draw(){
     }
     ctx.putImageData(pixels,0,0);
   }
+  renderCrop();
 }
 $('photoInput').addEventListener('change',async e=>{
   const file=e.target.files?.[0];if(!file)return;
   if(!file.type.startsWith('image/')||file.size>MAX_PHOTO){message('ocrStatus','Wybierz zdjęcie do 12 MB.','error');return;}
-  state.image=null;state.angle=0;$('recognizeBtn').disabled=true;
+  state.image=null;state.angle=0;state.crop=null;state.drag=null;$('recognizeBtn').disabled=true;
+  $('rawText').value='';$('basis').value='';for(const k of ['kcal','protein','fat','carbs'])$(k).value='';
+  state.warnings=[];$('confirmed').checked=false;render();renderCrop();
   message('ocrStatus','Wczytuję zdjęcie…');
   try{state.image=await loadImage(file);draw();$('previewWrap').hidden=false;$('recognizeBtn').disabled=false;message('ocrStatus','Zdjęcie gotowe. Uruchom rozpoznawanie.');}
   catch(err){message('ocrStatus',err.message,'error');}
 });
-$('rotateBtn').addEventListener('click',()=>{state.angle=(state.angle+90)%360;draw();});
+$('rotateBtn').addEventListener('click',()=>{state.angle=(state.angle+90)%360;state.crop=null;draw();});
 $('contrastToggle').addEventListener('change',draw);
 function loadScript(){
   if(window.Tesseract?.createWorker)return Promise.resolve(window.Tesseract);
@@ -88,6 +144,7 @@ async function ocrWorker(){
       }else if(m.status)message('ocrStatus','OCR: '+m.status);
     }
   });
+  try{await state.worker.setParameters?.({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});}catch{}
   return state.worker;
 }
 $('recognizeBtn').addEventListener('click',async()=>{
@@ -96,9 +153,22 @@ $('recognizeBtn').addEventListener('click',async()=>{
   message('ocrStatus','Pobieram model OCR (pierwszy raz wymaga internetu)…');
   try{
     const worker=await ocrWorker();
-    const r=await worker.recognize($('photoCanvas'));const text=String(r?.data?.text||'').trim();
-    if(!text)throw Error('Nie rozpoznano tekstu. Spróbuj zdjęcia z bliższej odległości.');
-    $('rawText').value=text;message('ocrStatus','Tekst odczytany na urządzeniu. Sprawdź wartości.','success');parse();
+    const candidates=[];
+    for(const [index,enhanced] of [false,true].entries()){
+      message('ocrStatus',index===0?'Odczyt tabeli: próba 1/2…':'Odczyt tabeli: poprawiam kontrast (2/2)…');
+      const response=await worker.recognize(makeOcrCanvas(enhanced));
+      const text=String(response?.data?.text||'').trim(),parsed=parseNutritionLabel(text);
+      const score=parsed.fieldsDetected*100+(parsed.basis?25:0)+Math.min(text.length,200)/200;
+      candidates.push({text,parsed,score});if(parsed.complete)break;
+    }
+    candidates.sort((a,b)=>b.score-a.score);
+    const best=candidates[0];
+    if(!best?.text)throw Error('Nie rozpoznano tekstu. Zaznacz palcem samą tabelę i spróbuj ponownie.');
+    $('rawText').value=best.text;parse();
+    message('ocrStatus',best.parsed.fieldsDetected===0
+      ? 'Odczyt nie znalazł wartości odżywczych. Zaznacz palcem tylko tabelę na zdjęciu, a następnie spróbuj ponownie.'
+      : 'Wykryto '+best.parsed.fieldsDetected+'/4 wartości. Sprawdź każdą liczbę i kolumnę na oryginalnej etykiecie.',
+      best.parsed.complete?'success':'error');
   }catch(err){
     message('ocrStatus','Błąd OCR: '+(err?.message||'nieznany')+'. Możesz wpisać etykietę ręcznie.','error');
     if(state.worker){try{await state.worker.terminate();}catch{}state.worker=null;}
