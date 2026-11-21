@@ -1227,7 +1227,7 @@
     $('#productForm').addEventListener('submit', onAddProduct);
     $('#backToLookup').addEventListener('click', backToLookup);
     $('#productGrams').addEventListener('input', syncProductPortionFields);
-    $('[data-np-grams]').forEach(button => button.addEventListener('click', () => {
+    $$('[data-np-grams]').forEach(button => button.addEventListener('click', () => {
       $('#productGrams').value = button.dataset.npGrams;
       syncProductPortionFields();
       $('#productGrams').focus({ preventScroll: true });

@@ -29,3 +29,10 @@ SVG trendu kcal wyliczony wyłącznie z rzeczywistych wpisów; brak danych nie j
 5. Historia 7/14 dni i własny zakres; słupek dla okresu bez wpisów ma być pusty, średnia nie może zawierać pustych dni.
 6. Dodaj dwa testowe ważenia i dwa obwody; sprawdź delty, wpisy i wykresy.
 7. Zamknij aplikację, uruchom ponownie, sprawdź zapis i offline; porównaj dane produkcyjne / przed i po (bez zmian).
+
+## Etap 5 — automatyczny odbiór Chromium
+Wykonano 10 testów E2E w przeglądarce Chromium: start bez danych, RWD 320/375/390/430/1280 px, ostatnie i EAN, lokalne „ziemniaki” bez wywołań API podczas pisania, porcja 150 g z przeliczeniem kcal, zapis i szczegóły wpisu, trend historii, ważenia i obwody, trwałość danych po odświeżeniu, oddzielne dane produkcji, prawdziwy tryb offline Service Workera oraz brak błędów JavaScript.
+
+Wykryto i naprawiono błąd nasłuchiwania kliknięć w przyciskach gramatury, który blokował inicjalizację dalszych formularzy. Potwierdzono 10/10 testów przeglądarkowych i testy regresyjne. Zmieniono nazwę cache do `moj-bilans-np-v2-cache-stage5` dla bezpiecznej aktualizacji PWA w obrębie własnego scope.
+
+Testy uruchamiane na osobnej gałęzi przez `.github/workflows/np-v2-browser.yml`; screenshoty trzech rozdzielczości dostępne jako artefakty GitHub Actions. Przed zakończeniem odbioru użytkowego zalecana jest kontrola na własnym telefonie z realną klawiaturą dotykową i zgodą aparatu. Nie używać danych produkcyjnych w testach.
