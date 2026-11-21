@@ -7,7 +7,7 @@
   <meta name="description" content="Odizolowany prototyp OCR etykiet dla Mojego Bilansu. Zdjęcia analizowane na urządzeniu.">
   <title>Mój Bilans — OCR etykiety v2.2 TEST</title>
   <link rel="icon" href="../icons/icon-192.png">
-  <link rel="stylesheet" href="./style.css?v=2">
+  <link rel="stylesheet" href="./style.css?v=3">
 </head>
 <body>
   <header class="topbar">
@@ -19,8 +19,21 @@
     <div class="heading"><span class="eyebrow">OCR ETYKIET / LOCAL-FIRST</span><h1>Dodaj produkt ze zdjęcia</h1><p>Zrób zdjęcie tabeli wartości odżywczych, sprawdź odczytane dane i wpisz, ile zjadłeś.</p></div>
     <section class="panel" aria-labelledby="photoTitle">
       <div class="section-heading"><span class="step">01</span><div><h2 id="photoTitle">Zdjęcie etykiety</h2><p>W kadrze powinna być przede wszystkim tabela na 100 g lub 100 ml.</p></div></div>
-      <label class="upload" for="photoInput"><span aria-hidden="true">▣</span><strong>Wybierz zdjęcie lub otwórz aparat</strong><small>JPG, PNG, HEIC (jeśli telefon obsługuje) · maks. 12 MB</small></label>
-      <input id="photoInput" type="file" accept="image/*" capture="environment" aria-label="Zdjęcie tabeli wartości odżywczych">
+      <div class="upload-options" role="group" aria-label="Sposób dodania zdjęcia etykiety">
+        <label class="upload-option camera-option" for="cameraInput">
+          <span class="upload-icon" aria-hidden="true">📷</span>
+          <strong>Zrób zdjęcie aparatem</strong>
+          <small>Uruchom aparat telefonu</small>
+          <input id="cameraInput" type="file" accept="image/*" capture="environment" aria-label="Zrób nowe zdjęcie aparatem">
+        </label>
+        <label class="upload-option gallery-option" for="photoInput">
+          <span class="upload-icon" aria-hidden="true">🖼️</span>
+          <strong>Załącz zdjęcie z galerii lub plików</strong>
+          <small>Wybierz istniejące zdjęcie z urządzenia</small>
+          <input id="photoInput" type="file" accept="image/*" aria-label="Załącz istniejące zdjęcie z galerii lub plików">
+        </label>
+      </div>
+      <p class="upload-help">Format JPG, PNG lub HEIC, jeśli urządzenie obsługuje · maks. 12 MB</p>
       <div class="preview-wrap" id="previewWrap" hidden><div class="image-stage"><div class="photo-frame"><canvas id="photoCanvas" aria-label="Zdjęcie. Przesuń palcem, aby zaznaczyć tabelę wartości odżywczych."></canvas><div id="cropSelection" class="crop-selection" hidden aria-hidden="true"></div></div></div>
         <div class="preview-controls"><button type="button" id="rotateBtn" class="button subtle">↻ Obróć o 90°</button><label class="switch"><input id="contrastToggle" type="checkbox"> Zwiększ kontrast</label><button type="button" id="clearCropBtn" class="button subtle" hidden>Usuń zaznaczenie</button></div><p id="cropHint" class="fine" aria-live="polite">Przeciągnij palcem po zdjęciu, aby zaznaczyć samą tabelę.</p>
       </div>
@@ -59,6 +72,6 @@
     <section class="panel" aria-labelledby="diaryTitle"><div class="section-heading"><span class="step">05</span><div><h2 id="diaryTitle">Testowy dziennik</h2><p>Wpisy z tego prototypu nie trafią do aplikacji produkcyjnej.</p></div></div><div id="testDiary" class="diary"></div><button type="button" class="button danger" id="clearDiary">Usuń wpisy testowe</button></section>
     <footer>Prototyp v2.2 OCR · Wyłącznie testy · Odczyt wartości może wymagać korekty · <a href="../">Wróć do Mojego Bilansu</a></footer>
   </main>
-  <script type="module" src="./app.js?v=2"></script>
+  <script type="module" src="./app.js?v=3"></script>
 </body>
 </html>

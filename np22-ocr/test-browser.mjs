@@ -64,6 +64,30 @@ try{
     assert.equal(await page.locator('#protein').inputValue(),'');
     assert.equal(await page.locator('#saveBtn').isDisabled(),true);
   });
+  await verify('Dwa widoczne źródła zdjęcia: aparat oraz załącznik z galerii/plików bez wymuszania kamery',async()=>{
+    const camera=page.locator('#cameraInput'),gallery=page.locator('#photoInput');
+    assert.equal(await camera.getAttribute('capture'),'environment');
+    assert.equal(await gallery.getAttribute('capture'),null);
+    assert.equal(await gallery.getAttribute('accept'),'image/*');
+    assert.equal(await page.locator('.upload-option').count(),2);
+    assert.equal(await page.getByText('Zrób zdjęcie aparatem').isVisible(),true);
+    assert.equal(await page.getByText('Załącz zdjęcie z galerii lub plików').isVisible(),true);
+    const chooserPromise=page.waitForEvent('filechooser',{timeout:10000});
+    await page.locator('.gallery-option').click();
+    const chooser=await chooserPromise;
+    assert.equal(chooser.isMultiple(),false);
+    const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLrVQAAAABJRU5ErkJggg==','base64');
+    await chooser.setFiles({name:'z-galerii.png',mimeType:'image/png',buffer:png});
+    await page.waitForFunction(()=>document.getElementById('ocrStatus').textContent.includes('załączone'));
+    assert.equal(await page.locator('#recognizeBtn').isEnabled(),true);
+    assert.equal(await page.locator('#previewWrap').isVisible(),true);
+    // This is the native camera input, tested with a supplied mock photo because CI has no physical camera.
+    await camera.setInputFiles({name:'z-aparatu.png',mimeType:'image/png',buffer:png});
+    await page.waitForFunction(()=>document.getElementById('ocrStatus').textContent.includes('załączone'));
+    assert.equal(await page.locator('#recognizeBtn').isEnabled(),true);
+    assert.equal(await camera.inputValue(),'');
+    assert.equal(await gallery.inputValue(),'');
+  });
   await verify('Kadr z aparatu obsługiwany i OCR uruchomiony lokalnie (zamockowany silnik)',async()=>{
     await page.evaluate(()=>{
       window.Tesseract={createWorker:async()=>({

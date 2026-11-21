@@ -112,16 +112,28 @@ function draw(){
   }
   renderCrop();
 }
-$('photoInput').addEventListener('change',async e=>{
-  const file=e.target.files?.[0];if(!file)return;
-  if(!file.type.startsWith('image/')||file.size>MAX_PHOTO){message('ocrStatus','Wybierz zdjęcie do 12 MB.','error');return;}
-  state.image=null;state.angle=0;state.crop=null;state.drag=null;$('recognizeBtn').disabled=true;
-  $('rawText').value='';$('basis').value='';for(const k of ['kcal','protein','fat','carbs'])$(k).value='';
+async function onPhotoSelected(e){
+  const input=e.currentTarget;
+  const file=input.files?.[0];
+  // Pozwól ponownie wybrać ten sam plik — przy ponownym teście OCR to częsty scenariusz.
+  input.value='';
+  if(!file)return;
+  if(!file.type.startsWith('image/')||file.size>MAX_PHOTO){
+    message('ocrStatus','Wybierz plik zdjęcia (JPG/PNG lub obsługiwane HEIC) do 12 MB.','error');return;
+  }
+  state.image=null;state.angle=0;state.crop=null;state.drag=null;
+  $('recognizeBtn').disabled=true;$('previewWrap').hidden=true;
+  $('rawText').value='';$('basis').value='';
+  for(const k of ['kcal','protein','fat','carbs'])$(k).value='';
   state.warnings=[];$('confirmed').checked=false;render();renderCrop();
   message('ocrStatus','Wczytuję zdjęcie…');
-  try{state.image=await loadImage(file);draw();$('previewWrap').hidden=false;$('recognizeBtn').disabled=false;message('ocrStatus','Zdjęcie gotowe. Uruchom rozpoznawanie.');}
-  catch(err){message('ocrStatus',err.message,'error');}
-});
+  try{
+    state.image=await loadImage(file);
+    draw();$('previewWrap').hidden=false;$('recognizeBtn').disabled=false;
+    message('ocrStatus','Zdjęcie załączone. Możesz zaznaczyć tabelę i uruchomić rozpoznawanie.','success');
+  }catch(err){message('ocrStatus',err.message,'error');}
+}
+for(const id of ['cameraInput','photoInput'])$(id).addEventListener('change',onPhotoSelected);
 $('rotateBtn').addEventListener('click',()=>{state.angle=(state.angle+90)%360;state.crop=null;draw();});
 $('contrastToggle').addEventListener('change',draw);
 function loadScript(){

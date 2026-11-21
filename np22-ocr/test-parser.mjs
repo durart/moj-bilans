@@ -89,6 +89,6 @@ check('Brak połączeń z produkcyjnym magazynem danych',()=>{
   assert.ok(app.includes('makeOcrCanvas'));
   assert.ok(app.includes('cropSelection'));
   assert.ok(html.includes('cropHint'));
-  assert.match(html,/app.js\?v=2/);
+  assert.match(html,/app.js\?v=3/);
 });
 console.log('OCR parser: '+passed+' tests passed');

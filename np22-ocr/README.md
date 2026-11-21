@@ -9,3 +9,6 @@ Izolacja: zdjęcie jest przetwarzane w przeglądarce. Prototyp używa tylko kluc
 Biblioteka OCR, WebAssembly i modele językowe są pobierane z publicznych serwerów CDN przy pierwszym użyciu. Zdjęcie nie jest przesyłane do płatnego API. Zewnętrzny kod jest wykonywany lokalnie. Funkcja OCR wymaga internetu przy pierwszym użyciu; pełna obsługa offline i dokładność na rzeczywistych etykietach pozostają do sprawdzenia.
 
 Parser nie uzupełnia fikcyjnych zer, sygnalizuje brak danych lub podejrzane kolumny. Zawsze sprawdź OCR z oryginalnym opakowaniem. Zapisy są wyłącznie testowe, bez synchronizacji z produkcją.
+
+## v2.2.2 — osobny wybór aparatu i załącznika
+Rozdzielono dwie kontrolki: aparat (z capture=environment) i wybór istniejącego zdjęcia z galerii/plików (bez capture). Obie ścieżki mają wspólny handler, czyszczą wartość inputu aby możliwy był ponowny wybór tej samej fotografii, i nie korzystają z produkcyjnego magazynu danych. Testy UI sprawdzają dostępność obu opcji i natywny dialog wyboru pliku.
