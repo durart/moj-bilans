@@ -73,7 +73,7 @@ check('pięć okresów i własny zakres obecne w interfejsie', () => {
 check('karty średnich makro obecne w interfejsie', () => {
   for (const id of ['historyAverage', 'historyProtein', 'historyFat', 'historyCarbs']) assert.ok(index.includes('id="' + id + '"'));
 });
-check('skrypt statystyk uruchamia się przed aplikacją', () => assert.ok(index.indexOf('src="./historia-statystyki.js"') < index.indexOf('src="./app.js?v=pi2.4.0"')));
+check('skrypt statystyk uruchamia się przed aplikacją', () => assert.ok(index.indexOf('src="./historia-statystyki.js"') < index.indexOf('src="./app.js?v=bp2.5.0"')));
 check('Historia obsługuje zmianę okresu', () => assert.ok(app.includes("button.dataset.historyPeriod") && app.includes("historyFrom').addEventListener")));
 check('PWA buforuje statystyki historii offline', () => assert.ok(sw.includes("'./historia-statystyki.js?v=pi2.4.0'")));
 check('zachowany format kopii danych użytkownika', () => assert.ok(app.includes('moj-bilans-v1')));
