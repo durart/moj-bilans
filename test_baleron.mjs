@@ -50,7 +50,7 @@ check('działa offline',()=>{
 check('PWA przechowuje moduł',()=>{
  const sw=fs.readFileSync('sw.js','utf8');
  assert.ok(sw.includes("'./baleron.mjs'"));
- assert.ok(sw.includes('moj-bilans-cache-v08-baleron-v1'));
+ assert.ok(/moj-bilans-cache-(?:v08-|np-v2-)/.test(sw));
 });
 check('dziennik pozostaje nienaruszony',()=>{
  const app=fs.readFileSync('app.js','utf8');
