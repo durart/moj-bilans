@@ -7,7 +7,7 @@
   <meta name="description" content="Odizolowany prototyp OCR etykiet dla Mojego Bilansu. Zdjęcia analizowane na urządzeniu.">
   <title>Mój Bilans — OCR etykiety v2.2 TEST</title>
   <link rel="icon" href="../icons/icon-192.png">
-  <link rel="stylesheet" href="./style.css?v=1">
+  <link rel="stylesheet" href="./style.css?v=2">
 </head>
 <body>
   <header class="topbar">
@@ -21,8 +21,8 @@
       <div class="section-heading"><span class="step">01</span><div><h2 id="photoTitle">Zdjęcie etykiety</h2><p>W kadrze powinna być przede wszystkim tabela na 100 g lub 100 ml.</p></div></div>
       <label class="upload" for="photoInput"><span aria-hidden="true">▣</span><strong>Wybierz zdjęcie lub otwórz aparat</strong><small>JPG, PNG, HEIC (jeśli telefon obsługuje) · maks. 12 MB</small></label>
       <input id="photoInput" type="file" accept="image/*" capture="environment" aria-label="Zdjęcie tabeli wartości odżywczych">
-      <div class="preview-wrap" id="previewWrap" hidden><canvas id="photoCanvas" aria-label="Podgląd fotografii do rozpoznania OCR"></canvas>
-        <div class="preview-controls"><button type="button" id="rotateBtn" class="button subtle">↻ Obróć o 90°</button><label class="switch"><input id="contrastToggle" type="checkbox"> Zwiększ kontrast</label></div>
+      <div class="preview-wrap" id="previewWrap" hidden><div class="image-stage"><div class="photo-frame"><canvas id="photoCanvas" aria-label="Zdjęcie. Przesuń palcem, aby zaznaczyć tabelę wartości odżywczych."></canvas><div id="cropSelection" class="crop-selection" hidden aria-hidden="true"></div></div></div>
+        <div class="preview-controls"><button type="button" id="rotateBtn" class="button subtle">↻ Obróć o 90°</button><label class="switch"><input id="contrastToggle" type="checkbox"> Zwiększ kontrast</label><button type="button" id="clearCropBtn" class="button subtle" hidden>Usuń zaznaczenie</button></div><p id="cropHint" class="fine" aria-live="polite">Przeciągnij palcem po zdjęciu, aby zaznaczyć samą tabelę.</p>
       </div>
       <button type="button" id="recognizeBtn" class="button primary block" disabled>Rozpoznaj tekst na zdjęciu</button>
       <div id="ocrProgress" class="progress" hidden><div id="progressBar" class="progress-bar"></div></div>
@@ -59,6 +59,6 @@
     <section class="panel" aria-labelledby="diaryTitle"><div class="section-heading"><span class="step">05</span><div><h2 id="diaryTitle">Testowy dziennik</h2><p>Wpisy z tego prototypu nie trafią do aplikacji produkcyjnej.</p></div></div><div id="testDiary" class="diary"></div><button type="button" class="button danger" id="clearDiary">Usuń wpisy testowe</button></section>
     <footer>Prototyp v2.2 OCR · Wyłącznie testy · Odczyt wartości może wymagać korekty · <a href="../">Wróć do Mojego Bilansu</a></footer>
   </main>
-  <script type="module" src="./app.js?v=1"></script>
+  <script type="module" src="./app.js?v=2"></script>
 </body>
 </html>
