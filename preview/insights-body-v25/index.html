@@ -188,14 +188,24 @@
             <p id="bp25SummaryText">Dodaj pomiar, aby rozpocząć śledzenie postępu.</p>
           </section>
         <div class="weight-overview"><div class="panel weight-stat"><span>Ostatni pomiar</span><strong id="weightLatest">—</strong><small id="weightLatestDate">Brak danych</small></div><div class="panel weight-stat"><span>Zmiana od początku</span><strong id="weightChange">—</strong><small id="weightChangeHint">Pierwszy pomiar</small></div><div class="panel weight-stat"><span>Cel masy ciała</span><strong id="weightGoalDisplay">90 kg</strong><small id="weightToGoal">Ustaw cel poniżej</small></div><div class="panel weight-stat"><span>Od poprzedniego ważenia</span><strong id="npWeightRecent">—</strong><small id="npWeightRecentDate">Co najmniej dwa pomiary</small></div></div>
-        <form id="weightEntryForm" class="panel compact-form"><h3>Zapisz pomiar</h3><div class="field-row"><label class="field-label">Data<input id="weightDate" type="date" required/></label><label class="field-label">Masa ciała (kg)<input id="weightKg" type="number" min="20" max="400" step="0.1" inputmode="decimal" placeholder="np. 102,5" required/></label></div><button type="submit" class="primary-button wide">Zapisz wagę</button><p class="help">Ponowny zapis w tym samym dniu zastąpi poprzedni pomiar.</p></form>
+        
         <div class="panel weight-chart-panel bp25-chart-panel"><div class="section-title weight-section-title bp25-chart-heading"><div><div class="eyebrow">TREND MASY CIAŁA</div><h2>Trend wagi</h2></div><div class="bp25-periods" role="group" aria-label="Zakres wykresu wagi"><button type="button" class="active" data-bp-range="8w" aria-pressed="true">8 tyg.</button><button type="button" data-bp-range="3m" aria-pressed="false">3 mies.</button><button type="button" data-bp-range="all" aria-pressed="false">Wszystko</button></div></div><div id="weightChart" class="weight-chart"><p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p></div><div id="weightChartCaption" class="chart-caption"></div></div>
+        <form id="weightEntryForm" class="panel compact-form"><h3>Zapisz pomiar</h3><div class="field-row"><label class="field-label">Data<input id="weightDate" type="date" required/></label><label class="field-label">Masa ciała (kg)<input id="weightKg" type="number" min="20" max="400" step="0.1" inputmode="decimal" placeholder="np. 102,5" required/></label></div><button type="submit" class="primary-button wide">Zapisz wagę</button><p class="help">Ponowny zapis w tym samym dniu zastąpi poprzedni pomiar.</p></form>
         <div class="panel compact-form"><form id="weightGoalForm"><h3>Twój cel</h3><label class="field-label">Docelowa masa ciała (kg)<input id="goalWeight" type="number" min="20" max="400" step="0.1" inputmode="decimal" required /></label><button class="secondary-button wide" type="submit">Zapisz cel wagi</button></form></div>
         <h3 class="subheading bp25-subheading">Historia wagi</h3><div id="weightList" class="compact-list"></div>
         </div>
         <div id="bp25MeasureView" class="hidden">
         <div class="body-divider"><span class="eyebrow">NOWOŚĆ W WERSJI 0.3</span><h2>Obwody ciała</h2><p class="help">Mierz zawsze w podobnych warunkach. Każdy obwód możesz zapisać oddzielnie, bez konieczności wpisywania pozostałych.</p></div>
         <div class="measure-overview" id="measurementOverview" aria-label="Ostatnie obwody ciała"></div>
+        
+        <div class="panel weight-chart-panel">
+          <div class="section-title weight-section-title"><div><div class="eyebrow">TRENDY W CENTYMETRACH</div><h2>Wykres obwodów</h2></div></div>
+          <label class="field-label measure-select-label">Wybierz obwód
+            <select id="measurementChartType"><option value="abdomen">Brzuch</option><option value="waist">Talia</option><option value="chest">Klatka piersiowa</option><option value="biceps">Biceps</option><option value="thigh">Udo</option><option value="calf">Łydka</option></select>
+          </label>
+          <div id="measurementChart" class="weight-chart"><p class="empty-chart">Dodaj pomiary, aby zobaczyć wykres.</p></div>
+          <div id="measurementChartCaption" class="chart-caption"></div><p id="npMeasureRecent" class="np-measure-recent" aria-live="polite"></p>
+        </div>
         <form id="measurementForm" class="panel compact-form" autocomplete="off">
           <h3>Dodaj pomiar obwodów</h3>
           <label class="field-label">Data pomiaru<input type="date" id="measurementDate" required/></label>
@@ -210,14 +220,6 @@
           <p class="help">Wpisz co najmniej jeden obwód. Ponowny zapis z tą samą datą aktualizuje pomiary z tego dnia (puste pola usuwają wartości dla tej daty). Zmiana daty wczytuje wcześniejszy wpis do edycji.</p>
           <button type="submit" class="primary-button wide">Zapisz obwody</button>
         </form>
-        <div class="panel weight-chart-panel">
-          <div class="section-title weight-section-title"><div><div class="eyebrow">TRENDY W CENTYMETRACH</div><h2>Wykres obwodów</h2></div></div>
-          <label class="field-label measure-select-label">Wybierz obwód
-            <select id="measurementChartType"><option value="abdomen">Brzuch</option><option value="waist">Talia</option><option value="chest">Klatka piersiowa</option><option value="biceps">Biceps</option><option value="thigh">Udo</option><option value="calf">Łydka</option></select>
-          </label>
-          <div id="measurementChart" class="weight-chart"><p class="empty-chart">Dodaj pomiary, aby zobaczyć wykres.</p></div>
-          <div id="measurementChartCaption" class="chart-caption"></div><p id="npMeasureRecent" class="np-measure-recent" aria-live="polite"></p>
-        </div>
         <h3 class="subheading bp25-subheading">Historia obwodów</h3><div id="measurementList" class="compact-list"></div>
         </div>
       </section>
