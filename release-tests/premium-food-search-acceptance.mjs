@@ -57,7 +57,7 @@ try{
   assert.match(await page.locator('#searchResults').innerText(),/Ziemniaki gotowane/i);
   assert.equal(await page.locator('.pfs-advanced').getAttribute('open'),null);
   const positions=await page.evaluate(()=>({results:document.querySelector('#searchResults').compareDocumentPosition(document.querySelector('.pfs-advanced'))}));
-  assert.ok(positions.results & Node.DOCUMENT_POSITION_FOLLOWING,JSON.stringify(positions));
+  assert.ok(positions.results & 4,JSON.stringify(positions)); // DOCUMENT_POSITION_FOLLOWING
  });
  await verify('Previously used grams are recalled for matching food; presets do not open keyboard',async()=>{
   await page.locator('#searchResults .food-card').filter({hasText:'Ziemniaki gotowane w wodzie'}).first().locator('.food-action').click();
