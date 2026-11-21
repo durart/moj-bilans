@@ -10,6 +10,7 @@ on:
       - 'sw.js'
       - 'test_*.mjs'
       - 'release-tests/**'
+      - 'preview/premium-food-search-v23/**'
       - '.github/workflows/premium-food-search-v23.yml'
   workflow_dispatch:
 permissions:
@@ -43,6 +44,8 @@ jobs:
         run: node release-tests/daily-focus-visual-acceptance.mjs
       - name: Premium Food Search responsive / interaction / screenshots
         run: node release-tests/premium-food-search-acceptance.mjs
+      - name: Isolated public preview / no production diary mutations
+        run: node release-tests/premium-food-search-preview-isolation.mjs
       - name: Upload mobile preview screenshots
         if: always()
         uses: actions/upload-artifact@v4
