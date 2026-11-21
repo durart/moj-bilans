@@ -1,0 +1,77 @@
+/* Historia 2.4 / Nutrition Performance — zachowuje design system testowej PWA. */
+#page-history .page-heading{margin-bottom:19px}
+#page-history .history-range{padding:20px 22px 17px}
+#page-history .history-range-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#page-history .history-range-title h2{font-size:17px;letter-spacing:-.4px}
+#page-history .history-periods{gap:7px;margin-top:14px}
+#page-history .history-periods button{border:1px solid var(--line);background:#152c3a;border-radius:11px;padding:9px 12px;color:var(--muted);font-weight:700;min-height:43px}
+#page-history .history-periods button.active{background:var(--accent);color:#092c22;border-color:var(--accent);box-shadow:0 7px 20px rgba(108,229,183,.18)}
+#page-history .history-range-dates{margin:12px 0 0;color:var(--muted)}
+#page-history .history-summary{padding:19px 20px}
+#page-history .history-averages{gap:11px}
+#page-history .history-average{background:#172e3e;border:1px solid #2a4a58;border-radius:15px;padding:16px;min-width:0}
+#page-history .history-average strong{font-size:clamp(21px,3vw,30px);letter-spacing:-1px}
+#page-history .history-average small{color:var(--muted)}
+.np-analytics{padding:22px 23px;margin-top:16px;background:linear-gradient(145deg,#142c3b,#10222f)}
+.np-analytics-header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
+.np-analytics-header h2{margin:5px 0 0;font-size:21px;letter-spacing:-.6px}
+.np-analytics-tag{white-space:nowrap;border:1px solid #416456;border-radius:50px;background:#193a32;color:#a2e6c9;font-size:11px;padding:7px 11px;font-weight:750}
+.np-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.np-kpi{padding:15px 14px;background:#192e3e;border:1px solid #2d4756;border-radius:15px;min-width:0}
+.np-kpi span{display:block;font-size:11px;color:#a9bdc9;line-height:1.35;margin-bottom:8px}
+.np-kpi strong{display:block;font-size:clamp(18px,2vw,23px);line-height:1.14;letter-spacing:-.6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.np-kpi small{display:block;margin-top:7px;font-size:10px;line-height:1.35;color:#a2b9c7}
+.np-kpi:nth-child(2) strong{color:var(--accent)}
+.np-kpi:nth-child(3) strong{color:var(--orange)}
+.np-analytics-insight{font-size:12px;color:#b6c9d3;line-height:1.7;padding:13px 0 0;margin:0}
+.np-goal-band{display:flex;overflow:hidden;min-height:9px;margin-top:16px;border-radius:99px;background:#243c4b}
+.np-goal-segment{min-width:0;display:block;transition:width .2s ease}
+.np-goal-segment.np-below{background:#65b9f8}
+.np-goal-segment.np-near{background:#6ce5b7}
+.np-goal-segment.np-above{background:#ffb578}
+.np-goal-band-legend{font-size:11px;line-height:1.5;color:#a9bdc9;margin:9px 0 0}
+.np-trend-panel{padding:21px 22px}
+.np-trend-heading h2{font-size:21px;letter-spacing:-.5px;margin-top:5px}
+.np-trend-unit{white-space:nowrap}
+.np-chart-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-color:#476976 transparent}
+.np-chart-scroll svg{display:block;width:100%;min-width:700px;height:auto;max-height:270px}
+.np-history-chart{max-width:100%;min-width:0}
+.np-history-chart .np-trend-legend{display:flex;flex-wrap:wrap;gap:9px 17px;margin:8px 0 0}
+.np-history-chart .np-trend-legend span{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:11px;color:var(--muted)}
+.np-history-chart .np-trend-legend i{width:11px;height:11px;display:inline-block;border-radius:3px}
+.np-history-chart .np-legend-logged{background:var(--accent)}
+.np-history-chart .np-legend-over{background:var(--orange)}
+.np-history-chart .np-legend-empty{border:1px dashed #7593a1}
+.np-history-chart .np-legend-target{height:0!important;border-top:2px dashed var(--orange);border-radius:0!important}
+.np-history-chart .np-legend-average{height:0!important;border-top:2px solid #b4a5f6;border-radius:0!important}
+.np-trend-footnote{font-size:11px;line-height:1.65;margin-top:12px}
+.np-compare-panel{padding:20px 22px;margin-top:15px}
+.np-compare-panel h2{font-size:18px;letter-spacing:-.4px;margin:5px 0 5px}
+.np-compare-panel p{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.5}
+.np-daily-compare{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.np-compare-day{font-family:inherit;display:flex;flex-direction:column;gap:8px;min-width:0;min-height:98px;text-align:left;padding:11px 9px;border-radius:12px;background:#172d3c;border:1px solid #2c4858;color:var(--text);cursor:pointer}
+.np-compare-day:hover{border-color:var(--accent)}
+.np-compare-day:focus-visible{outline:2px solid var(--np-focus);outline-offset:2px}
+.np-compare-day .np-compare-date{font-size:11px;color:#b8c9d5}
+.np-compare-day strong{font-size:13px;white-space:normal;overflow-wrap:anywhere;line-height:1.25;font-variant-numeric:tabular-nums}
+.np-compare-day small{font-size:10px;color:var(--muted);line-height:1.3}
+.np-compare-day.np-near{border-top:3px solid var(--accent)}
+.np-compare-day.np-above{border-top:3px solid var(--orange)}
+.np-compare-day.np-below{border-top:3px solid var(--blue)}
+.np-compare-day.np-missing{border-top:3px dashed #708b9d;opacity:.83}
+.np-compare-day.np-above small{color:var(--orange)}
+#page-history .history-list-heading{margin-top:25px}
+@media(max-width:800px){.np-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.np-daily-compare{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:630px){#page-history .history-range,#page-history .history-summary,.np-analytics,.np-trend-panel,.np-compare-panel{padding:16px}
+  #page-history .history-averages{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #page-history .history-average{padding:13px}
+  .np-analytics-header{align-items:flex-start;flex-wrap:wrap}
+  .np-daily-compare{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .np-compare-day{min-height:82px}
+  .np-compare-day strong{font-size:14px}
+  .np-trend-heading{gap:6px;align-items:flex-start;flex-wrap:wrap}
+  .np-trend-unit{white-space:normal}
+  .np-chart-scroll svg{min-width:620px}
+}
+@media(max-width:355px){.np-kpi{padding:12px 10px}.np-kpi strong{font-size:17px}.np-analytics-tag{font-size:10px}.np-trend-heading h2{font-size:18px}}
+@media(prefers-reduced-motion:reduce){.np-goal-segment{transition:none}}
