@@ -1,0 +1,56 @@
+name: Mój Bilans — Premium Insights 2.4 and Body Progress 2.5
+on:
+  push:
+    branches:
+      - release/insights-v2.4-body-v2.5
+    paths:
+      - 'app.js'
+      - 'index.html'
+      - 'historia-statystyki.js'
+      - 'np-analytics-v24.js'
+      - 'premium-insights.css'
+      - 'sw.js'
+      - 'test_*.mjs'
+      - 'release-tests/**'
+      - '.github/workflows/insights-body.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Data safety and existing tests
+        run: node release-tests/np21-prod-safety.mjs && node release-tests/np-v2-safety.mjs && npm test && node release-tests/insights-unit.mjs
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: npm install --no-save --package-lock=false playwright && npx playwright install --with-deps chromium
+      - name: Original diary and backup acceptance
+        run: node release-tests/np-v2-production-acceptance.mjs
+      - name: Storage fault rollback acceptance
+        run: node release-tests/stage1-data-safety-browser.mjs
+      - name: Daily Focus main screen unchanged
+        run: node release-tests/daily-focus-visual-acceptance.mjs
+      - name: Premium Food Search existing acceptance
+        run: node release-tests/premium-food-search-acceptance.mjs
+      - name: New History 2.4 browser acceptance
+        run: node release-tests/insights-browser.mjs
+      - name: Upload real UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: premium-insights-preview
+          path: test-artifacts/premium-history-*.png
+          if-no-files-found: ignore
