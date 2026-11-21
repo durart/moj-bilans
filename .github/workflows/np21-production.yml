@@ -1,0 +1,46 @@
+name: Moj Bilans v2.1 - production release
+on:
+  push:
+    branches:
+      - release/moj-bilans-v2.1
+    paths:
+      - 'index.html'
+      - 'app.js'
+      - 'np-design.css'
+      - 'pwa-updater.js'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'package.json'
+      - 'test_*.mjs'
+      - 'release-tests/**'
+      - '.github/workflows/np21-production.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static-and-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: New safeguards and original PWA identity
+        run: node release-tests/np21-prod-safety.mjs && node release-tests/np-v2-safety.mjs
+      - name: Existing product, diary and history regressions
+        run: npm test
+  chromium-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Playwright test runner
+        run: npm install --no-save --package-lock=false playwright
+      - name: Install Chromium browser
+        run: npx playwright install --with-deps chromium
+      - name: Test upgrade of existing diary, backup roundtrip and corruption
+        run: node release-tests/np-v2-production-acceptance.mjs

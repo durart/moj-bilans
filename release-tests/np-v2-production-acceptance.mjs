@@ -30,7 +30,7 @@ try{
  },{fixture,sentinel});
  await page.goto(BASE,{waitUntil:'networkidle'});
  await verify('Root URL and original PWA identity',async()=>{
-  assert.match(await page.title(),/Nutrition Performance v2\.0/);
+  assert.match(await page.title(),/Nutrition Performance v2\.1/);
   const manifest=await page.evaluate(async()=>await (await fetch(document.querySelector('link[rel=manifest]').href)).json());
   assert.equal(manifest.id,'./');assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');
   assert.equal(await page.locator('.np-env-banner').count(),0);
@@ -86,12 +86,39 @@ try{
   await page.locator('.nav-item[data-page="settings"]').click();
   assert.equal(await page.locator('#goalKcal').inputValue(),'2150');
   assert.equal(await page.locator('#localBackupRefresh').count(),1);
+  assert.match(await page.locator('#np21SaveStatus').innerText(),/Dziennik zapisany|Wczytano zapisany/);
+  assert.equal(await page.locator('#np21VerifyBackup').count(),1);
+  assert.equal(await page.locator('#np21CheckUpdate').count(),1);
+ });
+ await verify('Readback-confirmed local backup and integrity check without changing entries',async()=>{
+  await page.waitForFunction(()=>document.querySelector('#np21BackupHealth').textContent.includes('Kopia lokalna potwierdzona')
+    ||document.querySelector('#np21BackupHealth').textContent.includes('Ostatnia kopia lokalna'),null,{timeout:20000});
+  const before=await page.evaluate(()=>localStorage.getItem('moj-bilans-v1'));
+  await page.locator('#np21VerifyBackup').click();
+  await page.waitForFunction(()=>document.querySelector('#np21BackupHealth').textContent.includes('Sprawdzono kopię'),null,{timeout:15000});
+  assert.equal(await page.evaluate(()=>localStorage.getItem('moj-bilans-v1')),before);
+ });
+ await verify('Backup JSON dry-run import roundtrip preserves previous product data',async()=>{
+  const data=await page.evaluate(()=>JSON.parse(localStorage.getItem('moj-bilans-v1')));
+  const backup={...data,app:'MojBilans',version:5,exportedAt:new Date().toISOString()};
+  // In CI, only: input a new JSON copy of the existing dummy entries.
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('#importData').setInputFiles({
+    name:'test-backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(backup))
+  });
+  await page.waitForFunction(()=>document.querySelector('#toast').textContent.includes('Przywrócono'),null,{timeout:7000});
+  const after=await page.evaluate(()=>JSON.parse(localStorage.getItem('moj-bilans-v1')));
+  assert.equal(after.entries.length,backup.entries.length);
+  assert.ok(after.entries.some(e=>e.name==='Poprzedni wpis - zachowaj'));
+  assert.ok(after.entries.some(e=>e.name==='Ziemniaki gotowane w wodzie'));
+  assert.equal(after.goals.kcal,2150);
+  assert.equal(after.weights.length,2);
  });
  await verify('Reload and offline support work with original root service worker',async()=>{
   await page.reload({waitUntil:'networkidle'});
   assert.equal(await page.locator('#npFoodCount').innerText(),'2');
   await page.waitForFunction(async()=>{
-   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-np-v2-release3');
+   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-np-v21-release1');
   },null,{timeout:30000});
   const reg=await page.evaluate(async()=>{
    const r=await navigator.serviceWorker.getRegistration('./');return {scope:r?.scope,script:r?.active?.scriptURL};
@@ -108,7 +135,21 @@ try{
   assert.equal(await page.evaluate(()=>localStorage.getItem('moj-bilans-np-v2-v1')),sentinel);
  });
  await context.close();
- console.log('PRODUCTION NP V2: '+passed+' Chromium tests passed');
+ const corruptContext=await browser.newContext({viewport:{width:390,height:844},locale:'pl-PL',serviceWorkers:'block'});
+ const bad=await corruptContext.newPage();
+ await bad.addInitScript(()=>localStorage.setItem('moj-bilans-v1','{"entries":'));
+ await bad.goto(BASE,{waitUntil:'networkidle'});
+ await verify('Corrupt production storage must never be overwritten or exported as empty diary',async()=>{
+  assert.match(await bad.locator('#np21SaveStatus').innerText(),/Zapis zablokowano/);
+  await bad.locator('[data-water="250"]').first().click();
+  assert.equal(await bad.evaluate(()=>localStorage.getItem('moj-bilans-v1')),'{"entries":');
+  await bad.locator('.nav-item[data-page="settings"]').click();
+  await bad.locator('#exportData').click();
+  assert.match(await bad.locator('#downloadStatus').innerText(),/nie eksportowano/i);
+  assert.equal(await bad.evaluate(()=>localStorage.getItem('moj-bilans-v1')),'{"entries":');
+ });
+ await corruptContext.close();
+ console.log('PRODUCTION NP V2.1: '+passed+' Chromium tests passed');
 } finally {
  if(browser)await browser.close();
  if(server){server.kill('SIGTERM');if(server.exitCode===null)await Promise.race([new Promise(r=>server.once('exit',r)),sleep(1000)]);}
