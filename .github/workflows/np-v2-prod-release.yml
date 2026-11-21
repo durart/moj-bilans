@@ -6,6 +6,9 @@ on:
     paths:
       - 'index.html'
       - 'app.js'
+      - 'produkty-podstawowe.mjs'
+      - 'bakador-chili.mjs'
+      - 'test_bakador_chili.mjs'
       - 'interfejs-wyszukiwarki.mjs'
       - 'np-design.css'
       - 'np-trends.js'

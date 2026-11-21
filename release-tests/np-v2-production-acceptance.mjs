@@ -91,7 +91,7 @@ try{
   await page.reload({waitUntil:'networkidle'});
   assert.equal(await page.locator('#npFoodCount').innerText(),'2');
   await page.waitForFunction(async()=>{
-   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-np-v2-release2');
+   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-np-v2-release3');
   },null,{timeout:30000});
   const reg=await page.evaluate(async()=>{
    const r=await navigator.serviceWorker.getRegistration('./');return {scope:r?.scope,script:r?.active?.scriptURL};
