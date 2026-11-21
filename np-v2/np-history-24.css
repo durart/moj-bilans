@@ -41,6 +41,7 @@
 .np-history-chart .np-trend-legend i{width:11px;height:11px;display:inline-block;border-radius:3px}
 .np-history-chart .np-legend-logged{background:var(--accent)}
 .np-history-chart .np-legend-over{background:var(--orange)}
+.np-history-chart .np-legend-under{background:var(--blue)}
 .np-history-chart .np-legend-empty{border:1px dashed #7593a1}
 .np-history-chart .np-legend-target{height:0!important;border-top:2px dashed var(--orange);border-radius:0!important}
 .np-history-chart .np-legend-average{height:0!important;border-top:2px solid #b4a5f6;border-radius:0!important}
