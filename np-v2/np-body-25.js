@@ -5,7 +5,8 @@
   const nf=new Intl.NumberFormat('pl-PL',{maximumFractionDigits:1});
   const nf0=new Intl.NumberFormat('pl-PL',{maximumFractionDigits:0});
   const specs=[['abdomen','Brzuch'],['waist','Talia'],['chest','Klatka piersiowa'],['biceps','Biceps']];
-  const dateOK=key=>/^\d{4}-\d{2}-\d{2}$/.test(String(key||'')) && new Date(key+'T00:00:00Z').toISOString().slice(0,10)===key;
+  const dateOK=key=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(String(key||'')))return false;
+    const day=new Date(key+'T00:00:00Z');return Number.isFinite(day.getTime())&&day.toISOString().slice(0,10)===key;};
   const kgOK=value=>value!==null&&value!==''&&Number.isFinite(Number(value))&&Number(value)>=20&&Number(value)<=400;
   const cmOK=value=>value!==null&&value!==''&&Number.isFinite(Number(value))&&Number(value)>=10&&Number(value)<=300;
   const signed=(value,unit)=>value===null?'—':(value>0?'+':value<0?'−':'')+nf.format(Math.abs(value))+' '+unit;
