@@ -695,23 +695,26 @@
     if (!name) { toast('Podaj nazwę ulubionego posiłku'); return; }
     const duplicate = state.favorites.find(f => f.name.toLocaleLowerCase('pl') === name.toLocaleLowerCase('pl'));
     if (duplicate && !confirm('Taka nazwa już istnieje. Zastąpić zapisany zestaw?')) return;
-    state.favorites = [{ id: duplicate?.id || productId(), name, meal, items: products }, ...state.favorites.filter(f => f.id !== duplicate?.id)];
-    if (save()) { renderAll(); toast('Zapisano ulubiony posiłek'); }
+    if (commitMutation(draft => {
+      draft.favorites = [{ id: duplicate?.id || productId(), name, meal, items: products }, ...draft.favorites.filter(f => f.id !== duplicate?.id)];
+    })) { renderAll(); toast('Zapisano ulubiony posiłek'); }
   }
   function addFavorite(id) {
     const fav = state.favorites.find(f => f.id === id);
     if (!fav || !Array.isArray(fav.items) || !fav.items.length || !mealValid(fav.meal)) return;
     // Zestaw można dodać wielokrotnie świadomie, jak każdy inny posiłek.
     const rows = fav.items.map(e => ({ ...cloneProductEntry(e), id: productId(), date: state.selectedDate, meal: fav.meal }));
-    state.entries.push(...rows);
-    rows.forEach(e => { state.portions[productKey(e)] = e.grams; });
-    if (save()) { showPage('journal'); toast(`Dodano „${fav.name}” (${rows.length} produktów)`); }
+    if (commitMutation(draft => {
+      draft.entries.push(...rows);
+      rows.forEach(e => { draft.portions[productKey(e)] = e.grams; });
+    })) { showPage('journal'); toast(`Dodano „${fav.name}” (${rows.length} produktów)`); }
   }
   function removeFavorite(id) {
     const fav = state.favorites.find(f => f.id === id);
     if (!fav || !confirm(`Usunąć ulubiony posiłek „${fav.name}”? Zapisane w dzienniku produkty pozostaną.`)) return;
-    state.favorites = state.favorites.filter(f => f.id !== id);
-    save(); renderAll(); toast('Usunięto ulubiony posiłek');
+    if (commitMutation(draft => { draft.favorites = draft.favorites.filter(f => f.id !== id); })) {
+      renderAll(); toast('Usunięto ulubiony posiłek');
+    }
   }
   function renderFavoriteQuick() {
     const section = $('#favoriteQuickSection');
@@ -750,9 +753,10 @@
     if (!products.length) { toast('Brak produktów do skopiowania'); return; }
     if (date === state.selectedDate && meal === targetMeal && !confirm('Kopiujesz posiłek do tego samego miejsca. Dodać drugi raz?')) return;
     const rows = products.map(p => ({ ...p, id: productId(), date: state.selectedDate, meal: targetMeal }));
-    state.entries.push(...rows);
-    rows.forEach(row => { state.portions[productKey(row)] = row.grams; });
-    if (save()) { closeCopyDialog(); renderAll(); toast(`Skopiowano ${rows.length} produktów`); }
+    if (commitMutation(draft => {
+      draft.entries.push(...rows);
+      rows.forEach(row => { draft.portions[productKey(row)] = row.grams; });
+    })) { closeCopyDialog(); renderAll(); toast(`Skopiowano ${rows.length} produktów`); }
   }
   // v0.2: ręczny dziennik wody, dzienna suma i cofnięcie ostatniego wpisu.
   function renderWater() {
@@ -765,13 +769,14 @@
   }
   function addWater(ml) {
     if (!Number.isFinite(ml) || ml < 1 || ml > 5000) return;
-    state.water.push({ id: productId(), date: state.selectedDate, ml });
-    if (save()) { renderAll(); toast(`Dodano ${nf.format(ml)} ml wody`); }
+    if (commitMutation(draft => { draft.water.push({ id: productId(), date: draft.selectedDate, ml }); })) {
+      renderAll(); toast(`Dodano ${nf.format(ml)} ml wody`);
+    }
   }
   function undoWater() {
     const i = state.water.map((w, index) => w.date === state.selectedDate ? index : -1).filter(x => x >= 0).pop();
     if (i === undefined) return;
-    state.water.splice(i, 1); save(); renderAll(); toast('Cofnięto ostatni wpis wody');
+    if (commitMutation(draft => { draft.water.splice(i, 1); })) { renderAll(); toast('Cofnięto ostatni wpis wody'); }
   }
   // v0.2: masa ciała, datowany dziennik, proporcjonalna oś czasu i cel.
   function renderWeight() {
@@ -794,7 +799,9 @@
     $('#weightList').innerHTML = sorted.length ? [...sorted].reverse().map(w => `<div class="compact-item"><div><strong>${nf1.format(w.kg)} kg</strong><small>${safeText(niceDate(toDate(w.date)))}</small></div><button type="button" class="danger-quiet" data-removeweight="${safeText(w.date)}">Usuń</button></div>`).join('') : '<div class="empty-list">Nie ma jeszcze pomiarów.</div>';
     $$('[data-removeweight]').forEach(b => b.addEventListener('click', () => {
       if (!confirm(`Usunąć pomiar z dnia ${b.dataset.removeweight}?`)) return;
-      state.weights = state.weights.filter(w => w.date !== b.dataset.removeweight); save(); renderAll(); toast('Pomiar usunięty');
+      if (commitMutation(draft => { draft.weights = draft.weights.filter(w => w.date !== b.dataset.removeweight); })) {
+        renderAll(); toast('Pomiar usunięty');
+      }
     }));
   }
   function buildWeightChart(rows) {
@@ -816,13 +823,14 @@
   function saveWeight(e) {
     e.preventDefault(); const date = $('#weightDate').value, kg = number($('#weightKg').value);
     if (!normalizedDate(date) || kg === null || kg < 20 || kg > 400) { toast('Sprawdź datę i wagę (20–400 kg)'); return; }
-    state.weights = [...state.weights.filter(w => w.date !== date), { date, kg }].sort((a,b) => a.date.localeCompare(b.date));
-    if (save()) { $('#weightKg').value = ''; renderAll(); toast('Waga zapisana'); }
+    if (commitMutation(draft => {
+      draft.weights = [...draft.weights.filter(w => w.date !== date), { date, kg }].sort((a,b) => a.date.localeCompare(b.date));
+    })) { $('#weightKg').value = ''; renderAll(); toast('Waga zapisana'); }
   }
   function saveWeightGoal(e) {
     e.preventDefault(); const value = number($('#goalWeight').value);
     if (value === null || value < 20 || value > 400) { toast('Cel wagi musi wynosić 20–400 kg'); return; }
-    state.weightGoal = value; save(); renderAll(); toast('Cel wagi zapisany');
+    if (commitMutation(draft => { draft.weightGoal = value; })) { renderAll(); toast('Cel wagi zapisany'); }
   }
 
 
@@ -866,8 +874,9 @@
     }));
     $$('[data-removemeasure]').forEach(b => b.addEventListener('click', () => {
       if (!confirm(`Usunąć wszystkie obwody z dnia ${b.dataset.removemeasure}?`)) return;
-      state.measurements = state.measurements.filter(m => m.date !== b.dataset.removemeasure);
-      if (save()) { readMeasurementsAtDate(); renderAll(); toast('Pomiar usunięty'); }
+      if (commitMutation(draft => {
+        draft.measurements = draft.measurements.filter(m => m.date !== b.dataset.removemeasure);
+      })) { readMeasurementsAtDate(); renderAll(); toast('Pomiar usunięty'); }
     }));
   }
   function buildMeasureChart(rows, metric) {
@@ -900,8 +909,9 @@
       row[m.key] = Math.round(value * 10) / 10;
     }
     if (!MEASURES.some(m => row[m.key] !== undefined)) { toast('Podaj co najmniej jeden obwód'); return; }
-    state.measurements = [...state.measurements.filter(m => m.date !== date), row].sort((a, b) => a.date.localeCompare(b.date));
-    if (save()) { renderAll(); toast('Obwody zapisane'); }
+    if (commitMutation(draft => {
+      draft.measurements = [...draft.measurements.filter(m => m.date !== date), row].sort((a, b) => a.date.localeCompare(b.date));
+    })) { renderAll(); toast('Obwody zapisane'); }
   }
 
   // v0.7: edycja dotyczy pojedynczego wpisu. W eksporcie nadal zapisujemy
@@ -1042,18 +1052,12 @@
     }
     const warning=nutritionWarning(nutrients);
     if(warning && !confirm(`⚠️ Podejrzane dane w edytowanym wpisie: ${warning}\n\nCzy mimo to zapisać zmiany?`)) return;
-    const original = { name:e.name, grams:e.grams, date:e.date, meal:e.meal, nutrients:e.nutrients };
-    const pKey = productKey(e);
-    const oldPortion = Object.prototype.hasOwnProperty.call(state.portions, pKey) ? state.portions[pKey] : undefined;
-    Object.assign(e, { name, grams, date, meal, nutrients });
-    const newKey = productKey(e);
-    state.portions[newKey] = grams;
-    if (!save()) {
-      Object.assign(e, original);
-      if (oldPortion === undefined) delete state.portions[pKey]; else state.portions[pKey] = oldPortion;
-      if (newKey !== pKey) delete state.portions[newKey];
-      return;
-    }
+    if (!commitMutation(draft => {
+      const item = draft.entries.find(row => row.id === e.id);
+      if (!item) throw Error('Nie znaleziono edytowanego wpisu.');
+      Object.assign(item, { name, grams, date, meal, nutrients });
+      draft.portions[productKey(item)] = grams;
+    })) return;
     state.selectedDate = date;
     closeEntryDialog(); renderAll();
     toast('Zapisano zmiany tego produktu');
@@ -1071,18 +1075,23 @@
     ev.preventDefault(); const e = chosenEntry(); if (!e) return;
     const targetDate = $('#entryTargetDate').value, targetMeal = $('#entryTargetMeal').value;
     if (!normalizedDate(targetDate) || !mealValid(targetMeal)) {toast('Wybierz poprawny dzień i posiłek');return;}
-    if (transferMode === 'copy') {
-      if (targetDate === e.date && targetMeal === e.meal && !confirm('Dodać drugi taki sam wpis do tego samego posiłku?')) return;
-      state.entries.push({...cloneProductEntry(e), id:productId(), date:targetDate, meal:targetMeal});
-    } else {e.date=targetDate; e.meal=targetMeal;}
-    if (save()) {closeEntryDialog(); renderAll(); toast(transferMode === 'copy' ? 'Skopiowano produkt' : 'Przeniesiono produkt');}
+    if (transferMode === 'copy' && targetDate === e.date && targetMeal === e.meal &&
+        !confirm('Dodać drugi taki sam wpis do tego samego posiłku?')) return;
+    if (commitMutation(draft => {
+      if (transferMode === 'copy') {
+        draft.entries.push({...cloneProductEntry(e), id:productId(), date:targetDate, meal:targetMeal});
+      } else {
+        const item = draft.entries.find(row=>row.id===e.id);
+        if (!item) throw Error('Nie znaleziono wpisu do przeniesienia.');
+        item.date = targetDate; item.meal = targetMeal;
+      }
+    })) {closeEntryDialog(); renderAll(); toast(transferMode === 'copy' ? 'Skopiowano produkt' : 'Przeniesiono produkt');}
   }
   function deleteSelectedEntry() {
     const e=chosenEntry(); if (!e || !confirm(`Usunąć produkt „${e.name}”?`))return;
-    const previous = state.entries;
-    state.entries = state.entries.filter(x => x.id !== e.id);
-    if (save()) { closeEntryDialog(); renderAll(); toast('Usunięto tylko wybrany wpis'); }
-    else state.entries = previous;
+    if (commitMutation(draft => { draft.entries = draft.entries.filter(x => x.id !== e.id); })) {
+      closeEntryDialog(); renderAll(); toast('Usunięto tylko wybrany wpis');
+    }
   }
   function cancelEntryAction() {
     const id = openEntryId;
