@@ -142,9 +142,9 @@ try {
   verify('Sprint 1: Historia 2.4 — 30 dni, porównania, cel, nawigacja',async ()=>{
     await page.locator('.nav-item[data-page="history"]').click();
     await page.locator('[data-history-period="30d"]').click();
-    assert.match(await page.locator('#historyDays').innerText(),/1\\s*\\/\\s*30/);
+    assert.match(await page.locator('#historyDays').innerText(),/1\s*\/\s*30/);
     assert.equal(await page.locator('#npDailyCompare button').count(),7);
-    assert.match(await page.locator('#npGoalWindow').innerText(),/\\d+\\s*\\/\\s*\\d+/);
+    assert.match(await page.locator('#npGoalWindow').innerText(),/\d+\s*\/\s*\d+/);
     assert.equal(await page.locator('#npHistoryChart svg').isVisible(),true);
     for (const width of [320,390,1280]) {
       await page.setViewportSize({width,height:844});
