@@ -98,6 +98,25 @@
       return false;
     }
   };
+  // Zmiany są przygotowane na kopii stanu, zanim nastąpi zapis.
+  // Nieudany zapis nie może udawać sukcesu ani zmieniać danych w pamięci aplikacji.
+  function commitMutation(change) {
+    if (storageFault) return save();
+    const previous = state;
+    let draft;
+    try {
+      draft = JSON.parse(JSON.stringify(previous));
+      change(draft);
+    } catch (err) {
+      saveStatus('Nie można przygotować zmiany: ' + (err?.message || 'błąd danych'), true);
+      toast('Nie udało się przygotować zapisu.');
+      return false;
+    }
+    state = draft;
+    if (save()) return true;
+    state = previous;
+    return false;
+  }
   const toast = text => { const el = $('#toast'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2800); };
   const feedback = text => { $('#feedback').textContent = text || ''; };
   const pct = (value, target) => Math.max(0, Math.min(100, target > 0 ? value / target * 100 : 0));
@@ -116,12 +135,22 @@
   const totalFor = entries => ({ kcal: sum(entries, 'kcal'), protein: sum(entries, 'protein'), carbs: sum(entries, 'carbs'), fat: sum(entries, 'fat') });
   const currentEntries = () => state.entries.filter(entry => entry.date === state.selectedDate);
   const plainNutrients = n => ({ kcal: number(n?.kcal), protein: number(n?.protein), carbs: number(n?.carbs), fat: number(n?.fat) });
+  // Starsze wpisy zachowują swoją strukturę. Nowe mogą przenosić informację
+  // o wiarygodności makro razem z wpisem, ulubionymi i kopią JSON.
+  const productProvenance = p => {
+    const result = {};
+    if (typeof p?.isEstimate === 'boolean') result.isEstimate = p.isEstimate;
+    if (typeof p?.verification === 'string' && p.verification) result.verification = p.verification.slice(0, 80);
+    if (typeof p?.sourceName === 'string' && p.sourceName) result.sourceName = p.sourceName.slice(0, 200);
+    if (typeof p?.sourceUrl === 'string' && /^https:\/\//i.test(p.sourceUrl)) result.sourceUrl = p.sourceUrl.slice(0, 600);
+    return result;
+  };
   const niceDate = date => date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
   const productKey = p => p.ean && /^\d{8,14}$/.test(p.ean) ? `ean:${p.ean}` : `name:${String(p.name || '').trim().toLocaleLowerCase('pl')}|${String(p.brand || '').trim().toLocaleLowerCase('pl')}`;
   const normalizedDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') && dateKey(toDate(d)) === d;
   const mealName = id => MEALS.find(m => m.id === id)?.name || 'Posiłek';
   const goalField = key => `#goal${key === 'fat' ? 'Fats' : key[0].toUpperCase() + key.slice(1)}`;
-  const cloneProductEntry = e => ({ name: e.name, grams: e.grams, nutrients: plainNutrients(e.nutrients), source: e.source || 'Zapisany', brand: e.brand || '', ean: e.ean || '' });
+  const cloneProductEntry = e => ({ name: e.name, grams: e.grams, nutrients: plainNutrients(e.nutrients), source: e.source || 'Zapisany', brand: e.brand || '', ean: e.ean || '', ...productProvenance(e) });
   const entriesFor = (date, meal) => state.entries.filter(e => e.date === date && e.meal === meal);
 
   function renderJournal() {
@@ -321,11 +350,10 @@
     if (sourceDate === state.selectedDate && sourceMeal === targetMeal &&
         !confirm('Dodajesz ponownie cały posiłek do tego samego dnia i kategorii. Kontynuować?')) return;
     const rows = products.map(p => ({ ...p, id: productId(), date: state.selectedDate, meal: targetMeal }));
-    const previousEntries = state.entries, previousPortions = state.portions;
-    state.entries = [...state.entries, ...rows];
-    state.portions = { ...state.portions };
-    rows.forEach(entry => { state.portions[productKey(entry)] = entry.grams; });
-    if (!save()) { state.entries = previousEntries; state.portions = previousPortions; return; }
+    if (!commitMutation(draft => {
+      draft.entries.push(...rows);
+      rows.forEach(entry => { draft.portions[productKey(entry)] = entry.grams; });
+    })) return;
     closeModal();
     showPage('journal');
     toast(`Dodano cały posiłek (${rows.length} produktów)`);
@@ -459,14 +487,19 @@
     }
     const warning=nutritionWarning(nutrients);
     if(warning && !confirm(`⚠️ Podejrzane dane żywieniowe: ${warning}\n\nCzy mimo to zapisać produkt?`)) return;
-    const p = { name, nutrients, source: activeProduct?.source || 'Własny', brand: activeProduct?.brand || '', ean: activeProduct?.ean || '' };
-    state.entries.push({ ...p, id: productId(), date: state.selectedDate, meal: $('#productMeal').value, grams });
-    state.portions[productKey(p)] = grams;
-    state.recent = [p, ...state.recent.filter(item => (p.ean && item.ean ? item.ean !== p.ean : item.name.toLocaleLowerCase('pl') !== p.name.toLocaleLowerCase('pl')))].slice(0, 25);
-    if ($('#saveOwnProduct').checked) {
-      state.custom = [p, ...state.custom.filter(item => item.name.toLocaleLowerCase('pl') !== p.name.toLocaleLowerCase('pl'))].slice(0, 100);
+    const p = { name, nutrients, source: activeProduct?.source || 'Własny', brand: activeProduct?.brand || '', ean: activeProduct?.ean || '', ...productProvenance(activeProduct) };
+    if (!commitMutation(draft => {
+      draft.entries.push({ ...p, id: productId(), date: draft.selectedDate, meal: $('#productMeal').value, grams });
+      draft.portions[productKey(p)] = grams;
+      draft.recent = [p, ...draft.recent.filter(item => (p.ean && item.ean ? item.ean !== p.ean : item.name.toLocaleLowerCase('pl') !== p.name.toLocaleLowerCase('pl')))].slice(0, 25);
+      if ($('#saveOwnProduct').checked) {
+        draft.custom = [p, ...draft.custom.filter(item => item.name.toLocaleLowerCase('pl') !== p.name.toLocaleLowerCase('pl'))].slice(0, 100);
+      }
+    })) {
+      feedback('Nie udało się zapisać. Produkt nie został dodany; sprawdź pamięć urządzenia i spróbuj ponownie.');
+      return;
     }
-    save(); closeModal(); renderAll(); showPage('journal'); toast(`${name} dodano do dziennika`);
+    closeModal(); showPage('journal'); toast(`${name} dodano do dziennika`);
   }
   function offToProduct(p) {
     const n = p.nutriments || {};
@@ -517,8 +550,9 @@
         $('#eanResults').innerHTML = '';
         selectProduct({
           name: local.name, brand: local.brand, ean: local.code,
-          source: 'Etykieta opakowania (baza lokalna)',
-          nutrients: {kcal: local.kcal, protein: local.protein, carbs: local.carbs, fat: local.fat}
+          source: local.verification === 'label-photo' ? 'Etykieta opakowania (baza lokalna)' : 'Baza podstawowa',
+          nutrients: {kcal: local.kcal, protein: local.protein, carbs: local.carbs, fat: local.fat},
+          ...productProvenance(local)
         });
         return;
       }
@@ -535,7 +569,8 @@
       }
       productResults([data.product], $('#eanResults'));
       selectProduct({name:checked.name,brand:checked.brand,ean:checked.code,source:checked.source,
-        nutrients:{kcal:checked.kcal,protein:checked.protein,carbs:checked.carbs,fat:checked.fat}});
+        nutrients:{kcal:checked.kcal,protein:checked.protein,carbs:checked.carbs,fat:checked.fat},
+        ...productProvenance(checked)});
     } catch { $('#eanResults').innerHTML = ''; feedback('Nie udało się pobrać produktu. Sprawdź połączenie lub spróbuj później.'); }
   }
   async function startCamera() {
@@ -579,7 +614,7 @@
       const value = number($(goalField(key)).value);
       if (value === null || value < (key === 'water' ? 100 : 1) || value > (key === 'kcal' || key === 'water' ? 10000 : 1000)) { toast('Sprawdź cele dzienne'); return; } next[key] = Math.round(value);
     }
-    state.goals = next; save(); renderAll(); toast('Cele zaktualizowane');
+    if (commitMutation(draft => { draft.goals = next; })) { renderAll(); toast('Cele zaktualizowane'); }
   }
   function downloadJson(data, name) {
     const blob = new Blob([data], { type: 'application/json;charset=utf-8' });
@@ -614,8 +649,8 @@
       if (payload.app !== 'MojBilans' || !Array.isArray(payload.entries) || !Array.isArray(payload.custom) || !Array.isArray(payload.recent)) throw Error('To nie jest prawidłowy plik Mój Bilans.');
       if (payload.entries.length > 20000 || payload.custom.length > 5000 || payload.recent.length > 5000) throw Error('Zbyt duży zestaw danych.');
       const validProduct = p => p && typeof p.name === 'string' && p.name.length <= 100 && p.nutrients && isNumber(p.nutrients.kcal) && number(p.nutrients.kcal) >= 0 && Number(p.nutrients.kcal) <= 10000;
-      const entries = payload.entries.filter(e => validProduct(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000).map(e => ({ id: productId(), name: e.name, date: e.date, meal: e.meal, grams: number(e.grams), nutrients: plainNutrients(e.nutrients), source: String(e.source || 'Import').slice(0, 50), brand: String(e.brand || '').slice(0, 100), ean: String(e.ean || '').slice(0, 14) }));
-      const products = arr => arr.filter(validProduct).map(p => ({ name: p.name, brand: String(p.brand || '').slice(0, 100), source: String(p.source || 'Import').slice(0, 50), ean: String(p.ean || '').slice(0, 14), nutrients: plainNutrients(p.nutrients) }));
+      const entries = payload.entries.filter(e => validProduct(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000).map(e => ({ id: productId(), name: e.name, date: e.date, meal: e.meal, grams: number(e.grams), nutrients: plainNutrients(e.nutrients), source: String(e.source || 'Import').slice(0, 50), brand: String(e.brand || '').slice(0, 100), ean: String(e.ean || '').slice(0, 14), ...productProvenance(e) }));
+      const products = arr => arr.filter(validProduct).map(p => ({ name: p.name, brand: String(p.brand || '').slice(0, 100), source: String(p.source || 'Import').slice(0, 50), ean: String(p.ean || '').slice(0, 14), nutrients: plainNutrients(p.nutrients), ...productProvenance(p) }));
       if (!confirm('Przywrócenie zastąpi bieżące dane na telefonie. Przedtem zalecamy eksport lokalnej kopii JSON. Kontynuować?')) return false;
       const goals = {};
       for (const key of ['kcal', 'protein', 'carbs', 'fat', 'water']) { const val = number(payload.goals?.[key]); goals[key] = val !== null && val >= (key === 'water' ? 100 : 1) && val <= (key === 'kcal' || key === 'water' ? 10000 : 1000) ? Math.round(val) : DEFAULT_GOALS[key]; }
@@ -635,8 +670,9 @@
       const portions = {};
       if (payload.portions && typeof payload.portions === 'object' && !Array.isArray(payload.portions)) for (const [k, v] of Object.entries(payload.portions).slice(0, 5000)) { if (k.length <= 240 && isNumber(v) && number(v) > 0 && number(v) <= 100000 && !['__proto__','constructor','prototype'].includes(k)) Object.defineProperty(portions, k, { value: Number(v), enumerable: true, writable: true, configurable: true }); }
       const target = number(payload.weightGoal);
+      const previous = state;
       state = { ...state, goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
-      save();
+      if (!save()) { state = previous; return false; }
       renderAll(); toast(`Przywrócono ${entries.length} wpisów`);
       return true;
   }
@@ -887,6 +923,11 @@
     $('#entryActions').classList.remove('hidden'); $('#entrySummary').classList.remove('hidden');
     const portion = key => entryTotal(row, key) === null ? 'brak' : `${nf1.format(entryTotal(row, key))} g`;
     const per100 = key => isNumber(row.nutrients?.[key]) ? `${nf1.format(row.nutrients[key])}${key === 'kcal' ? ' kcal' : ' g'}` : 'brak';
+    const provenanceInfo = row.isEstimate || row.verification === 'ean-photo-macro-estimate'
+      ? '⚠️ Wartości orientacyjne — nie są potwierdzonym odczytem etykiety.'
+      : row.verification === 'label-photo' ? 'Wartości odczytane z etykiety konkretnego produktu.'
+      : row.source === 'Open Food Facts' ? 'Dane społecznościowe OFF — sprawdź etykietę.'
+      : '';
     $('#entrySummary').innerHTML = `<strong>${safeText(row.name)}</strong>
       <p>${safeText(niceDate(toDate(row.date)))} · ${safeText(mealName(row.meal))} · ${nf1.format(row.grams)} g/ml ${row.brand ? '· ' + safeText(row.brand) : ''}</p>
       <div class="entry-value-label">Wartości dla całej porcji</div>
@@ -897,7 +938,8 @@
         <span><b>${portion('fat')}</b>Tłuszcze</span>
       </div>
       <div class="entry-per100">Na 100 g/ml: ${per100('kcal')} · B ${per100('protein')} · W ${per100('carbs')} · T ${per100('fat')}</div>
-      <p>${safeText(row.source || '')}${row.ean ? ' · EAN ' + safeText(row.ean) : ''}</p>`;
+      <p>${safeText(row.source || '')}${row.ean ? ' · EAN ' + safeText(row.ean) : ''}</p>
+      ${provenanceInfo ? '<p class="entry-provenance">' + safeText(provenanceInfo) + '</p>' : ''}`;
     $('#entryTitle').textContent = 'Szczegóły wpisu';
     $('#entryBackdrop').classList.remove('hidden'); $('#entryBackdrop').setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
@@ -1285,7 +1327,7 @@
     // v0.6: podłącz zintegrowaną wyszukiwarkę (ziemniaki/produkty podstawowe + OFF).
     // Jeśli moduł się nie załaduje, zachowaj starą wyszukiwarkę, aby nie blokować dziennika.
     $('#searchForm').addEventListener('submit', searchName);
-    import('./interfejs-wyszukiwarki.mjs?v=np2.1.0').then(({ mountFoodSearch }) => {
+    import('./interfejs-wyszukiwarki.mjs?v=np2.1.1').then(({ mountFoodSearch }) => {
       $('#searchForm').removeEventListener('submit', searchName);
       mountFoodSearch({
         form: $('#searchForm'), input: $('#searchName'), results: $('#searchResults'),
@@ -1294,7 +1336,8 @@
           name: product.name, brand: product.brand || '', ean: product.code || '',
           source: product.source || 'Baza podstawowa',
           nutrients: { kcal: product.kcal, protein: product.protein,
-                       carbs: product.carbs, fat: product.fat }
+                       carbs: product.carbs, fat: product.fat },
+          ...productProvenance(product)
         })
       });
     }).catch(() => {
