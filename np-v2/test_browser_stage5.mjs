@@ -139,6 +139,22 @@ try {
     assert.equal(await page.locator('#npHistoryChart svg').isVisible(),true);
     assert.match(await page.locator('#historyDays').innerText(),/1\s*\/\s*14/);
   });
+  verify('Sprint 1: Historia 2.4 — 30 dni, porównania, cel, nawigacja',async ()=>{
+    await page.locator('.nav-item[data-page="history"]').click();
+    await page.locator('[data-history-period="30d"]').click();
+    assert.match(await page.locator('#historyDays').innerText(),/1\\s*\\/\\s*30/);
+    assert.equal(await page.locator('#npDailyCompare button').count(),7);
+    assert.match(await page.locator('#npGoalWindow').innerText(),/\\d+\\s*\\/\\s*\\d+/);
+    assert.equal(await page.locator('#npHistoryChart svg').isVisible(),true);
+    for (const width of [320,390,1280]) {
+      await page.setViewportSize({width,height:844});
+      const size=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth}));
+      assert.equal(outOfBounds(size),false,'Historia 2.4 overflow: '+JSON.stringify(size));
+    }
+    await page.setViewportSize({width:390,height:844});
+    await page.locator('#npDailyCompare button').last().click();
+    assert.equal(await page.locator('#page-journal').isVisible(),true);
+  });
   verify('Dwa ważenia i obwody pokazują prawidłową zmianę',async ()=>{
     await page.locator('.nav-item[data-page="weight"]').click();
     await page.locator('#weightDate').fill('2026-11-18');
@@ -172,7 +188,7 @@ try {
       if(!('serviceWorker' in navigator))return false;
       const keys=await caches.keys();
       return !!navigator.serviceWorker.controller &&
-        keys.includes('moj-bilans-np-v2-cache-stage5');
+        keys.includes('moj-bilans-np-v2-cache-historia24');
     },null,{timeout:30000});
     const reg=await page.evaluate(async ()=>{
       const x=await navigator.serviceWorker.getRegistration('./');
