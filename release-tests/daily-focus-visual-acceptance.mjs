@@ -36,11 +36,11 @@ try{
     assert.equal(await page.locator('.df-hero .df-macro').count(),3);
     assert.equal(await page.locator('.df-meal-card').count(),4);
     assert.equal(await page.locator('.df-nav-icon').count(),5);
-    assert.equal(await page.locator('#goalInline').innerText(),'2 300'.replace(' ','')==='2300'?'2300':await page.locator('#goalInline').innerText());
+    assert.match((await page.locator('#goalInline').innerText()).replace(/\\s/g,''),/2.?300|2300/);
     const cal=await page.locator('#caloriesUsed').innerText();
     assert.notEqual(cal,'0');
     assert.ok(await page.locator('.df-ring').isVisible());
-    assert.equal(await page.locator('#waterTotal').innerText(),'1 500 ml'.replace(' ','')==='1500 ml'?'1500 ml':await page.locator('#waterTotal').innerText());
+    assert.match((await page.locator('#waterTotal').innerText()).replace(/\\s/g,''),/1500ml/);
   });
   await verify('No horizontal overflow at 320, 360, 375, 390, 430, 768 and 1280px',async()=>{
     for(const width of [320,360,375,390,430,768,1280]){

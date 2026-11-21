@@ -407,6 +407,7 @@
     $('#productForm').classList.add('hidden');
     $('#searchResults').innerHTML = ''; $('#eanResults').innerHTML = '';
     $('#recentTargetMeal').value = currentMeal;
+    $('#productMeal').value = currentMeal;
     feedback(''); switchMode(mode);
     $('#modalTitle').textContent = 'Dodaj produkt';
     $('#modalBackdrop').classList.remove('hidden'); $('#modalBackdrop').setAttribute('aria-hidden', 'false');
