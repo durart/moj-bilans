@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const source = fs.readFileSync(new URL('./historia-statystyki.js', import.meta.url), 'utf8');
+const source = fs.readFileSync(new URL('./historia-statystyki.js?v=pi2.4.0', import.meta.url), 'utf8');
 const window = {};
 vm.runInNewContext(source, { window });
 const { periodRange, historySummary, dateCount } = window.MojBilansHistory;
@@ -18,6 +18,7 @@ check('7 dni obejmuje dziś i 6 poprzednich', () => {
   assert.equal(r.from, '2026-11-10');
   assert.equal(r.to, '2026-11-16');
 });
+check('30 dni kalendarzowych kończy się dzisiaj', () => assert.equal(periodRange('30d', date).from, '2026-10-18'));
 check('14 dni obejmuje dziś i 13 poprzednich', () => assert.equal(periodRange('14d', date).from, '2026-11-03'));
 check('miesiąc kalendarzowy wstecz', () => assert.equal(periodRange('1m', date).from, '2026-10-17'));
 check('6 miesięcy kalendarzowych wstecz', () => assert.equal(periodRange('6m', date).from, '2026-05-17'));
@@ -67,12 +68,12 @@ const index = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
 const app = fs.readFileSync(new URL('./app.js', import.meta.url), 'utf8');
 const sw = fs.readFileSync(new URL('./sw.js', import.meta.url), 'utf8');
 check('pięć okresów i własny zakres obecne w interfejsie', () => {
-  for (const id of ['7d', '14d', '1m', '6m', '1y', 'custom']) assert.ok(index.includes('data-history-period="' + id + '"'));
+  for (const id of ['7d', '14d', '30d', '1m', '6m', '1y', 'custom']) assert.ok(index.includes('data-history-period="' + id + '"'));
 });
 check('karty średnich makro obecne w interfejsie', () => {
   for (const id of ['historyAverage', 'historyProtein', 'historyFat', 'historyCarbs']) assert.ok(index.includes('id="' + id + '"'));
 });
-check('skrypt statystyk uruchamia się przed aplikacją', () => assert.ok(index.indexOf('src="./historia-statystyki.js"') < index.indexOf('src="./app.js?v=pfs2.3.0"')));
+check('skrypt statystyk uruchamia się przed aplikacją', () => assert.ok(index.indexOf('src="./historia-statystyki.js"') < index.indexOf('src="./app.js?v=pi2.4.0"')));
 check('Historia obsługuje zmianę okresu', () => assert.ok(app.includes("button.dataset.historyPeriod") && app.includes("historyFrom').addEventListener")));
 check('PWA buforuje statystyki historii offline', () => assert.ok(sw.includes("'./historia-statystyki.js'")));
 check('zachowany format kopii danych użytkownika', () => assert.ok(app.includes('moj-bilans-v1')));

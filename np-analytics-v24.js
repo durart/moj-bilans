@@ -39,6 +39,8 @@ function render(summary,goals,today,mount){
  show('h24AvgCalories',report.avg?fmt(Math.round(report.avg.kcal)):'—');
  show('h24Goal',Number(goals?.kcal)>0?fmt(goals.kcal):'—');
  show('h24Percent',report.ratios.kcal===null?'—':report.ratios.kcal+'%');
+ const ring=mount.querySelector('#h24KcalRing');
+ if(ring){const ratio=report.ratios.kcal;ring.style.setProperty('--h24-ring-angle',(ratio===null?0:Math.max(0,Math.min(100,ratio))*3.6)+'deg');ring.setAttribute('aria-label',ratio===null?'Brak średnich kalorii':'Średnie kalorie: '+ratio+'% celu');}
  show('h24InBand',report.logged?report.inBand+' z '+report.logged:'—');
  show('h24Insight',report.insight);
  const tone=mount.querySelector('#h24Status');
