@@ -410,7 +410,7 @@
   }
   function updatePfsPortionControls() {
     const grams = number($('#productGrams').value);
-    $('[data-np-grams]').forEach(button => {
+    $$('[data-np-grams]').forEach(button => {
       const selected = grams !== null && grams === Number(button.dataset.npGrams);
       button.classList.toggle('selected', selected);
       button.setAttribute('aria-pressed', String(selected));
@@ -427,11 +427,11 @@
     $('#pfsFavoriteList').innerHTML =
       `<h4>Ulubione posiłki</h4>${mealHtml || '<p class="pfs-empty">Brak ulubionych zestawów. Zapisz zestaw w dzienniku przy wybranym posiłku.</p>'}` +
       `<h4>Moje produkty</h4>${ownHtml || '<p class="pfs-empty">Brak zapisanych własnych produktów.</p>'}`;
-    $('[data-pfs-favmeal]').forEach(button => button.addEventListener('click', () => {
+    $$('[data-pfs-favmeal]').forEach(button => button.addEventListener('click', () => {
       const fav = state.favorites[Number(button.dataset.pfsFavmeal)];
       if (fav && addFavorite(fav.id, currentMeal)) closeModal();
     }));
-    $('[data-pfs-own]').forEach(button => button.addEventListener('click', () => {
+    $$('[data-pfs-own]').forEach(button => button.addEventListener('click', () => {
       const p = state.custom[Number(button.dataset.pfsOwn)];
       if (p) selectProduct(p);
     }));
