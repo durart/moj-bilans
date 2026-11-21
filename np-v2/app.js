@@ -184,17 +184,17 @@
     }
 
     const average = summary.averages;
-    $('#historyAverage').textContent = average ? nf.format(Math.round(average.kcal)) : '—';
-    $('#historyProtein').textContent = average ? nf1.format(average.protein) : '—';
-    $('#historyFat').textContent = average ? nf1.format(average.fat) : '—';
-    $('#historyCarbs').textContent = average ? nf1.format(average.carbs) : '—';
+    $('#historyAverage').textContent = Number.isFinite(average?.kcal) ? nf.format(Math.round(average.kcal)) : '—';
+    $('#historyProtein').textContent = Number.isFinite(average?.protein) ? nf1.format(average.protein) : '—';
+    $('#historyFat').textContent = Number.isFinite(average?.fat) ? nf1.format(average.fat) : '—';
+    $('#historyCarbs').textContent = Number.isFinite(average?.carbs) ? nf1.format(average.carbs) : '—';
     $('#historyDays').textContent = `${summary.loggedDays} / ${summary.rangeDays}`;
     if (!summary.loggedDays) {
       $('#historyCoverage').textContent = 'Brak posiłków zapisanych w wybranym okresie. Dni bez wpisów nie są traktowane jak 0 kcal.';
     } else {
       $('#historyCoverage').textContent =
         'Średnie obliczono tylko z dni, w których są zapisane posiłki. Dni bez wpisów są pominięte. Dzisiejszy dzień może być jeszcze niepełny.' +
-        (summary.incompleteEntries ? ` Uwaga: ${summary.incompleteEntries} wpisów nie ma kompletnych wartości odżywczych; część średnich może być zaniżona.` : '');
+        (summary.incompleteEntries ? ` Uwaga: ${summary.incompleteEntries} wpisów nie ma kompletnych wartości odżywczych; niekompletne dni pominięto w średniej danego składnika.` : '');
     }
 
     window.NPTrends?.render(summary, state.goals.kcal, $('#npHistoryChart'));
