@@ -238,3 +238,6 @@ body{background:radial-gradient(ellipse 760px 450px at 55% -180px,#263839 0,tran
 @media(prefers-reduced-motion:reduce){
  .df-hero .ring,.df-hero .fill,.df-water .water-fill,.df-meal-chevron,.df-hero-actions button{transition:none!important}
 }
+
+/* Original local SVG meal art: consistent imagery with no network requests. */
+.df-meal-art .df-meal-photo{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
