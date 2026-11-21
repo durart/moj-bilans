@@ -99,6 +99,12 @@
     $('#dailyGoal').innerHTML = `${nf.format(state.goals.kcal)} <small>kcal</small>`;
     const deg = pct(totals.kcal, state.goals.kcal) * 3.6;
     $('#calorieRing').style.setProperty('--progress', `${deg}deg`);
+    $('#npMealCount').textContent = `${new Set(current.map(e => e.meal).filter(mealValid)).size} / ${MEALS.length}`;
+    $('#npFoodCount').textContent = nf.format(current.length);
+    $('#npBudgetStatus').textContent = remaining < 0
+      ? `${nf.format(Math.abs(remaining))} kcal ponad cel`
+      : `${nf.format(remaining)} kcal do celu`;
+    $('#npBudgetStatus').classList.toggle('np-over-goal', remaining < 0);
     for (const m of [{ key: 'protein', id: 'protein', goal: 'protein' }, { key: 'carbs', id: 'carb', goal: 'carbs' }, { key: 'fat', id: 'fat', goal: 'fat' }]) {
       const partial = current.some(entry => !isNumber(entry.nutrients?.[m.key]));
       $(`#${m.id}Value`).textContent = `${partial ? '≥ ' : ''}${nf1.format(totals[m.key])} g`;
@@ -172,6 +178,7 @@
       $('#historyListScope').textContent = '';
       $('#historyList').innerHTML = '';
       $('#historyShowMore').classList.add('hidden');
+      $('#npHistoryChart').innerHTML = '<p class="empty-chart">Wybierz poprawny zakres dat.</p>';
       return;
     }
 
@@ -189,6 +196,7 @@
         (summary.incompleteEntries ? ` Uwaga: ${summary.incompleteEntries} wpisów nie ma kompletnych wartości odżywczych; część średnich może być zaniżona.` : '');
     }
 
+    window.NPTrends?.render(summary, state.goals.kcal, $('#npHistoryChart'));
     // Krótkie okresy zachowują widok wszystkich dni, również pustych.
     // Dłuższe okresy pokazują tylko dni z wpisami, aby uniknąć setek pustych pozycji.
     const detailed = summary.rangeDays <= 35;
@@ -696,6 +704,10 @@
     $('#weightChangeHint').textContent = first ? `od ${niceDate(toDate(first.date))}` : 'Dodaj pierwszy pomiar';
     $('#weightGoalDisplay').textContent = `${nf1.format(state.weightGoal)} kg`;
     $('#weightToGoal').textContent = last ? `${nf1.format(Math.abs(last.kg - state.weightGoal))} kg ${last.kg > state.weightGoal ? 'do celu' : last.kg < state.weightGoal ? 'poniżej celu' : '— cel osiągnięty'}` : 'Ustawiony cel';
+    const previousWeight = sorted.at(-2);
+    const recentDelta = previousWeight && last ? Number(last.kg) - Number(previousWeight.kg) : null;
+    $('#npWeightRecent').textContent = recentDelta === null ? '—' : `${recentDelta > 0 ? '+' : ''}${nf1.format(Math.round(recentDelta * 10) / 10)} kg`;
+    $('#npWeightRecentDate').textContent = previousWeight && last ? `${previousWeight.date} → ${last.date}` : 'Co najmniej dwa pomiary';
     $('#goalWeight').value = state.weightGoal;
     const recent = sorted.slice(-60);
     $('#weightChartCaption').textContent = recent.length ? `Ostatnie ${recent.length} ${recent.length === 1 ? 'ważenie' : 'pomiary'}${sorted.length > 60 ? ' (maks. 60 na wykresie)' : ''}. Wartości w kg. Linie pomiędzy pomiarami nie oznaczają pomiaru codziennego.` : '';
@@ -759,6 +771,10 @@
     const recent = series.slice(-60);
     $('#measurementChart').innerHTML = recent.length ? buildMeasureChart(recent, metric) : `<p class="empty-chart">Brak danych dla: ${safeText(metric.label.toLowerCase())}. Dodaj pomiar.</p>`;
     $('#measurementChartCaption').textContent = recent.length ? `${metric.label}: ${recent.length} ${recent.length === 1 ? 'pomiar' : 'pomiarów'} na wykresie (maks. 60), w cm. Linie łączą zapisane daty, nie oznaczają codziennych pomiarów.` : '';
+    const lastMeasure = series.at(-1), previousMeasure = series.at(-2);
+    const measureDelta = lastMeasure && previousMeasure ? Number(lastMeasure[metric.key]) - Number(previousMeasure[metric.key]) : null;
+    $('#npMeasureRecent').textContent = measureDelta === null ? 'Trend obwodu pojawi się po drugim pomiarze.'
+      : `${metric.label}: ${measureDelta > 0 ? '+' : ''}${nf1.format(Math.round(measureDelta * 10) / 10)} cm między ${previousMeasure.date} i ${lastMeasure.date}.`;
     $('#measurementList').innerHTML = sorted.length ? [...sorted].reverse().map(m => {
       const values = MEASURES.filter(t => measureValue(m[t.key]) !== null).map(t => `${t.label}: ${nf1.format(m[t.key])} cm`).join(' · ');
       return `<div class="compact-item measurement-item"><div><strong>${safeText(niceDate(toDate(m.date)))}</strong><small>${safeText(values)}</small></div><div class="measurement-actions"><button type="button" data-editmeasure="${safeText(m.date)}">Edytuj</button><button type="button" class="danger-quiet" data-removemeasure="${safeText(m.date)}">Usuń</button></div></div>`;
@@ -1211,6 +1227,11 @@
     $('#productForm').addEventListener('submit', onAddProduct);
     $('#backToLookup').addEventListener('click', backToLookup);
     $('#productGrams').addEventListener('input', syncProductPortionFields);
+    $('[data-np-grams]').forEach(button => button.addEventListener('click', () => {
+      $('#productGrams').value = button.dataset.npGrams;
+      syncProductPortionFields();
+      $('#productGrams').focus({ preventScroll: true });
+    }));
     PRODUCT_KEYS.forEach(([key, suffix]) => $('#product' + suffix).addEventListener('input', () => productNutrientChanged(key, suffix)));
     $('#goalsForm').addEventListener('submit', onSaveGoals);
     $('#favoritesLink').addEventListener('click', () => showPage('products'));

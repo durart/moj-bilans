@@ -133,3 +133,51 @@ input,select,textarea{accent-color:var(--accent)}
  .np-action small{display:none}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+
+/* Etapy 2–4: real data, interactive offline search, accessible analytics */
+.np-day-snapshot{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:10px;margin:12px 0 14px}
+.np-snapshot-item{display:flex;flex-direction:column;gap:4px;padding:13px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.np-snapshot-item span{font-size:12px;color:var(--muted)}
+.np-snapshot-item strong{font-variant-numeric:tabular-nums;font-size:18px}
+.np-snapshot-item strong.np-over-goal{color:var(--red)}
+.np-snapshot-budget{border-color:#396656}
+.np-portion-preset{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 4px}
+.np-portion-preset>span{font-size:13px;font-weight:700;margin-right:4px}
+.np-portion-preset button{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);padding:8px 13px;font-weight:700;font-size:13px}
+.np-portion-preset button:active{background:#244f42}
+.np-portion-note{font-size:12px;line-height:1.45;color:var(--muted);margin:4px 0 12px}
+.np-food-meta{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0 2px}
+.np-food-chip{background:#21483e;color:#a7f0d1;padding:4px 9px;border-radius:99px;font-size:12px;font-weight:700}
+.np-food-chip.np-food-estimate{background:#4c3528;color:#ffcf9d}
+.np-trend-panel{padding:20px;margin:16px 0}
+.np-trend-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.np-trend-heading h2{font-size:20px;margin:4px 0 0}
+.np-trend-unit{font-size:12px;color:var(--muted)}
+.np-history-chart{min-height:160px;overflow:hidden}
+.np-history-chart svg{display:block;width:100%;height:auto}
+.np-trend-legend{display:flex;gap:15px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 0}
+.np-trend-legend span{display:inline-flex;align-items:center;gap:6px}
+.np-trend-legend i{display:block;width:14px;height:9px;border:1px solid var(--accent)}
+.np-trend-legend .np-legend-logged{background:var(--accent)}
+.np-trend-legend .np-legend-empty{border-style:dashed;border-color:#7792a3}
+.np-trend-legend .np-legend-target{height:0;border:0;border-top:2px dashed var(--orange)}
+.np-trend-footnote{font-size:12px;line-height:1.55;color:var(--muted);margin:8px 0 0}
+.np-measure-recent{font-size:13px;color:#c0dadf;line-height:1.5;margin:8px 0}
+.weight-overview{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:630px){
+ .np-day-snapshot{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .np-snapshot-budget{grid-column:1/-1}
+ .np-snapshot-item{padding:11px 12px}
+ .np-snapshot-item span{font-size:12px}
+ .np-snapshot-item strong{font-size:17px}
+ .macro-head span,.macro-head b{font-size:13px}
+ .macro small,.macro-footer small{font-size:12px}
+ .np-action strong{font-size:13px}
+ .np-action small{font-size:12px}
+ .weight-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .np-trend-panel{padding:14px 10px}
+ .np-trend-heading{display:block}
+ .np-trend-unit{display:block;margin-top:4px}
+ .np-trend-legend{gap:8px}
+}

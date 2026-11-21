@@ -27,7 +27,7 @@
 
     <main>
       <section id="page-journal" class="page active" aria-label="Dziennik kalorii">
-        <div class="np-page-intro"><span class="np-eyebrow">NUTRITION PERFORMANCE / ETAP 1</span><h1>Twój dzienny bilans</h1><p>Kalorie i makro, które pomagają trzymać kurs.</p></div>
+        <div class="np-page-intro"><span class="np-eyebrow">NUTRITION PERFORMANCE / WERSJA TESTOWA</span><h1>Twój dzienny bilans</h1><p>Kalorie i makro, które pomagają trzymać kurs.</p></div>
         <div class="date-bar">
           <button class="chevron" id="prevDay" aria-label="Poprzedni dzień">‹</button>
           <div class="date-center"><div class="eyebrow" id="dateLabel">Dzisiaj</div><button id="datePickerTrigger" class="date-title" type="button"><span id="dateText">—</span><span class="small-chevron">⌄</span></button><input type="date" id="dateInput" class="sr-only" aria-label="Wybierz dzień"></div>
@@ -60,6 +60,11 @@
           <p id="macroWarning" class="macro-warning hidden">≥ oznacza, że niektóre produkty nie mają pełnego makro. Suma może być wyższa.</p>
         </section>
 
+        <section class="np-day-snapshot" aria-label="Podsumowanie zapisów w wybranym dniu">
+          <div class="np-snapshot-item"><span>Zapisane posiłki</span><strong id="npMealCount">0 / 4</strong></div>
+          <div class="np-snapshot-item"><span>Produkty w dzienniku</span><strong id="npFoodCount">0</strong></div>
+          <div class="np-snapshot-item np-snapshot-budget"><span>Bilans celu</span><strong id="npBudgetStatus">—</strong></div>
+        </section>
         <section class="np-quick panel" aria-labelledby="npQuickTitle">
           <div class="np-quick-head"><div><span class="np-eyebrow">DODAJ JEDZENIE</span><h2 id="npQuickTitle">Zapisz posiłek szybciej</h2></div><span class="np-quick-hint">Wybierz sposób</span></div>
           <div class="np-quick-actions">
@@ -116,6 +121,11 @@
           </div>
           <div class="history-coverage"><span>Dni z wpisami: <strong id="historyDays">0</strong></span><p id="historyCoverage"></p></div>
         </section>
+        <section class="panel np-trend-panel" aria-labelledby="npTrendTitle">
+          <div class="np-trend-heading"><div><span class="np-eyebrow">DANE Z DZIENNIKA</span><h2 id="npTrendTitle">Trend kalorii</h2></div><span class="np-trend-unit">kcal / dzień z wpisami</span></div>
+          <div id="npHistoryChart" class="np-history-chart" aria-live="polite"><p class="empty-chart">Dodaj posiłek, aby zobaczyć trend.</p></div>
+          <p class="np-trend-footnote">Puste lub kreskowane okresy oznaczają brak wpisów, a nie zero kalorii. Przy długich zakresach słupki pokazują średnią z zapisanych dni danego przedziału.</p>
+        </section>
         <div class="history-list-heading"><h2>Historia dni</h2><span id="historyListScope"></span></div>
         <div id="historyList" class="history-list"></div>
         <button type="button" id="historyShowMore" class="secondary-button wide history-show-more hidden">Pokaż kolejne dni</button>
@@ -123,7 +133,7 @@
 
       <section id="page-weight" class="page" aria-label="Waga i obwody ciała">
         <div class="page-heading"><div class="eyebrow">POSTĘPY REDUKCJI</div><h1>Pomiary ciała</h1><p>Obserwuj wagę, brzuch, talię, klatkę piersiową i biceps — ze zmianami na wykresach.</p></div>
-        <div class="weight-overview"><div class="panel weight-stat"><span>Ostatni pomiar</span><strong id="weightLatest">—</strong><small id="weightLatestDate">Brak danych</small></div><div class="panel weight-stat"><span>Zmiana od początku</span><strong id="weightChange">—</strong><small id="weightChangeHint">Pierwszy pomiar</small></div><div class="panel weight-stat"><span>Cel masy ciała</span><strong id="weightGoalDisplay">90 kg</strong><small id="weightToGoal">Ustaw cel poniżej</small></div></div>
+        <div class="weight-overview"><div class="panel weight-stat"><span>Ostatni pomiar</span><strong id="weightLatest">—</strong><small id="weightLatestDate">Brak danych</small></div><div class="panel weight-stat"><span>Zmiana od początku</span><strong id="weightChange">—</strong><small id="weightChangeHint">Pierwszy pomiar</small></div><div class="panel weight-stat"><span>Cel masy ciała</span><strong id="weightGoalDisplay">90 kg</strong><small id="weightToGoal">Ustaw cel poniżej</small></div><div class="panel weight-stat"><span>Od poprzedniego ważenia</span><strong id="npWeightRecent">—</strong><small id="npWeightRecentDate">Co najmniej dwa pomiary</small></div></div>
         <form id="weightEntryForm" class="panel compact-form"><h3>Zapisz pomiar</h3><div class="field-row"><label class="field-label">Data<input id="weightDate" type="date" required/></label><label class="field-label">Masa ciała (kg)<input id="weightKg" type="number" min="20" max="400" step="0.1" inputmode="decimal" placeholder="np. 102,5" required/></label></div><button type="submit" class="primary-button wide">Zapisz wagę</button><p class="help">Ponowny zapis w tym samym dniu zastąpi poprzedni pomiar.</p></form>
         <div class="panel weight-chart-panel"><div class="section-title weight-section-title"><div><div class="eyebrow">TWOJA HISTORIA</div><h2>Wykres masy ciała</h2></div></div><div id="weightChart" class="weight-chart"><p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p></div><div id="weightChartCaption" class="chart-caption"></div></div>
         <div class="panel compact-form"><form id="weightGoalForm"><h3>Twój cel</h3><label class="field-label">Docelowa masa ciała (kg)<input id="goalWeight" type="number" min="20" max="400" step="0.1" inputmode="decimal" required /></label><button class="secondary-button wide" type="submit">Zapisz cel wagi</button></form></div>
@@ -148,7 +158,7 @@
             <select id="measurementChartType"><option value="abdomen">Brzuch</option><option value="waist">Talia</option><option value="chest">Klatka piersiowa</option><option value="biceps">Biceps</option></select>
           </label>
           <div id="measurementChart" class="weight-chart"><p class="empty-chart">Dodaj pomiary, aby zobaczyć wykres.</p></div>
-          <div id="measurementChartCaption" class="chart-caption"></div>
+          <div id="measurementChartCaption" class="chart-caption"></div><p id="npMeasureRecent" class="np-measure-recent" aria-live="polite"></p>
         </div>
         <h3 class="subheading">Historia obwodów</h3><div id="measurementList" class="compact-list"></div>
       </section>
@@ -213,7 +223,7 @@
   <div id="copyBackdrop" class="modal-backdrop hidden" aria-hidden="true"><section class="modal compact-dialog" role="dialog" aria-modal="true" aria-labelledby="copyTitle"><div class="modal-handle"></div><div class="modal-top"><h2 id="copyTitle">Kopiuj posiłek</h2><button id="closeCopy" type="button" class="modal-close" aria-label="Zamknij">×</button></div><form id="copyForm" class="product-form"><label class="field-label">Z dnia<input id="copySourceDate" type="date" required/></label><label class="field-label">Posiłek źródłowy<select id="copySourceMeal"><option value="breakfast">Śniadanie</option><option value="lunch">Obiad</option><option value="dinner">Kolacja</option><option value="snack">Przekąski</option></select></label><div id="copyPreview" class="copy-preview">—</div><div class="help" id="copyTargetText"></div><label class="field-label">Docelowy posiłek<select id="copyTargetMeal"><option value="breakfast">Śniadanie</option><option value="lunch">Obiad</option><option value="dinner">Kolacja</option><option value="snack">Przekąski</option></select></label><button class="primary-button wide" type="submit" id="copySubmit">Kopiuj produkty</button></form></section></div>
   <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-handle"></div><div class="modal-top"><h2 id="modalTitle">Dodaj produkt</h2><button id="modalClose" type="button" class="modal-close" aria-label="Zamknij">×</button></div>
     <div id="lookupArea"><div class="mode-tabs"><button class="mode-tab active" data-mode="search" type="button">Szukaj</button><button class="mode-tab" data-mode="recent" type="button">Ostatnie</button><button class="mode-tab" data-mode="ean" type="button">Kod EAN</button><button class="mode-tab" data-mode="manual" type="button">Własny</button></div>
-      <div id="mode-search" class="mode-pane"><form id="searchForm" class="search-row"><input type="search" id="searchName" placeholder="np. bigos, pierogi, mięso, sos" aria-label="Nazwa produktu" required minlength="2" autocomplete="off" /><button type="submit" class="primary-button">Szukaj</button></form><p class="help">Wyszukiwanie odbywa się po kliknięciu przycisku, aby oszczędzać limity API.</p><section class="food-catalog-panel" aria-label="Wspólna baza produktów offline"><div class="food-catalog-head"><strong>📦 Produkty zapisane offline</strong><small>Wspólny katalog · Open Food Facts</small></div><p class="help">Produkty z różnych sklepów trafiają na jedną listę. Zapis do 100 popularnych produktów z Polski działa ręcznie; dane nie są automatycznie potwierdzane z etykietą.</p><button id="foodCatalogImport" type="button" class="secondary-button wide">Pobierz / odśwież produkty offline</button><p id="foodCatalogStatus" class="help" role="status" aria-live="polite">Katalog nie został jeszcze pobrany.</p><label class="food-filter-label" for="foodStoreFilter">Sklep (opcjonalnie)</label><select id="foodStoreFilter" class="food-filter-select"><option value="all">Wszystkie sklepy</option><option value="biedronka">Biedronka</option><option value="lidl">Lidl</option><option value="kaufland">Kaufland</option><option value="carrefour">Carrefour</option><option value="auchan">Auchan</option><option value="zabka">Żabka</option></select><p class="help">Filtr działa tylko dla produktów z rozpoznanym oznaczeniem sklepu w danych źródłowych.</p></section><p id="foodSearchStatus" class="help" role="status" aria-live="polite">Szukaj produktów lub dań: bigos, rosół, pierogi, pierś kurczaka, sos pieczeniowy. Nowe produkty i dania domowe działają offline; ich wartości są orientacyjne.</p><div id="searchResults" class="result-list"></div></div>
+      <div id="mode-search" class="mode-pane"><form id="searchForm" class="search-row"><input type="search" id="searchName" placeholder="np. ziemniaki, bigos, skyr" aria-label="Nazwa produktu" aria-describedby="npSearchHelp foodSearchStatus" required minlength="2" autocomplete="off" /><button type="submit" class="primary-button">Sprawdź OFF</button></form><p class="help" id="npSearchHelp">Wyniki lokalne pojawiają się podczas pisania. „Sprawdź OFF” szuka dodatkowo online — bez zapytań przy każdym znaku.</p><section class="food-catalog-panel" aria-label="Wspólna baza produktów offline"><div class="food-catalog-head"><strong>📦 Produkty zapisane offline</strong><small>Wspólny katalog · Open Food Facts</small></div><p class="help">Produkty z różnych sklepów trafiają na jedną listę. Zapis do 100 popularnych produktów z Polski działa ręcznie; dane nie są automatycznie potwierdzane z etykietą.</p><button id="foodCatalogImport" type="button" class="secondary-button wide">Pobierz / odśwież produkty offline</button><p id="foodCatalogStatus" class="help" role="status" aria-live="polite">Katalog nie został jeszcze pobrany.</p><label class="food-filter-label" for="foodStoreFilter">Sklep (opcjonalnie)</label><select id="foodStoreFilter" class="food-filter-select"><option value="all">Wszystkie sklepy</option><option value="biedronka">Biedronka</option><option value="lidl">Lidl</option><option value="kaufland">Kaufland</option><option value="carrefour">Carrefour</option><option value="auchan">Auchan</option><option value="zabka">Żabka</option></select><p class="help">Filtr działa tylko dla produktów z rozpoznanym oznaczeniem sklepu w danych źródłowych.</p></section><p id="foodSearchStatus" class="help" role="status" aria-live="polite">Szukaj produktów lub dań: bigos, rosół, pierogi, pierś kurczaka, sos pieczeniowy. Nowe produkty i dania domowe działają offline; ich wartości są orientacyjne.</p><div id="searchResults" class="result-list"></div></div>
       <div id="mode-recent" class="mode-pane hidden" aria-label="Ostatnie produkty i posiłki">
         <p class="help">Produkty i posiłki zapisane w dzienniku dzisiaj i w poprzednich 4 dniach. Najnowsze na górze.</p>
         <p id="recentRange" class="recent-range" aria-live="polite"></p>
@@ -235,6 +245,9 @@
     </div>
     <form id="productForm" class="product-form hidden"><div class="selected-tag" id="productSource">Produkt</div><label class="field-label">Nazwa produktu<input id="productName" required maxlength="100" placeholder="Np. gotowana pierś z kurczaka" /></label>
       <div class="field-row"><label class="field-label">Ilość <span>g / ml</span><input type="number" id="productGrams" min="0.1" max="100000" step="0.1" value="100" required inputmode="decimal" /></label><label class="field-label">Posiłek<select id="productMeal"><option value="breakfast">Śniadanie</option><option value="lunch">Obiad</option><option value="dinner">Kolacja</option><option value="snack">Przekąski</option></select></label></div>
+      <div class="np-portion-preset" role="group" aria-label="Szybkie ustawienie gramatury">
+        <span>Porcja:</span><button type="button" data-np-grams="50">50 g</button><button type="button" data-np-grams="100">100 g</button><button type="button" data-np-grams="150">150 g</button><button type="button" data-np-grams="200">200 g</button>
+      </div><p class="np-portion-note">Podawaj masę w g lub ml. Nie przeliczamy na sztuki bez potwierdzonej masy pojedynczej sztuki.</p>
       <p class="field-caption" id="productBasisHelp">Wartości poniżej dotyczą <strong>wybranej porcji</strong> i przeliczają się przy zmianie ilości. Dla 100 g/ml odpowiadają danym z etykiety. Możesz je ręcznie poprawić.</p><div class="nutrient-fields"><label>kcal<input type="number" id="productKcal" min="0" step="any" inputmode="decimal" placeholder="—" required /></label><label>Białko (g)<input type="number" id="productProtein" min="0" step="any" inputmode="decimal" placeholder="—" /></label><label>Węgle (g)<input type="number" id="productCarbs" min="0" step="any" inputmode="decimal" placeholder="—" /></label><label>Tłuszcz (g)<input type="number" id="productFat" min="0" step="any" inputmode="decimal" placeholder="—" /></label></div>
       <div class="estimate" id="portionPreview" role="status" aria-live="polite">Porcja: —</div><label class="save-custom-check"><input type="checkbox" id="saveOwnProduct"/> Zachowaj w „Moich produktach”</label><button type="submit" class="primary-button wide">Dodaj do dziennika</button><button type="button" id="backToLookup" class="flat-button">← Wróć do wyszukiwania</button></form>
     <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
@@ -242,6 +255,7 @@
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="./historia-statystyki.js" defer></script>
   <script src="./ostatnie-dziennik.js" defer></script>
+  <script src="./np-trends.js" defer></script>
   <script src="./app.js" defer></script>
   <script src="./np-ui.js" defer></script>
 </body>
