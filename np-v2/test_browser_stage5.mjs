@@ -164,6 +164,9 @@ try {
     await page.locator('#weightKg').fill('99.5');
     await page.locator('#weightEntryForm button[type="submit"]').click();
     assert.match(await page.locator('#npWeightRecent').innerText(),/−?[-]?0,5\s*kg/);
+    assert.match(await page.locator('#npBodyProgressPercent').innerText(),/5%/);
+    assert.notEqual(await page.locator('#npBodySmoothed').innerText(),'—');
+    assert.equal(await page.locator('#weightChart svg').isVisible(),true);
     await page.locator('#measurementDate').fill('2026-11-18');
     await page.locator('#measurementAbdomen').fill('110');
     await page.locator('#measurementForm button[type="submit"]').click();
@@ -171,6 +174,7 @@ try {
     await page.locator('#measurementAbdomen').fill('109');
     await page.locator('#measurementForm button[type="submit"]').click();
     assert.match(await page.locator('#npMeasureRecent').innerText(),/-1\s*cm/);
+    assert.equal(await page.locator('#measurementOverview .np-body-measure').count(),4);
   });
   verify('Po przeładowaniu wpis i izolacja produkcji pozostają zachowane',async ()=>{
     await page.reload({waitUntil:'networkidle'});
@@ -188,7 +192,7 @@ try {
       if(!('serviceWorker' in navigator))return false;
       const keys=await caches.keys();
       return !!navigator.serviceWorker.controller &&
-        keys.includes('moj-bilans-np-v2-cache-historia24');
+        keys.includes('moj-bilans-np-v2-cache-body25');
     },null,{timeout:30000});
     const reg=await page.evaluate(async ()=>{
       const x=await navigator.serviceWorker.getRegistration('./');
