@@ -1,0 +1,52 @@
+name: Mój Bilans v2.3 — Premium Food Search acceptance
+on:
+  push:
+    branches:
+      - release/premium-food-search-v2.3
+    paths:
+      - 'index.html'
+      - 'app.js'
+      - 'premium-food-search.css'
+      - 'sw.js'
+      - 'test_*.mjs'
+      - 'release-tests/**'
+      - '.github/workflows/premium-food-search-v23.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Storage and PWA integrity, product database regressions
+        run: node release-tests/np21-prod-safety.mjs && node release-tests/np-v2-safety.mjs && npm test
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright and Chromium
+        run: npm install --no-save --package-lock=false playwright && npx playwright install --with-deps chromium
+      - name: Production safety and backup / offline regression
+        run: node release-tests/np-v2-production-acceptance.mjs
+      - name: Fault injections and data rollback
+        run: node release-tests/stage1-data-safety-browser.mjs
+      - name: Daily Focus unchanged
+        run: node release-tests/daily-focus-visual-acceptance.mjs
+      - name: Premium Food Search responsive / interaction / screenshots
+        run: node release-tests/premium-food-search-acceptance.mjs
+      - name: Upload mobile preview screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: premium-food-search-screenshots
+          path: test-artifacts/premium-food-search-*.png
+          if-no-files-found: ignore
