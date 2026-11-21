@@ -68,6 +68,10 @@ check('Bez wpisów brak oceny, nie ma wartości 0 udającej średnią', () => {
   assert.equal(result.difference, null);
   assert.equal(result.near, 0);
 });
+check('Niekompletne kcal i makro nie zaniżają średnich', () => {
+  assert.equal(summary.averages.kcal, (2300+2800+1200)/3);
+  assert.equal(summary.averages.protein, (160+170+75+140)/4);
+});
 check('Dane i ich kolejność nie są zmieniane przez statystyki', () => {
   assert.equal(JSON.stringify(entries), before);
   assert.doesNotMatch(analytics, /localStorage\.setItem|indexedDB\.open|fetch\(/);
@@ -84,7 +88,7 @@ check('Elementy i skrypty Sprintu 1 są podłączone przed app.js', () => {
 check('Najnowszy cache obsługuje offline i nie usuwa produkcji', () => {
   assert.match(sw, /np-history-24\.css/);
   assert.match(sw, /np-history-24\.js/);
-  assert.match(sw, /moj-bilans-np-v2-cache-historia24/);
+  assert.match(sw, /moj-bilans-np-v2-cache-body25/);
   assert.doesNotMatch(sw,/k\.startsWith\('moj-bilans-cache-'/);
   assert.match(css, /prefers-reduced-motion/);
 });
