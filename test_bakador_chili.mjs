@@ -57,7 +57,7 @@ test('Search UI explicitly distinguishes exact EAN from unverified macro',()=>{
 test('PWA precaches new module and retains original diary storage keys',()=>{
  const sw=fs.readFileSync('sw.js','utf8'),app=fs.readFileSync('app.js','utf8');
  assert.ok(sw.includes("'./bakador-chili.mjs'"));
- assert.ok(sw.includes("'./app.js?v=pi2.4.0'"));
+ assert.ok(sw.includes("'./app.js?v=bp2.5.0'"));
  assert.ok(app.includes("const KEY = 'moj-bilans-v1'"));
  assert.ok(app.includes("const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1'"));
 });
