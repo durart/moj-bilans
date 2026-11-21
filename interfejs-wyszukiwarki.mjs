@@ -39,7 +39,8 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       heading.append(node('strong','',item.name));
       if(item.brand) heading.append(node('small','food-brand',item.brand));
       const shops=(item.storeKeys||[]).map(storeLabel).filter(Boolean);
-      const sourceLabel=item.verification==='manufacturer-example'?'Wędlina · wartości orientacyjne':
+      const sourceLabel=item.verification==='bakery-card'?'Pieczywo · dane piekarni / sklepu':
+        item.verification==='manufacturer-example'?'Wędlina · wartości orientacyjne':
         item.verification==='label-photo'?'Wartości z etykiety · konkretny EAN':
         item.category==='dish'?'Danie domowe · szacunek':
         item.verification==='estimated-generic'?'Produkt bazowy · szacunek':
@@ -47,7 +48,9 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
         shops.length?`${shops.join(', ')} · OFF`:'Open Food Facts';
       head.append(heading,node('span','food-source',sourceLabel));
       const macros=node('p','food-macros',`${fmt(item.kcal)} kcal · B ${fmt(item.protein)} g · T ${fmt(item.fat)} g · W ${fmt(item.carbs)} g / 100 ${item.unit||'g'}`);
-      const description=item.verification==='manufacturer-example'?
+      const description=item.verification==='bakery-card'?
+        '✓ Wartości z karty tego konkretnego cebularza; inne piekarnie mogą stosować odmienną recepturę.':
+        item.verification==='manufacturer-example'?
         '⚖️ Przykładowe wartości ze wskazanej karty producenta; Twój baleron może mieć inne makro. Sprawdź etykietę swojego opakowania.':
         item.verification==='label-photo'?
         '✓ Dane odczytane ze zdjęcia opakowania tego wariantu. Inne opakowania Sante mogą mieć zmieniony skład i makro.': 
@@ -83,7 +86,7 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
         card.append(link);
       }
       if (item.category==='bakery' && item.sourceUrl) {
-        const link=node('a','food-off-link','Dane na stronie Biedronki');
+        const link=node('a','food-off-link',item.verification==='bakery-card'?'Źródło wartości odżywczych':'Dane na stronie Biedronki');
         link.href=item.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';
         card.append(link);
       }
