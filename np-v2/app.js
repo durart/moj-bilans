@@ -715,8 +715,9 @@
     $('#npWeightRecentDate').textContent = previousWeight && last ? `${previousWeight.date} → ${last.date}` : 'Co najmniej dwa pomiary';
     $('#goalWeight').value = state.weightGoal;
     const recent = sorted.slice(-60);
-    $('#weightChartCaption').textContent = recent.length ? `Ostatnie ${recent.length} ${recent.length === 1 ? 'ważenie' : 'pomiary'}${sorted.length > 60 ? ' (maks. 60 na wykresie)' : ''}. Wartości w kg. Linie pomiędzy pomiarami nie oznaczają pomiaru codziennego.` : '';
-    $('#weightChart').innerHTML = recent.length ? buildWeightChart(recent) : '<p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p>';
+    $('#weightChartCaption').textContent = recent.length ? `Ostatnie ${recent.length} ${recent.length === 1 ? 'ważenie' : 'pomiary'}${sorted.length > 60 ? ' (maks. 60 na wykresie)' : ''}. Wartości w kg. Miętowy: pomiary, fioletowy: wygładzony trend EMA (półokres 7 dni), pomarańczowy: cel. Łączymy tylko rzeczywiste pomiary.` : '';
+    $('#weightChart').innerHTML = recent.length ? (window.NPBody25?.weightChart(recent, state.weightGoal) || buildWeightChart(recent)) : '<p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p>';
+    window.NPBody25?.render(sorted, state.weightGoal);
     $('#weightList').innerHTML = sorted.length ? [...sorted].reverse().map(w => `<div class="compact-item"><div><strong>${nf1.format(w.kg)} kg</strong><small>${safeText(niceDate(toDate(w.date)))}</small></div><button type="button" class="danger-quiet" data-removeweight="${safeText(w.date)}">Usuń</button></div>`).join('') : '<div class="empty-list">Nie ma jeszcze pomiarów.</div>';
     $$('[data-removeweight]').forEach(b => b.addEventListener('click', () => {
       if (!confirm(`Usunąć pomiar z dnia ${b.dataset.removeweight}?`)) return;
@@ -770,6 +771,7 @@
       const diffText = delta === null ? (last ? 'Pierwszy pomiar' : 'Brak pomiarów') : `${delta > 0 ? '+' : ''}${nf1.format(Math.round(delta * 10) / 10)} cm od początku`;
       return `<div class="panel measure-stat"><span>${safeText(m.label)}</span><strong>${last ? nf1.format(last[m.key]) + ' cm' : '—'}</strong><small>${safeText(diffText)}</small></div>`;
     }).join('');
+    window.NPBody25?.renderMeasures(sorted, $('#measurementOverview'));
     const type = $('#measurementChartType').value;
     const metric = MEASURES.find(m => m.key === type) || MEASURES[0];
     const series = sorted.filter(m => measureValue(m[metric.key]) !== null);
