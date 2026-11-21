@@ -36,6 +36,7 @@ try{
  const fail=value=>page.evaluate(v=>window.__failWrites=v,value);
  await verify('Existing journal and installed PWA data keys remain unchanged',async()=>{
    assert.equal((await stored()).entries.length,1);
+   await page.locator('[data-togglemeal="lunch"]').click();
    assert.match(await page.locator('#mealsContainer').innerText(),/Wcześniejszy wpis/);
    assert.equal(await page.locator('#npFoodCount').innerText(),'1');
  });
@@ -64,6 +65,7 @@ try{
    assert.equal(item.verification,'ean-photo-macro-estimate');
    assert.equal(item.nutrients.kcal,515);
    assert.deepEqual(data.entries.find(e=>e.id===existing.id),existing);
+   await page.locator('[data-togglemeal="breakfast"]').click();
    await page.locator('[data-viewentry="'+item.id+'"]').click();
    assert.match(await page.locator('#entrySummary').innerText(),/Wartości orientacyjne/);
    await page.locator('#closeEntry').click();
@@ -82,6 +84,7 @@ try{
  });
  await verify('Failed edit does not mutate saved entry or close dialog',async()=>{
    const data=await stored(),item=data.entries.find(e=>e.ean==='5900571906099');
+   await page.locator('[data-togglemeal="breakfast"]').click();
    await page.locator('[data-viewentry="'+item.id+'"]').click();
    await page.locator('#entryEdit').click();
    await page.locator('#entryGrams').fill('200');

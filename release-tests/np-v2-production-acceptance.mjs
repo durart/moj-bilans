@@ -31,7 +31,7 @@ try{
  },{fixture,sentinel});
  await page.goto(BASE,{waitUntil:'networkidle'});
  await verify('Root URL and original PWA identity',async()=>{
-  assert.match(await page.title(),/Nutrition Performance v2\.1/);
+  assert.match(await page.title(),/Daily Focus v2\.2/);
   const manifest=await page.evaluate(async()=>await (await fetch(document.querySelector('link[rel=manifest]').href)).json());
   assert.equal(manifest.id,'./');assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');
   assert.equal(await page.locator('.np-env-banner').count(),0);
@@ -42,6 +42,7 @@ try{
   assert.equal(await page.locator('#npMealCount').innerText(),'1 / 4');
   assert.match(await page.locator('#npBudgetStatus').innerText(),/kcal do celu/);
   assert.match(await page.locator('#goalInline').innerText(),/2.?150/);
+  await page.locator('[data-togglemeal="lunch"]').click();
   assert.match(await page.locator('#mealsContainer').innerText(),/Poprzedni wpis - zachowaj/);
   await page.locator('.nav-item[data-page="weight"]').click();
   assert.match(await page.locator('#weightLatest').innerText(),/99,2/);
@@ -119,7 +120,7 @@ try{
   await page.reload({waitUntil:'networkidle'});
   assert.equal(await page.locator('#npFoodCount').innerText(),'2');
   await page.waitForFunction(async()=>{
-   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-np-v21-release2');
+   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-daily-focus-v22');
   },null,{timeout:30000});
   const reg=await page.evaluate(async()=>{
    const r=await navigator.serviceWorker.getRegistration('./');return {scope:r?.scope,script:r?.active?.scriptURL};
