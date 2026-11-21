@@ -19,6 +19,6 @@ jobs:
         with:
           node-version: '22'
       - name: Verify isolated storage, PWA and UI
-        run: node np-v2/test_np_v2.mjs && node np-v2/test_np_v2_stages234.mjs && node np-v2/test_np_history_24.mjs
+        run: node np-v2/test_np_v2.mjs && node np-v2/test_np_v2_stages234.mjs && node np-v2/test_np_history_24.mjs && node np-v2/test_np_body_25.mjs
       - name: Run existing product, history and diary tests
         run: npm test
