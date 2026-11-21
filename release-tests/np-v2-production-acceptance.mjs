@@ -24,6 +24,7 @@ try{
  const context=await browser.newContext({viewport:{width:390,height:844},locale:'pl-PL',isMobile:true,hasTouch:true,serviceWorkers:'allow'});
  await context.route('https://world.openfoodfacts.org/**',route=>route.abort('blockedbyclient'));
  const page=await context.newPage();page.on('pageerror',err=>errors.push(String(err)));
+ page.on('dialog',dialog=>dialog.accept());
  await page.addInitScript(({fixture,sentinel})=>{
    if(localStorage.getItem('moj-bilans-v1')===null)localStorage.setItem('moj-bilans-v1',JSON.stringify(fixture));
    if(localStorage.getItem('moj-bilans-np-v2-v1')===null)localStorage.setItem('moj-bilans-np-v2-v1',sentinel);
@@ -68,7 +69,7 @@ try{
   await page.locator('[data-np-grams="150"]').click();
   assert.equal(await page.locator('#productGrams').inputValue(),'150');
   assert.ok(Math.abs(Number(await page.locator('#productKcal').inputValue())-initial*1.5)<.02);
-  page.once('dialog',d=>d.accept());
+  // Dialogs are accepted by the common listener below.
   await page.locator('#productForm button[type="submit"]').click();
   await page.locator('#modalBackdrop').waitFor({state:'hidden'});
   assert.equal(await page.locator('#npFoodCount').innerText(),'2');
@@ -102,7 +103,7 @@ try{
   const data=await page.evaluate(()=>JSON.parse(localStorage.getItem('moj-bilans-v1')));
   const backup={...data,app:'MojBilans',version:5,exportedAt:new Date().toISOString()};
   // In CI, only: input a new JSON copy of the existing dummy entries.
-  page.once('dialog',dialog=>dialog.accept());
+  // Dialogs are accepted by the common listener below.
   await page.locator('#importData').setInputFiles({
     name:'test-backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(backup))
   });
