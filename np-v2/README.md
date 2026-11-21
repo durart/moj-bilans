@@ -36,3 +36,19 @@ Wykonano 10 testów E2E w przeglądarce Chromium: start bez danych, RWD 320/375/
 Wykryto i naprawiono błąd nasłuchiwania kliknięć w przyciskach gramatury, który blokował inicjalizację dalszych formularzy. Potwierdzono 10/10 testów przeglądarkowych i testy regresyjne. Zmieniono nazwę cache do `moj-bilans-np-v2-cache-stage5` dla bezpiecznej aktualizacji PWA w obrębie własnego scope.
 
 Testy uruchamiane na osobnej gałęzi przez `.github/workflows/np-v2-browser.yml`; screenshoty trzech rozdzielczości dostępne jako artefakty GitHub Actions. Przed zakończeniem odbioru użytkowego zalecana jest kontrola na własnym telefonie z realną klawiaturą dotykową i zgodą aparatu. Nie używać danych produkcyjnych w testach.
+
+## Sprint 1 — Historia 2.4 (gałąź robocza)
+- Zakresy 7, 14 i **dokładne 30 dni**; zachowane dłuższe i własne okresy.
+- Wykres kcal: dzienne słupki dla 7/14/30, kolor względem celu ±10%, linie celu i średniej oraz oznaczenie brakujących wpisów. Dłuższe zakresy agregowane do maks. 28 słupków.
+- Panel realizacji celu: średnia względem celu, liczba dni w przedziale i powyżej, pokrycie okresu, rozkład dni oraz porównanie ostatnich 7 dni z przejściem do dziennika.
+- Niepełne dane kcal nie są traktowane jako zera; średnie i odchylenia planu są obliczane wyłącznie z dni z pełnymi kcal. Dni bez wpisów nie oznaczają realizacji celu.
+- Bez migracji danych, bez zapisu z panelu analiz i bez modyfikowania aplikacji produkcyjnej.
+- Testy: `node np-v2/test_np_history_24.mjs`, testy regresji, Chromium E2E oraz offline.
+- **Sprint 2 (Pomiary 2.5)** pozostaje kolejnym etapem po weryfikacji Sprintu 1.
+
+## Sprint 2 — Pomiary 2.5 / Body Progress (gałąź robocza)
+- Ekran postępu masy ciała: ostatnia waga, trend EMA wygładzany według faktycznych odstępów między ważeniami (półokres 7 dni), procent postępu od pierwszego ważenia do aktualnego celu i dystans do celu.
+- Wykres wagi: rzeczywiste pomiary, fioletowa linia trendu i linia celu, bez dopisywania sztucznych pomiarów.
+- Karty czterech obwodów: ostatnia wartość i data, różnica od pierwszego i poprzedniego pomiaru; wykres wybranego obwodu i historia nadal działają.
+- Bez nowych pól w kopiach JSON, bez modyfikacji localStorage, IndexedDB, bazy produktów i katalogu głównego produkcji. Obsługa braku danych i błędnych dat.
+- Testy: `node np-v2/test_np_body_25.mjs`, Chromium E2E oraz offline.
