@@ -1,7 +1,7 @@
 {
-  "name": "Mój Bilans — Nutrition Performance v2.0",
+  "name": "Mój Bilans — Nutrition Performance v2.1",
   "short_name": "Mój Bilans",
-  "description": "Dziennik kalorii, makro, wagi i obwodów ciała — Nutrition Performance v2.0",
+  "description": "Dziennik żywieniowy, pomiarów i postępów z kontrolą zapisu oraz kopii lokalnych",
   "id": "./",
   "start_url": "./",
   "scope": "./",

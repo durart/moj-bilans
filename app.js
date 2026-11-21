@@ -23,7 +23,21 @@
   const isNumber = x => x !== null && x !== '' && Number.isFinite(Number(x));
   const number = x => isNumber(x) ? Number(x) : null;
   const mealValid = x => MEALS.some(meal => meal.id === x);
-  const dataFromStorage = () => { try { const v = JSON.parse(localStorage.getItem(KEY)); return v && typeof v === 'object' ? v : {}; } catch { return {}; } };
+  let storageFault = '';
+  const dataFromStorage = () => {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw === null) return {};
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.entries)) {
+        throw Error('Niepoprawny format dziennika');
+      }
+      return parsed;
+    } catch (err) {
+      storageFault = 'Błąd odczytu: ' + (err?.message || 'pamięć niedostępna') + '. Zapis zablokowano, aby nie nadpisać wcześniejszych danych.';
+      return {};
+    }
+  };
   let saved = dataFromStorage();
   let state = {
     goals: { ...DEFAULT_GOALS, ...(saved.goals || {}) },
@@ -59,7 +73,31 @@
   let historyCustomFrom = '';
   let historyCustomTo = '';
   const snapshot = () => ({ app: 'MojBilans', version: 5, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements })); queueAutomaticLocalCopy(); return true; } catch { toast('Nie udało się zapisać. Sprawdź pamięć urządzenia.'); return false; } };
+  const saveStatus = (message, isError=false) => {
+    for (const id of ['np21SaveStatus','np21SaveInline']) {
+      const el = $('#'+id);
+      if (el) { el.textContent=message; el.classList.toggle('np21-error',isError); }
+    }
+  };
+  const save = () => {
+    if (storageFault) {
+      saveStatus(storageFault, true);
+      toast('Zapis zablokowany. Nie usuwaj danych aplikacji.');
+      return false;
+    }
+    try {
+      const json = JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
+      localStorage.setItem(KEY, json);
+      if (localStorage.getItem(KEY) !== json) throw Error('Odczyt po zapisie nie zgadza się z zapisaną treścią.');
+      saveStatus('Dziennik zapisany w tym urządzeniu o ' + new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+      queueAutomaticLocalCopy();
+      return true;
+    } catch (err) {
+      saveStatus('Nie udało się zapisać: '+(err?.message||'błąd pamięci')+'. Lokalna kopia może być nieaktualna.',true);
+      toast('Nie udało się zapisać. Sprawdź pamięć urządzenia.');
+      return false;
+    }
+  };
   const toast = text => { const el = $('#toast'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2800); };
   const feedback = text => { $('#feedback').textContent = text || ''; };
   const pct = (value, target) => Math.max(0, Math.min(100, target > 0 ? value / target * 100 : 0));
@@ -556,6 +594,10 @@
     return blob.size;
   }
   function exportData() {
+    if (storageFault) {
+      setDownloadStatus('Błąd odczytu dziennika — nie eksportowano pustego zastępczego stanu. Zabezpiecz oryginalną pamięć i punkty przywracania.', true);
+      return;
+    }
     try {
       const stamp = new Date();
       const time = [stamp.getHours(), stamp.getMinutes(), stamp.getSeconds()].map(v => String(v).padStart(2, '0')).join('-');
@@ -568,6 +610,7 @@
     }
   }
   function restorePayload(payload) {
+       if (storageFault) throw Error('Dziennik jest nieczytelny. Przywracanie zablokowane, aby nie nadpisać oryginalnej pamięci.');
       if (payload.app !== 'MojBilans' || !Array.isArray(payload.entries) || !Array.isArray(payload.custom) || !Array.isArray(payload.recent)) throw Error('To nie jest prawidłowy plik Mój Bilans.');
       if (payload.entries.length > 20000 || payload.custom.length > 5000 || payload.recent.length > 5000) throw Error('Zbyt duży zestaw danych.');
       const validProduct = p => p && typeof p.name === 'string' && p.name.length <= 100 && p.nutrients && isNumber(p.nutrients.kcal) && number(p.nutrients.kcal) >= 0 && Number(p.nutrients.kcal) <= 10000;
@@ -1007,6 +1050,10 @@
   // Lokalny punkt przywracania jest przechowywany w IndexedDB (jeden plik na dzień,
   // aktualizowany przy zmianach). To nie jest niezależna kopia w systemowym folderze
   // Pobrane: taki plik powstaje dopiero po świadomym kliknięciu Pobierz kopię.
+  function backupHealth(message, isError=false) {
+    const el=$('#np21BackupHealth');
+    if(el){el.textContent=message;el.classList.toggle('np21-error',isError);}
+  }
   function localBackupStatus(message, isError = false) {
     const el = $('#localBackupStatus');
     el.textContent = message;
@@ -1080,6 +1127,10 @@
       const db = await openLocalBackupDb();
       try {
         await dbOperation(db, 'readwrite', store => store.put(record));
+        const readback = await dbOperation(db, 'readonly', store => store.get(record.id));
+        if (!readback || readback.json !== record.json || readback.bytes !== record.bytes) {
+          throw Error('Brak potwierdzenia zapisu kopii w pamięci urządzenia.');
+        }
         // Zachowaj maksymalnie 30 ostatnich dni; nie usuwamy innych danych aplikacji.
         const rows = (await dbOperation(db, 'readonly', store => store.getAll()))
           .sort((a,b) => String(b.savedAt).localeCompare(String(a.savedAt)));
@@ -1087,9 +1138,11 @@
         for (const row of old) await dbOperation(db, 'readwrite', store => store.delete(row.id));
       } finally { db.close(); }
       localBackupStatus(`Automatyczny punkt przywracania na tym urządzeniu zapisany: ${formatTime(record.savedAt)} (${sizeLabel(record.bytes)}). Jest w pamięci przeglądarki, nie w folderze Pobrane.`);
+      backupHealth('Kopia lokalna potwierdzona: '+formatTime(record.savedAt)+' • '+sizeLabel(record.bytes)+'.');
       if ($('#page-settings').classList.contains('active')) await listLocalCopies(true);
     } catch (err) {
       localBackupStatus(`Nie zapisano automatycznego punktu przywracania: ${err.message}. Nadal możesz kliknąć „Pobierz kopię na telefon”.`, true);
+      backupHealth('Nie udało się zapisać kopii: '+err.message,true);
     }
   }
   function validateBackupPreview(data) {
@@ -1103,6 +1156,7 @@
     if (!quiet) el.innerHTML = '<div class="empty-list">Wczytuję kopie z pamięci tego telefonu…</div>';
     try {
       const files = await readAllLocalCopies();
+      backupHealth(files.length ? 'Ostatnia kopia lokalna: '+formatTime(files[0].savedAt)+' • '+files.length+' dni dostępnych.' : 'Nie ma jeszcze lokalnej kopii na tym urządzeniu.');
       el.innerHTML = files.length ? files.map(f => `<div class="compact-item drive-files-item"><div><strong>${safeText(f.name)}</strong><small>${safeText(formatTime(f.savedAt))} · ${safeText(sizeLabel(f.bytes))} · punkt lokalny</small></div><div class="file-actions"><button type="button" data-local-preview="${safeText(f.id)}">Podgląd</button><button type="button" data-local-download="${safeText(f.id)}">Pobierz</button><button type="button" data-local-restore="${safeText(f.id)}">Przywróć</button></div></div>`).join('') : '<div class="empty-list">Brak lokalnych punktów przywracania. Zostaną utworzone po zapisaniu danych w aplikacji.</div>';
       $$('[data-local-preview]').forEach(b => b.addEventListener('click', () => previewLocalCopy(b.dataset.localPreview)));
       $$('[data-local-download]').forEach(b => b.addEventListener('click', () => downloadSavedLocalCopy(b.dataset.localDownload)));
@@ -1111,7 +1165,32 @@
     } catch (err) {
       el.innerHTML = `<div class="empty-list">Nie można wyświetlić kopii: ${safeText(err.message)}</div>`;
       if (!quiet) localBackupStatus(`Nie można wyświetlić kopii: ${err.message}`, true);
+      backupHealth('Nie udało się odczytać kopii lokalnych: '+err.message,true);
     }
+  }
+  // Bezpieczny test integralności: parsowanie i walidacja BEZ zapisu do dziennika.
+  async function verifyLatestBackup() {
+    const button=$('#np21VerifyBackup');
+    button.disabled=true;
+    try {
+      const copies=await readAllLocalCopies();
+      if(!copies.length) throw Error('Brak kopii do sprawdzenia. Dodaj przykładowy posiłek testowy.');
+      const latest=await getLocalCopy(copies[0].id);
+      if(!latest || typeof latest.json!=='string') throw Error('Nie można odczytać treści kopii.');
+      if(new Blob([latest.json]).size!==latest.bytes) throw Error('Rozmiar zapisanej kopii jest niezgodny.');
+      const data=JSON.parse(latest.json);
+      validateBackupPreview(data);
+      const validEntry=e=> e && typeof e.name==='string' && e.nutrients && isNumber(e.nutrients.kcal)
+        && normalizedDate(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams)>0;
+      if(!data.entries.every(validEntry)) throw Error('Znaleziono niepoprawny wpis posiłku.');
+      for(const key of ['custom','recent','weights','water','measurements']) {
+        if(data[key]!==undefined && !Array.isArray(data[key]))throw Error('Nieprawidłowe pole '+key+'.');
+      }
+      backupHealth('Sprawdzono kopię z '+formatTime(latest.savedAt)+': odczyt, rozmiar i struktura '+data.entries.length+' wpisów poprawne. Nie przywracano danych.');
+      localBackupStatus('Kontrola zakończona. Dziennik pozostał bez zmian.');
+    } catch(err) {
+      backupHealth('Test integralności nieudany: '+(err?.message||'błąd odczytu'),true);
+    } finally {button.disabled=false;}
   }
   async function previewLocalCopy(id) {
     try {
@@ -1206,7 +1285,7 @@
     // v0.6: podłącz zintegrowaną wyszukiwarkę (ziemniaki/produkty podstawowe + OFF).
     // Jeśli moduł się nie załaduje, zachowaj starą wyszukiwarkę, aby nie blokować dziennika.
     $('#searchForm').addEventListener('submit', searchName);
-    import('./interfejs-wyszukiwarki.mjs?v=np2.0.2').then(({ mountFoodSearch }) => {
+    import('./interfejs-wyszukiwarki.mjs?v=np2.1.0').then(({ mountFoodSearch }) => {
       $('#searchForm').removeEventListener('submit', searchName);
       mountFoodSearch({
         form: $('#searchForm'), input: $('#searchName'), results: $('#searchResults'),
@@ -1253,12 +1332,14 @@
     $('#exportData').addEventListener('click', exportData);
     $('#importData').addEventListener('change', importData);
     $('#localBackupRefresh').addEventListener('click', () => listLocalCopies());
+    $('#np21VerifyBackup').addEventListener('click', verifyLatestBackup);
     $('#backupInspect').addEventListener('change', inspectBackupFile);
     listLocalCopies(true);
     // Rozpocznij lokalną historię dla istniejących danych bez wykonywania pobierania pliku.
-    if (localStorage.getItem(KEY)) queueAutomaticLocalCopy();
+    if (!storageFault && localStorage.getItem(KEY)) queueAutomaticLocalCopy();
   }
   function changeDay(days) { const d = toDate(state.selectedDate); d.setDate(d.getDate() + days); state.selectedDate = dateKey(d); renderAll(); }
   bind(); renderAll();
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  saveStatus(storageFault || (saved?.entries ? 'Wczytano zapisany dziennik z tego urządzenia.' : 'Dziennik jest pusty — nowe dane będą zapisywane na tym urządzeniu.'), !!storageFault);
+  // Rejestracja Service Workera i aktualizacje: pwa-updater.js (bez automatycznego przeładowania).
 })();
