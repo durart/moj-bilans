@@ -1,0 +1,50 @@
+name: Mój Bilans Daily Focus v2.2 - visual and data acceptance
+on:
+  push:
+    branches:
+      - release/daily-focus-v2.2
+    paths:
+      - 'app.js'
+      - 'index.html'
+      - 'daily-focus.css'
+      - 'sw.js'
+      - 'release-tests/**'
+      - 'test_*.mjs'
+      - '.github/workflows/daily-focus-v22.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Data safety / legacy / all product tests
+        run: node release-tests/np21-prod-safety.mjs && node release-tests/np-v2-safety.mjs && npm test
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright and Chromium
+        run: npm install --no-save --package-lock=false playwright && npx playwright install --with-deps chromium
+      - name: Existing production journal/backup/PWA acceptance
+        run: node release-tests/np-v2-production-acceptance.mjs
+      - name: Stage 1 data failure injections
+        run: node release-tests/stage1-data-safety-browser.mjs
+      - name: Daily Focus interaction and mobile layout
+        run: node release-tests/daily-focus-visual-acceptance.mjs
+      - name: Save real browser preview screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-focus-browser-screenshots
+          path: test-artifacts/daily-focus-*.png
+          if-no-files-found: ignore
