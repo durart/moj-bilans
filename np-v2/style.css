@@ -193,6 +193,3 @@
   .recent-item button{font-size:11px;padding:8px 9px;}
   .recent-destination-label{gap:7px;padding:8px 10px;}
 }
-
-/* Osobny testowy podgląd GitHub Pages — nie zmienia danych produkcji. */
-.preview-banner{position:relative;text-align:center;padding:9px 12px;background:#503b18;color:#fff0ca;font-size:12px;font-weight:800;letter-spacing:.15px;border-bottom:1px solid #99713a;line-height:1.45}
