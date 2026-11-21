@@ -26,7 +26,7 @@ for(const [path,resource] of [
   assert.ok(index.includes(resource+'="'+versioned+'"'),'HTML not versioned: '+path);
   assert.ok(sw.includes("'"+versioned+"'"),'Offline cache missing versioned asset: '+path);
 }
-assert.match(a,/import\('\.\/interfejs-wyszukiwarki\.mjs\?v=np2\.0\.2'\)/);
+assert.match(a,/import\('\.\/interfejs-wyszukiwarki\.mjs\?v=np2\.1\.0'\)/);
 assert.ok(sw.includes("'./interfejs-wyszukiwarki.mjs?v=np2.1.0'"));
 assert.ok(sw.includes("'./bakador-chili.mjs'"));
 assert.ok(read('produkty-podstawowe.mjs').includes("import { BAKADOR_CHILI } from './bakador-chili.mjs'"));
