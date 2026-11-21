@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="./wyszukiwarka.css" />
   <link rel="stylesheet" href="./np-design.css" />
   <link rel="stylesheet" href="./np-history-24.css" />
+  <link rel="stylesheet" href="./np-body-25.css" />
   <title>Mój Bilans — Nutrition Performance v2 • TEST</title>
 </head>
 <body>
@@ -152,11 +153,24 @@
       <section id="page-weight" class="page" aria-label="Waga i obwody ciała">
         <div class="page-heading"><div class="eyebrow">POSTĘPY REDUKCJI</div><h1>Pomiary ciała</h1><p>Obserwuj wagę, brzuch, talię, klatkę piersiową i biceps — ze zmianami na wykresach.</p></div>
         <div class="weight-overview"><div class="panel weight-stat"><span>Ostatni pomiar</span><strong id="weightLatest">—</strong><small id="weightLatestDate">Brak danych</small></div><div class="panel weight-stat"><span>Zmiana od początku</span><strong id="weightChange">—</strong><small id="weightChangeHint">Pierwszy pomiar</small></div><div class="panel weight-stat"><span>Cel masy ciała</span><strong id="weightGoalDisplay">90 kg</strong><small id="weightToGoal">Ustaw cel poniżej</small></div><div class="panel weight-stat"><span>Od poprzedniego ważenia</span><strong id="npWeightRecent">—</strong><small id="npWeightRecentDate">Co najmniej dwa pomiary</small></div></div>
+        <section class="panel np-body-progress" aria-labelledby="npBodyTitle">
+          <div class="np-body-head">
+            <div><span class="np-eyebrow">POMIARY 2.5 / BODY PROGRESS</span><h2 id="npBodyTitle">Twoja droga do celu</h2><p>Pomiar, wygładzony trend i rzeczywisty postęp.</p></div>
+            <span class="np-body-tag">Bez fikcyjnych pomiarów</span>
+          </div>
+          <div class="np-body-kpis">
+            <div class="np-body-kpi"><span>Postęp od pierwszego pomiaru</span><strong id="npBodyProgressPercent">—</strong><small>Względem obecnego celu masy ciała</small></div>
+            <div class="np-body-kpi"><span>Trend wygładzony</span><strong id="npBodySmoothed">—</strong><small id="npBodyTrendHint">Trend pojawi się po drugim ważeniu.</small></div>
+            <div class="np-body-kpi"><span>Pozostało do celu</span><strong id="npBodyTargetLeft">—</strong><small id="npBodyStatus">Brak pomiarów</small></div>
+          </div>
+          <div class="np-body-progress-meter"><div id="npBodyProgressBar" class="np-body-progress-fill" role="progressbar" aria-label="Postęp drogi do celu masy ciała" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div>
+          <p id="npBodyProgressDescription" class="np-body-progress-desc">Dodaj pierwszy pomiar, aby zobaczyć postęp.</p>
+        </section>
         <form id="weightEntryForm" class="panel compact-form"><h3>Zapisz pomiar</h3><div class="field-row"><label class="field-label">Data<input id="weightDate" type="date" required/></label><label class="field-label">Masa ciała (kg)<input id="weightKg" type="number" min="20" max="400" step="0.1" inputmode="decimal" placeholder="np. 102,5" required/></label></div><button type="submit" class="primary-button wide">Zapisz wagę</button><p class="help">Ponowny zapis w tym samym dniu zastąpi poprzedni pomiar.</p></form>
         <div class="panel weight-chart-panel"><div class="section-title weight-section-title"><div><div class="eyebrow">TWOJA HISTORIA</div><h2>Wykres masy ciała</h2></div></div><div id="weightChart" class="weight-chart"><p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p></div><div id="weightChartCaption" class="chart-caption"></div></div>
         <div class="panel compact-form"><form id="weightGoalForm"><h3>Twój cel</h3><label class="field-label">Docelowa masa ciała (kg)<input id="goalWeight" type="number" min="20" max="400" step="0.1" inputmode="decimal" required /></label><button class="secondary-button wide" type="submit">Zapisz cel wagi</button></form></div>
         <h3 class="subheading">Historia wagi</h3><div id="weightList" class="compact-list"></div>
-        <div class="body-divider"><span class="eyebrow">NOWOŚĆ W WERSJI 0.3</span><h2>Obwody ciała</h2><p class="help">Mierz zawsze w podobnych warunkach. Każdy obwód możesz zapisać oddzielnie, bez konieczności wpisywania pozostałych.</p></div>
+        <div class="body-divider"><span class="eyebrow">NOWOŚĆ W WERSJI 0.3</span><h2>Obwody ciała — porównania</h2><p class="help">Mierz zawsze w podobnych warunkach. Każdy obwód możesz zapisać oddzielnie, bez konieczności wpisywania pozostałych.</p></div>
         <div class="measure-overview" id="measurementOverview" aria-label="Ostatnie obwody ciała"></div>
         <form id="measurementForm" class="panel compact-form" autocomplete="off">
           <h3>Dodaj pomiar obwodów</h3>
@@ -275,6 +289,7 @@
   <script src="./ostatnie-dziennik.js" defer></script>
   <script src="./np-trends.js" defer></script>
   <script src="./np-history-24.js" defer></script>
+  <script src="./np-body-25.js" defer></script>
   <script src="./app.js" defer></script>
   <script src="./np-ui.js" defer></script>
 </body>
