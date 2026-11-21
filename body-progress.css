@@ -1,0 +1,92 @@
+/* Mój Bilans 2.5 — Body Progress premium design, harmonized with Daily Focus. */
+#page-weight.bp25-page{max-width:1010px;margin:auto;padding:0 24px 132px}
+.bp25-heading{margin:0 0 17px}
+.bp25-heading .eyebrow{font-size:10px;letter-spacing:.14em;color:#93e8b4;font-weight:830}
+.bp25-heading h1{display:flex;align-items:center;gap:12px;font-weight:870;letter-spacing:-1.15px;font-size:clamp(28px,3.2vw,39px);margin:5px 0}
+.bp25-heading p{font-size:13px;color:#adc9bc;line-height:1.5;margin:0}
+.bp25-heading-icon{display:grid;place-items:center;background:linear-gradient(150deg,#2a744d,#1a372b);border:1px solid #519365;color:#8affb0;width:42px;height:42px;border-radius:12px;font-size:28px}
+.bp25-page .panel{background:radial-gradient(ellipse at 3% 0,#2e73401b,transparent 65%),linear-gradient(145deg,#202f33,#152129 85%);border:1px solid #39544a8c;box-shadow:0 11px 24px #0003,inset 0 1px 0 #ffffff12;border-radius:21px}
+.bp25-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 16px;background:#111d24;border:1px solid #344840;border-radius:15px;padding:5px}
+.bp25-tabs button{min-height:47px;border:0;background:transparent;color:#b7d1c4;border-radius:12px;font-size:15px;font-weight:780;transition:background .18s ease}
+.bp25-tabs button.active{background:linear-gradient(140deg,#51ed88,#30cb6d);color:#083a22;box-shadow:0 5px 15px #20c66626}
+.bp25-tabs button:focus-visible,.bp25-periods button:focus-visible{outline:2px solid #9cfcb9;outline-offset:2px}
+.bp25-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:0 0 13px}
+.bp25-stat{padding:18px 17px;display:grid;gap:6px;min-width:0}
+.bp25-stat span{color:#aec7bb;font-size:12px;font-weight:680}
+.bp25-stat strong{font-size:clamp(21px,2.7vw,29px);color:#f4fff7;line-height:1.15;font-weight:860;letter-spacing:-.7px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bp25-stat small{color:#a3baaf;font-size:11px}
+.bp25-last-change strong{color:#80f3aa}
+.bp25-goal{padding:21px 22px 18px;margin:0 0 13px;border-color:#4a8062!important;background:radial-gradient(ellipse at 97% 6%,#2b6c3e66,transparent 55%),linear-gradient(145deg,#1a3b2d,#14252a)!important}
+.bp25-eyebrow{font-size:10px;color:#b8f7c7;letter-spacing:.12em;font-weight:780}
+.bp25-goal-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bp25-goal-heading h2{font-size:clamp(18px,2.3vw,22px);font-weight:820;margin:5px 0 0;letter-spacing:-.4px}
+.bp25-goal-heading>strong{font-size:clamp(24px,3.5vw,34px);font-weight:900;color:#79fda5;font-variant-numeric:tabular-nums}
+.bp25-progress-track{height:13px;margin:19px 0 12px;background:#36594e;border-radius:99px;overflow:hidden;box-shadow:inset 0 1px 4px #0005}
+.bp25-progress-bar{width:0%;height:100%;border-radius:99px;background:linear-gradient(90deg,#3ad974,#99ffd1);box-shadow:0 0 12px #30db8490;transition:width .35s ease}
+.bp25-progress-stats{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.bp25-progress-stats>span{font-size:12px;color:#b9d7c5}
+.bp25-progress-stats strong{color:#ecfff2;font-size:13px;font-weight:830;font-variant-numeric:tabular-nums}
+.bp25-goal p{margin:15px 0 0;font-size:12px;color:#b2cebb;line-height:1.5}
+.bp25-page .weight-overview{display:none}
+.bp25-page .bp25-chart-panel{padding:19px 18px;margin:0 0 13px}
+.bp25-chart-heading{display:flex;align-items:center;justify-content:space-between;gap:11px;margin-bottom:14px}
+.bp25-chart-heading .eyebrow{color:#8decb0;letter-spacing:.12em;font-size:10px}
+.bp25-chart-heading h2{font-weight:830;font-size:clamp(18px,2.2vw,22px);margin:5px 0;letter-spacing:-.4px}
+.bp25-periods{display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:#102127;border:1px solid #3b5649;border-radius:11px}
+.bp25-periods button{min-width:0;min-height:36px;border:0;background:transparent;color:#b5cfc2;border-radius:8px;padding:6px 9px;font-size:11px;font-weight:750;white-space:nowrap}
+.bp25-periods button.active{background:#286c46;color:#d7ffdf}
+.bp25-page #weightChart svg{display:block;width:100%;max-height:320px;height:auto;margin:3px auto}
+.bp25-chart-legend{display:flex;gap:11px 19px;flex-wrap:wrap;justify-content:center;margin-top:7px;font-size:11px;color:#c0d4c8}
+.bp25-chart-legend span{display:inline-flex;align-items:center;gap:5px}
+.bp25-chart-legend i{display:inline-block;width:16px;height:0;border-top:3px solid}
+.bp25-legend-raw{border-color:#899e92!important;border-top-style:dashed!important}
+.bp25-legend-trend{border-color:#4ce883!important}
+.bp25-legend-goal{border-color:#c1ecc1!important;border-top-style:dashed!important}
+.bp25-page .chart-caption{font-size:11px;line-height:1.5;color:#a3b8ac;margin-top:8px}
+.bp25-page .compact-form{padding:20px;margin-bottom:14px}
+.bp25-page .compact-form h3{font-size:17px;margin:0 0 13px}
+.bp25-page .compact-form :is(input,select){background:#10222a;border:1px solid #446052;border-radius:11px;color:#f5fff5;font-size:15px;min-height:45px}
+.bp25-page .compact-form .primary-button{border-radius:12px;background:linear-gradient(135deg,#60ef92,#30cf72);color:#093a20;font-weight:830;min-height:48px}
+.bp25-page #weightGoalForm button{background:#254b37;border-color:#468e60;color:#d1f7de;min-height:43px;border-radius:11px}
+.bp25-subheading{margin:19px 2px 11px;font-size:19px;font-weight:800}
+.bp25-page .compact-item{background:linear-gradient(125deg,#222f35,#17232b);border:1px solid #ffffff12;border-radius:13px;margin:0 0 8px;padding:12px 15px}
+.bp25-page .compact-item strong{color:#f8fff9}
+.bp25-page .compact-item small{color:#bbcbc0}
+.bp25-page .body-divider{border:0;margin:12px 0 14px;padding:0}
+.bp25-page .body-divider .eyebrow{display:none}
+.bp25-page .body-divider h2{font-size:22px;margin:5px 0}
+.bp25-page .body-divider p{font-size:12px}
+.bp25-page .measure-overview{grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:12px 0 16px}
+.bp25-page .measure-stat{padding:16px 15px;border-radius:17px;gap:7px;position:relative;overflow:hidden}
+.bp25-page .measure-stat:before{content:"";position:absolute;right:-18px;top:-18px;width:65px;height:65px;background:#41c57414;border-radius:50%}
+.bp25-page .measure-stat span{font-size:12px;color:#c4d8ce;font-weight:730}
+.bp25-page .measure-stat strong{font-size:clamp(18px,2.5vw,24px);color:#f5fff7;font-weight:860;letter-spacing:-.6px;white-space:nowrap}
+.bp25-page .measure-stat small{font-size:11px;color:#90f2ae;line-height:1.4}
+.bp25-page #measurementForm .measure-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+.bp25-page #measurementForm .field-label{min-width:0}
+.bp25-page .weight-chart-panel .measure-select-label{max-width:220px;font-size:12px;color:#cee4d6;margin-bottom:12px}
+.bp25-page .np-measure-recent{font-size:12px;color:#bae4c3}
+@media(max-width:730px){
+ #page-weight.bp25-page{padding:0 15px 130px}
+ .bp25-page .measure-overview,.bp25-page #measurementForm .measure-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .bp25-chart-heading{align-items:flex-start;flex-wrap:wrap}
+}
+@media(max-width:460px){
+ .bp25-heading h1{font-size:28px}
+ .bp25-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .bp25-last-change{grid-column:1/-1}
+ .bp25-stat{padding:14px 13px}
+ .bp25-stat strong{font-size:24px}
+ .bp25-last-change{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+ .bp25-last-change span{width:100%}
+ .bp25-last-change small{margin-left:auto}
+ .bp25-goal{padding:17px 15px}
+ .bp25-page .bp25-chart-panel{padding:14px 10px}
+ .bp25-page .measure-overview{gap:9px}
+ .bp25-page .measure-stat{padding:13px 11px}
+ .bp25-page .measure-stat strong{font-size:18px}
+ .bp25-page .measure-stat small{font-size:10px}
+ .bp25-page #measurementForm .measure-fields{gap:9px}
+}
+@media(max-width:340px){.bp25-page .measure-stat strong{font-size:17px}.bp25-page #measurementForm .measure-fields{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.bp25-progress-bar,.bp25-tabs button{transition:none}}
