@@ -210,7 +210,7 @@
       return `<article class="meal-card df-meal-card" data-meal-card="${safeId}">
         <div class="df-meal-row">
           <button class="df-meal-toggle" type="button" data-togglemeal="${safeId}" aria-expanded="${expanded}" aria-controls="df-meal-details-${safeId}" aria-label="${meal.name}: ${caption}, ${kcal} kcal. ${expanded ? 'Zwiń' : 'Rozwiń'} posiłek">
-            <span class="df-meal-art df-art-${safeId}" aria-hidden="true"><img class="df-meal-photo" src="./assets/df-${safeId}.svg" alt="" loading="lazy" decoding="async"></span>
+            <span class="df-meal-art df-art-${safeId}" aria-hidden="true"><img class="df-meal-photo" src="../assets/df-${safeId}.svg" alt="" loading="lazy" decoding="async"></span>
             <span class="df-meal-info"><strong>${meal.name}</strong><small>${caption}</small></span>
             <span class="df-meal-energy">${kcal} <small>kcal</small><span class="df-meal-chevron" aria-hidden="true">›</span></span>
           </button>
