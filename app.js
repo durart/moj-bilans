@@ -399,6 +399,43 @@
     showPage('journal');
     toast(`Dodano cały posiłek (${rows.length} produktów)`);
   }
+  // Premium Food Search: displayed context is derived from current UI state.
+  // This layer never writes a separate diary or modifies backup namespaces.
+  function updatePfsContext() {
+    const meal = $('#productForm').classList.contains('hidden') ? currentMeal : $('#productMeal').value;
+    const label = mealName(mealValid(meal) ? meal : currentMeal);
+    $('#pfsMealContext').textContent = 'Do posiłku: ' + label;
+    const save = $('#pfsSubmit');
+    if (save) save.textContent = '+ Dodaj do ' + label.toLocaleLowerCase('pl');
+  }
+  function updatePfsPortionControls() {
+    const grams = number($('#productGrams').value);
+    $('[data-np-grams]').forEach(button => {
+      const selected = grams !== null && grams === Number(button.dataset.npGrams);
+      button.classList.toggle('selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+  }
+  function renderPfsFavorites() {
+    const favoriteMeals = state.favorites;
+    const own = state.custom;
+    const mealHtml = favoriteMeals.map((f,i) => {
+      const energy = Math.round(totalFor(f.items || []).kcal);
+      return `<article class="pfs-fav-card"><span class="pfs-fav-glyph" aria-hidden="true">☆</span><div class="pfs-fav-info"><strong>${safeText(f.name)}</strong><small>${f.items?.length || 0} produktów · ${nf.format(energy)} kcal</small></div><button type="button" data-pfs-favmeal="${i}" aria-label="Dodaj zestaw ${safeText(f.name)} do ${safeText(mealName(currentMeal))}">+ Dodaj</button></article>`;
+    }).join('');
+    const ownHtml = own.slice(0,25).map((p,i) => `<article class="pfs-fav-card"><span class="pfs-fav-glyph" aria-hidden="true">◈</span><div class="pfs-fav-info"><strong>${safeText(p.name)}</strong><small>${nf1.format(p.nutrients?.kcal ?? 0)} kcal / 100 g</small></div><button type="button" data-pfs-own="${i}" aria-label="Wybierz produkt ${safeText(p.name)}">+ Wybierz</button></article>`).join('');
+    $('#pfsFavoriteList').innerHTML =
+      `<h4>Ulubione posiłki</h4>${mealHtml || '<p class="pfs-empty">Brak ulubionych zestawów. Zapisz zestaw w dzienniku przy wybranym posiłku.</p>'}` +
+      `<h4>Moje produkty</h4>${ownHtml || '<p class="pfs-empty">Brak zapisanych własnych produktów.</p>'}`;
+    $('[data-pfs-favmeal]').forEach(button => button.addEventListener('click', () => {
+      const fav = state.favorites[Number(button.dataset.pfsFavmeal)];
+      if (fav && addFavorite(fav.id, currentMeal)) closeModal();
+    }));
+    $('[data-pfs-own]').forEach(button => button.addEventListener('click', () => {
+      const p = state.custom[Number(button.dataset.pfsOwn)];
+      if (p) selectProduct(p);
+    }));
+  }
   function openModal(meal = 'breakfast', mode = 'search') {
     currentMeal = mealValid(meal) ? meal : 'breakfast';
     activeProduct = null;
@@ -410,6 +447,7 @@
     $('#productMeal').value = currentMeal;
     feedback(''); switchMode(mode);
     $('#modalTitle').textContent = 'Dodaj produkt';
+    updatePfsContext();
     $('#modalBackdrop').classList.remove('hidden'); $('#modalBackdrop').setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
     if (mode === 'manual') selectProduct({ name: '', nutrients: { kcal: null, protein: null, carbs: null, fat: null }, source: 'Własny' }, { manually: true });
@@ -424,6 +462,7 @@
     $$('.mode-pane').forEach(el => el.classList.toggle('hidden', el.id !== `mode-${mode}`));
     feedback('');
     if (mode === 'recent') renderRecentDiary();
+    if (mode === 'favorites') renderPfsFavorites();
     if (mode === 'manual') selectProduct({ name: '', nutrients: { kcal: null, protein: null, carbs: null, fat: null }, source: 'Własny' }, { manually: true });
   }
   // W formularzu wyświetlamy kcal i makro dla aktualnej ilości, lecz wpisy oraz
@@ -442,6 +481,7 @@
       $('#product' + suffix).value = per100 === null ? '' : formattedPortion(per100 * grams / 100);
     }
     updatePreview();
+    updatePfsPortionControls();
   }
   function productNutrientChanged(key, suffix) {
     const grams = number($('#productGrams').value);
@@ -461,20 +501,36 @@
     $('#modalTitle').textContent = opts.manually ? 'Własny produkt' : 'Dodaj porcję';
     $('#productSource').textContent = opts.manually ? 'Produkt własny' : (product.source || 'Open Food Facts');
     $('#productName').value = activeProduct.name || '';
-    // Zwykłe wyszukiwanie zaczyna od 100 g/ml. Jedynie świadomie wybrany
-    // produkt z zakładki Ostatnie dziedziczy gramaturę faktycznie zjedzonej porcji.
+    // Najpierw gramatura z konkretnego ostatniego wpisu, następnie ostatnia
+    // zapisana porcja tego produktu. Nowy produkt rozpoczyna od 100 g.
     const initialGrams = Number(opts.initialGrams);
-    $('#productGrams').value = Number.isFinite(initialGrams) && initialGrams > 0 && initialGrams <= 100000
-      ? String(initialGrams) : '100';
+    const lastGrams = Number(state.portions[productKey(activeProduct)]);
+    const remembered = !opts.manually && Number.isFinite(lastGrams) && lastGrams > 0 && lastGrams <= 100000;
+    const chosen = Number.isFinite(initialGrams) && initialGrams > 0 && initialGrams <= 100000
+      ? initialGrams : remembered ? lastGrams : 100;
+    $('#productGrams').value = String(chosen);
+    $('#pfsPortionHint').textContent = Number.isFinite(initialGrams) && initialGrams > 0
+      ? 'Porcja z ostatniego wpisu' : remembered ? 'Twoja ostatnio używana porcja' : 'Możesz wpisać dowolną gramaturę.';
+    const verification = activeProduct.verification;
+    const quality = verification === 'label-photo'
+      ? '✓ Dane odczytane z etykiety'
+      : activeProduct.isEstimate || verification === 'ean-photo-macro-estimate' || verification === 'estimated-generic'
+      ? '⚠ Wartości orientacyjne'
+      : activeProduct.source === 'Open Food Facts'
+      ? 'Dane społecznościowe OFF'
+      : 'Sprawdź wartości na etykiecie';
+    $('#pfsVerification').textContent = quality;
+    $('#pfsVerification').classList.toggle('pfs-estimated', quality.includes('orientacyjne'));
     $('#productMeal').value = mealValid(opts.meal) ? opts.meal : currentMeal;
     $('#saveOwnProduct').checked = Boolean(opts.manually);
-    syncProductPortionFields(); feedback('');
-    setTimeout(() => $('#productGrams').focus(), 70);
+    updatePfsContext(); syncProductPortionFields(); feedback('');
+    // Na telefonie nie otwieramy klawiatury bez prośby użytkownika.
   }
   function backToLookup() {
     $('#productForm').classList.add('hidden'); $('#lookupArea').classList.remove('hidden');
     draftPer100 = null;
     $('#modalTitle').textContent = 'Dodaj produkt';
+    updatePfsContext();
     if (activeMode === 'manual') switchMode('search');
   }
   // v0.8: ostrzeżenie w formularzach, gdy energia wyraźnie przeczy wartościom B/T/W.
@@ -491,6 +547,12 @@
   function updatePreview() {
     const grams = number($('#productGrams').value);
     const kcal = number($('#productKcal').value);
+    const values = {kcal,protein:number($('#productProtein').value),fat:number($('#productFat').value),carbs:number($('#productCarbs').value)};
+    for (const [id,key,unit] of [['pfsLiveKcal','kcal','kcal'],['pfsLiveProtein','protein','g'],['pfsLiveFat','fat','g'],['pfsLiveCarbs','carbs','g']]) {
+      const value = values[key];
+      $('#'+id).textContent = value === null || value < 0 ? '—' : nf1.format(value) + ' ' + unit;
+    }
+    updatePfsPortionControls();
     if (grams === null || grams <= 0 || grams > 100000 || kcal === null || kcal < 0) {
       $('#portionPreview').textContent = 'Uzupełnij poprawną ilość i kalorie, aby zobaczyć podsumowanie porcji.';
       return;
@@ -741,15 +803,21 @@
       draft.favorites = [{ id: duplicate?.id || productId(), name, meal, items: products }, ...draft.favorites.filter(f => f.id !== duplicate?.id)];
     })) { renderAll(); toast('Zapisano ulubiony posiłek'); }
   }
-  function addFavorite(id) {
+  function addFavorite(id, targetMeal = null) {
     const fav = state.favorites.find(f => f.id === id);
-    if (!fav || !Array.isArray(fav.items) || !fav.items.length || !mealValid(fav.meal)) return;
-    // Zestaw można dodać wielokrotnie świadomie, jak każdy inny posiłek.
-    const rows = fav.items.map(e => ({ ...cloneProductEntry(e), id: productId(), date: state.selectedDate, meal: fav.meal }));
+    if (!fav || !Array.isArray(fav.items) || !fav.items.length || !mealValid(fav.meal)) return false;
+    // Zestaw dodany z modalu trafia do posiłku, który użytkownik wybrał.
+    // Pozostałe wywołania zachowują oryginalną kategorię zestawu.
+    const meal = mealValid(targetMeal) ? targetMeal : fav.meal;
+    const rows = fav.items.map(e => ({ ...cloneProductEntry(e), id: productId(), date: state.selectedDate, meal }));
     if (commitMutation(draft => {
       draft.entries.push(...rows);
       rows.forEach(e => { draft.portions[productKey(e)] = e.grams; });
-    })) { showPage('journal'); toast(`Dodano „${fav.name}” (${rows.length} produktów)`); }
+    })) {
+      showPage('journal'); toast(`Dodano „${fav.name}” (${rows.length} produktów)`);
+      return true;
+    }
+    return false;
   }
   function removeFavorite(id) {
     const fav = state.favorites.find(f => f.id === id);
@@ -1400,10 +1468,10 @@
     $('#productForm').addEventListener('submit', onAddProduct);
     $('#backToLookup').addEventListener('click', backToLookup);
     $('#productGrams').addEventListener('input', syncProductPortionFields);
+    $('#productMeal').addEventListener('change', updatePfsContext);
     $$('[data-np-grams]').forEach(button => button.addEventListener('click', () => {
       $('#productGrams').value = button.dataset.npGrams;
       syncProductPortionFields();
-      $('#productGrams').focus({ preventScroll: true });
     }));
     PRODUCT_KEYS.forEach(([key, suffix]) => $('#product' + suffix).addEventListener('input', () => productNutrientChanged(key, suffix)));
     $('#goalsForm').addEventListener('submit', onSaveGoals);
