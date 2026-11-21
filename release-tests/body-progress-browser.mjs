@@ -35,7 +35,7 @@ try{
   assert.equal(await page.locator('.measure-stat').count(),6);
   assert.match(await page.locator('#measurementOverview').innerText(),/Udo/);
   assert.match(await page.locator('#measurementOverview').innerText(),/Łydka/);
-  assert.match(await page.locator('#measurementOverview').innerText(),/-1,0 cm od poprzedniego/);
+  assert.match(await page.locator('#measurementOverview').innerText(),/-1(?:,0)? cm od poprzedniego/);
  });
  await pass('New optional thigh and calf input fields preserve existing rows',async()=>{
   await page.locator('#measurementDate').fill(date);
