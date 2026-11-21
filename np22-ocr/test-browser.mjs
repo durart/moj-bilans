@@ -78,7 +78,7 @@ try{
     await page.locator('#rotateBtn').click();
     await page.locator('#contrastToggle').check();
     await page.locator('#recognizeBtn').click();
-    await page.waitForFunction(()=>document.getElementById('ocrStatus').textContent.includes('odczytany'),null,{timeout:10000});
+    await page.waitForFunction(()=>document.getElementById('ocrStatus').textContent.includes('4/4'),null,{timeout:10000});
     assert.equal(await page.locator('#kcal').inputValue(),'450');
     assert.equal(await page.locator('#resultKcal').innerText(),'90');
   });
