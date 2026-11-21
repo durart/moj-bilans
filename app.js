@@ -287,24 +287,29 @@
       $('#historyList').innerHTML = '';
       $('#historyShowMore').classList.add('hidden');
       $('#npHistoryChart').innerHTML = '<p class="empty-chart">Wybierz poprawny zakres dat.</p>';
+      window.NPHistory24?.clear();
       return;
     }
 
     const average = summary.averages;
-    $('#historyAverage').textContent = average ? nf.format(Math.round(average.kcal)) : '—';
-    $('#historyProtein').textContent = average ? nf1.format(average.protein) : '—';
-    $('#historyFat').textContent = average ? nf1.format(average.fat) : '—';
-    $('#historyCarbs').textContent = average ? nf1.format(average.carbs) : '—';
+    $('#historyAverage').textContent = Number.isFinite(average?.kcal) ? nf.format(Math.round(average.kcal)) : '—';
+    $('#historyProtein').textContent = Number.isFinite(average?.protein) ? nf1.format(average.protein) : '—';
+    $('#historyFat').textContent = Number.isFinite(average?.fat) ? nf1.format(average.fat) : '—';
+    $('#historyCarbs').textContent = Number.isFinite(average?.carbs) ? nf1.format(average.carbs) : '—';
     $('#historyDays').textContent = `${summary.loggedDays} / ${summary.rangeDays}`;
     if (!summary.loggedDays) {
       $('#historyCoverage').textContent = 'Brak posiłków zapisanych w wybranym okresie. Dni bez wpisów nie są traktowane jak 0 kcal.';
     } else {
       $('#historyCoverage').textContent =
         'Średnie obliczono tylko z dni, w których są zapisane posiłki. Dni bez wpisów są pominięte. Dzisiejszy dzień może być jeszcze niepełny.' +
-        (summary.incompleteEntries ? ` Uwaga: ${summary.incompleteEntries} wpisów nie ma kompletnych wartości odżywczych; część średnich może być zaniżona.` : '');
+        (summary.incompleteEntries ? ` Uwaga: ${summary.incompleteEntries} wpisów nie ma kompletnych wartości odżywczych; niekompletne dni pominięto w średniej danego składnika.` : '');
     }
 
     window.NPTrends?.render(summary, state.goals.kcal, $('#npHistoryChart'));
+    window.NPHistory24?.render(summary, state.goals.kcal, date => {
+      state.selectedDate = date;
+      showPage('journal');
+    });
     // Krótkie okresy zachowują widok wszystkich dni, również pustych.
     // Dłuższe okresy pokazują tylko dni z wpisami, aby uniknąć setek pustych pozycji.
     const detailed = summary.rangeDays <= 35;
@@ -905,8 +910,9 @@
     $('#npWeightRecentDate').textContent = previousWeight && last ? `${previousWeight.date} → ${last.date}` : 'Co najmniej dwa pomiary';
     $('#goalWeight').value = state.weightGoal;
     const recent = sorted.slice(-60);
-    $('#weightChartCaption').textContent = recent.length ? `Ostatnie ${recent.length} ${recent.length === 1 ? 'ważenie' : 'pomiary'}${sorted.length > 60 ? ' (maks. 60 na wykresie)' : ''}. Wartości w kg. Linie pomiędzy pomiarami nie oznaczają pomiaru codziennego.` : '';
-    $('#weightChart').innerHTML = recent.length ? buildWeightChart(recent) : '<p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p>';
+    $('#weightChartCaption').textContent = recent.length ? `Ostatnie ${recent.length} ${recent.length === 1 ? 'ważenie' : 'pomiary'}${sorted.length > 60 ? ' (maks. 60 na wykresie)' : ''}. Wartości w kg. Miętowy: pomiary, fioletowy: wygładzony trend EMA (półokres 7 dni), pomarańczowy: cel. Łączymy tylko rzeczywiste pomiary.` : '';
+    $('#weightChart').innerHTML = recent.length ? (window.NPBody25?.weightChart(recent, state.weightGoal) || buildWeightChart(recent)) : '<p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p>';
+    window.NPBody25?.render(sorted, state.weightGoal);
     $('#weightList').innerHTML = sorted.length ? [...sorted].reverse().map(w => `<div class="compact-item"><div><strong>${nf1.format(w.kg)} kg</strong><small>${safeText(niceDate(toDate(w.date)))}</small></div><button type="button" class="danger-quiet" data-removeweight="${safeText(w.date)}">Usuń</button></div>`).join('') : '<div class="empty-list">Nie ma jeszcze pomiarów.</div>';
     $$('[data-removeweight]').forEach(b => b.addEventListener('click', () => {
       if (!confirm(`Usunąć pomiar z dnia ${b.dataset.removeweight}?`)) return;
@@ -963,6 +969,7 @@
       const diffText = delta === null ? (last ? 'Pierwszy pomiar' : 'Brak pomiarów') : `${delta > 0 ? '+' : ''}${nf1.format(Math.round(delta * 10) / 10)} cm od początku`;
       return `<div class="panel measure-stat"><span>${safeText(m.label)}</span><strong>${last ? nf1.format(last[m.key]) + ' cm' : '—'}</strong><small>${safeText(diffText)}</small></div>`;
     }).join('');
+    window.NPBody25?.renderMeasures(sorted, $('#measurementOverview'));
     const type = $('#measurementChartType').value;
     const metric = MEASURES.find(m => m.key === type) || MEASURES[0];
     const series = sorted.filter(m => measureValue(m[metric.key]) !== null);
