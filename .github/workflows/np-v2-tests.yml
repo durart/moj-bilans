@@ -1,0 +1,23 @@
+name: Nutrition Performance v2 - isolation and regressions
+on:
+  push:
+    branches:
+      - feature/nutrition-performance-v2
+    paths:
+      - 'np-v2/**'
+      - '.github/workflows/np-v2-tests.yml'
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify isolated storage, PWA and UI
+        run: node np-v2/test_np_v2.mjs
+      - name: Run existing product, history and diary tests
+        run: npm test
