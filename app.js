@@ -912,8 +912,8 @@
     $('#weightChartCaption').textContent = recent.length ? `Ostatnie ${recent.length} ${recent.length === 1 ? 'ważenie' : 'pomiary'}${sorted.length > 60 ? ' (maks. 60 na wykresie)' : ''}. Wartości w kg. Linie pomiędzy pomiarami nie oznaczają pomiaru codziennego.` : '';
     $('#weightChart').innerHTML = recent.length ? buildWeightChart(recent) : '<p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p>';
     window.MojBilansBody25?.render(sorted,state.weightGoal,bodyPeriod,$('#page-weight'));
-    $('[data-bp-range]').forEach(button=>{const active=button.dataset.bpRange===bodyPeriod;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
-    $('[data-bp-tab]').forEach(button=>{const active=button.dataset.bpTab===bodyTab;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+    $$('[data-bp-range]').forEach(button=>{const active=button.dataset.bpRange===bodyPeriod;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+    $$('[data-bp-tab]').forEach(button=>{const active=button.dataset.bpTab===bodyTab;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
     $('#bp25WeightView').classList.toggle('hidden',bodyTab!=='weight');
     $('#bp25MeasureView').classList.toggle('hidden',bodyTab!=='measure');
     $('#weightList').innerHTML = sorted.length ? [...sorted].reverse().map(w => `<div class="compact-item"><div><strong>${nf1.format(w.kg)} kg</strong><small>${safeText(niceDate(toDate(w.date)))}</small></div><button type="button" class="danger-quiet" data-removeweight="${safeText(w.date)}">Usuń</button></div>`).join('') : '<div class="empty-list">Nie ma jeszcze pomiarów.</div>';
@@ -1496,8 +1496,8 @@
     $('#measurementDate').addEventListener('change', readMeasurementsAtDate);
     $('#measurementForm').addEventListener('submit', saveMeasurements);
     $('#measurementChartType').addEventListener('change', renderMeasurements);
-    $('[data-bp-range]').forEach(button=>button.addEventListener('click',()=>{bodyPeriod=button.dataset.bpRange;renderWeight();}));
-    $('[data-bp-tab]').forEach(button=>button.addEventListener('click',()=>{bodyTab=button.dataset.bpTab;renderWeight();}));
+    $$('[data-bp-range]').forEach(button=>button.addEventListener('click',()=>{bodyPeriod=button.dataset.bpRange;renderWeight();}));
+    $$('[data-bp-tab]').forEach(button=>button.addEventListener('click',()=>{bodyTab=button.dataset.bpTab;renderWeight();}));
     $('#copyForm').addEventListener('submit', submitCopy);
     $('#copySourceDate').addEventListener('change', renderCopyPreview);
     $('#copySourceMeal').addEventListener('change', renderCopyPreview);
