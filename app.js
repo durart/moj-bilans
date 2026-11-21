@@ -287,6 +287,7 @@
       $('#historyList').innerHTML = '';
       $('#historyShowMore').classList.add('hidden');
       $('#npHistoryChart').innerHTML = '<p class="empty-chart">Wybierz poprawny zakres dat.</p>';
+      window.MojBilansAnalytics24?.render(null,state.goals,today,$('#page-history'));
       return;
     }
 
@@ -305,6 +306,7 @@
     }
 
     window.NPTrends?.render(summary, state.goals.kcal, $('#npHistoryChart'));
+    window.MojBilansAnalytics24?.render(summary,state.goals,today,$('#page-history'));
     // Krótkie okresy zachowują widok wszystkich dni, również pustych.
     // Dłuższe okresy pokazują tylko dni z wpisami, aby uniknąć setek pustych pozycji.
     const detailed = summary.rangeDays <= 35;

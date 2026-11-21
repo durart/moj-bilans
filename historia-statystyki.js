@@ -30,9 +30,9 @@
     const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12);
     if (Number.isNaN(end.getTime())) throw new RangeError('Nieprawidłowa data.');
     let start;
-    if (period === '7d' || period === '14d') {
+    if (period === '7d' || period === '14d' || period === '30d') {
       start = new Date(end);
-      start.setDate(start.getDate() - (period === '7d' ? 6 : 13));
+      start.setDate(start.getDate() - (period === '7d' ? 6 : period === '14d' ? 13 : 29));
     } else if (period === '1m' || period === '6m' || period === '1y') {
       start = shiftMonths(end, period === '1m' ? -1 : period === '6m' ? -6 : -12);
       start.setDate(start.getDate() + 1);
