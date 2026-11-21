@@ -1,0 +1,38 @@
+name: Moj Bilans v2.2 OCR - isolated acceptance
+on:
+  push:
+    branches:
+      - feature/moj-bilans-v2.2-ocr
+    paths:
+      - 'np22-ocr/**'
+      - '.github/workflows/np22-ocr.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  parser-and-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: OCR nutrition parser and namespace isolation
+        run: node np22-ocr/test-parser.mjs
+      - name: All existing production regressions
+        run: npm test
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium runner
+        run: npm install --no-save --package-lock=false playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser UX, photo mock, privacy and isolated storage
+        run: node np22-ocr/test-browser.mjs
