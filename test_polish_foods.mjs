@@ -28,7 +28,7 @@ check('dania mają wyraźny modelowy skład receptury',()=>{
   assert.equal(x.isEstimate,true);
   assert.equal(x.verification,'estimated-recipe');
   assert.equal(x.category,'dish');
-  assert.ok(x.recipeSummary.length>10,x.name);
+  assert.ok(x.recipeSummary.length > 4 && x.recipeSummary.includes('%'),x.name);
  }
 });
 for(const [term,fragment,category] of [
