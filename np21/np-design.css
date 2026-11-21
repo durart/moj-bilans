@@ -1,0 +1,194 @@
+/* Nutrition Performance v2 / design system 0.1
+   Active in production root; original data schema and storage keys are unchanged.
+   Visual inspiration: prototypes/nutrition-performance. No external fonts/CDN.
+*/
+:root {
+  --bg:#0a1420; --surface:#112230; --surface2:#172b3b; --line:#284353;
+  --muted:#9aafbd; --text:#f2f8fb; --accent:#6ce5b7; --accent-strong:#52d7a5;
+  --purple:#b4a5f6; --orange:#ffb578; --blue:#65b9f8; --red:#ff9897;
+  --np-focus:#b3ffe2; --np-line-soft:#243b48;
+  --np-radius-card:19px; --np-radius-button:13px;
+  --shadow:0 15px 42px rgba(0,0,0,.16);
+  color-scheme:dark;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
+}
+body{background:radial-gradient(ellipse at 80% -15%,#193949 0,transparent 45%),var(--bg);color:var(--text)}
+.app-shell{max-width:1180px}
+.topbar{height:74px;padding:0 26px;border-bottom:1px solid rgba(133,205,190,.09)}
+.brand-mark{background:linear-gradient(145deg,#87f1c8,#47bc92);border-radius:14px;width:44px;height:44px}
+.brand-copy strong{font-size:20px;letter-spacing:-.8px}
+.brand-copy span{font-size:12px;color:var(--muted)}
+.icon-button,.chevron{border-color:var(--line);background:var(--surface2)}
+.np-env-banner{margin:0 auto;max-width:1180px;padding:10px 26px;background:#14372e;display:flex;align-items:center;gap:12px;color:#e0f8ec;font-size:12px;border-bottom:1px solid #28624a}
+.np-badge{display:inline-flex;align-items:center;white-space:nowrap;background:var(--accent);color:#0b2b20;font-weight:850;font-size:11px;border-radius:99px;padding:4px 10px;letter-spacing:.04em}
+.page{max-width:960px}
+.np-page-intro{margin:4px 0 15px}
+.np-page-intro h1{font-size:clamp(26px,3vw,36px);line-height:1.2;letter-spacing:-1.2px;margin:6px 0 5px}
+.np-page-intro p{color:var(--muted);font-size:13px;margin:0}
+.np-eyebrow{font-size:10px;font-weight:850;color:var(--accent);letter-spacing:.14em}
+.date-bar{justify-content:flex-start;gap:14px;margin:14px 0 18px}
+.date-center{width:auto;text-align:left;min-width:0}
+.date-title{font-size:16px;margin-top:2px}
+.chevron{min-height:44px;min-width:44px}
+.panel,.meal-card{border:1px solid var(--line);border-radius:var(--np-radius-card);background:var(--surface);box-shadow:var(--shadow)}
+.hero{padding:21px 25px;border-top:3px solid var(--accent);background:linear-gradient(155deg,#142b3b,#112230 70%)}
+.hero-title{gap:10px}
+.hero-title .eyebrow{letter-spacing:.13em;font-size:11px}
+.target-label{border:1px solid var(--line);background:#182e3d;border-radius:99px;padding:6px 11px;color:#b2c7cc}
+.hero-main{display:grid;grid-template-columns:minmax(132px,175px) minmax(0,1fr);align-items:center;justify-content:initial;gap:26px;padding:17px 0 16px}
+.ring{width:168px;max-width:100%;background:conic-gradient(var(--accent) 0deg,var(--accent) var(--progress,0deg),#2b4350 var(--progress,0deg) 360deg);box-shadow:0 0 38px rgba(80,217,159,.07)}
+.ring:before{inset:12px;background:#152b39}
+.ring-number{font-size:40px;letter-spacing:-1.8px}
+.ring-unit{font-size:12px}
+.macro-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px;border-top:0;padding-top:0}
+.macro-head{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin-bottom:7px}
+.macro-head span{font-size:12px;color:#bed0d8}
+.macro-head b{font-size:15px;font-variant-numeric:tabular-nums}
+.macro small{font-size:11px;margin-top:6px}
+.macro-track{height:9px;background:#274252}
+.macro-footer{min-height:17px}
+.fill.protein{background:var(--accent)}
+.fill.carbs{background:var(--blue)}
+.fill.fats{background:var(--orange)}
+.hero-stats{border-top:1px solid var(--np-line-soft);padding-top:13px;display:flex;flex-wrap:wrap;gap:24px;align-items:center}
+.stat-caption{color:var(--muted)}
+.stat-big{font-size:28px}
+.stat-target{font-size:21px}
+.np-quick{padding:19px 22px;margin:14px 0 15px;background:linear-gradient(115deg,#112b37,#112230 73%);border-color:#315c54}
+.np-quick-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.np-quick-head h2{margin:5px 0 0;font-size:19px;line-height:1.2;letter-spacing:-.55px}
+.np-quick-hint{font-size:11px;color:var(--muted)}
+.np-quick-actions{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:10px}
+.np-action{border:1px solid var(--line);color:var(--text);background:var(--surface2);padding:11px 12px;border-radius:13px;min-height:66px;display:flex;gap:10px;align-items:center;text-align:left}
+.np-action-primary{background:#204338;border-color:#3d8069}
+.np-action-icon{display:grid;place-items:center;height:34px;width:34px;flex-shrink:0;border-radius:10px;background:#254656;color:var(--accent);font-size:24px;line-height:1}
+.np-action>span:nth-child(2){display:flex;flex-direction:column;gap:2px;min-width:0}
+.np-action strong{font-size:13px;white-space:normal;line-height:1.25}
+.np-action small{font-size:11px;color:var(--muted);line-height:1.2}
+.np-action-arrow{margin-left:auto;font-size:19px;color:var(--accent)}
+.np-action:active{transform:scale(.988)}
+.water-panel{margin:13px 0 18px}
+.section-title{margin-top:23px}
+.meal-card{box-shadow:none}
+.meal-top{background:#142938}
+.meal-add{min-height:44px;color:var(--accent)}
+.primary-button{border-radius:var(--np-radius-button);background:var(--accent);color:#0d2b22;min-height:44px}
+.primary-button:hover{background:#8df4cc}
+.secondary-button{border-radius:var(--np-radius-button);min-height:44px}
+.nav-item{min-height:52px}
+.nav-item.selected{color:var(--accent)}
+.bottom-nav{background:rgba(10,20,32,.95);border-color:var(--line)}
+.modal{background:#122536}
+.mode-tab.active{background:#244d43;color:var(--accent)}
+.food-card{border-color:var(--line);background:var(--surface2);border-radius:15px}
+.food-action{background:var(--accent);color:#083025;min-height:44px;border-radius:11px}
+input,select,textarea{accent-color:var(--accent)}
+:where(button,input,select,textarea,a):focus-visible{outline:3px solid var(--np-focus);outline-offset:2px}
+@media(max-width:630px){
+ .np-env-banner{padding:7px 14px;font-size:11px;gap:7px}
+ .np-badge{font-size:10px;padding:4px 8px}
+ .topbar{height:65px;padding:0 16px}
+ .brand-copy strong{font-size:17px}
+ .brand-copy span{font-size:11px}
+ .page{padding:15px 14px 120px}
+ .np-page-intro{margin:2px 0 7px}
+ .np-page-intro h1{font-size:26px}
+ .np-page-intro p{font-size:12px}
+ .date-bar{gap:12px;margin:10px 0 13px}
+ .date-center{flex:1;min-width:0}
+ .hero{padding:16px 15px}
+ .hero-main{grid-template-columns:115px minmax(0,1fr);gap:14px;padding:14px 0 10px}
+ .ring{width:112px}
+ .ring:before{inset:10px}
+ .ring-number{font-size:27px;letter-spacing:-1px}
+ .ring-unit{font-size:10px}
+ .macro-grid{grid-template-columns:1fr;gap:7px}
+ .macro-head{flex-direction:row;justify-content:space-between;align-items:baseline;margin:0 0 3px}
+ .macro-head span{font-size:11px}
+ .macro-head b{font-size:12px}
+ .macro-footer{display:none}
+ .macro-track{height:7px}
+ .hero-stats{gap:20px}
+ .stat-big{font-size:25px}
+ .stat-target{font-size:19px}
+ .np-quick{padding:14px;margin:11px 0 13px}
+ .np-quick-head h2{font-size:16px}
+ .np-quick-hint{display:none}
+ .np-quick-actions{grid-template-columns:1fr 1fr;gap:8px}
+ .np-action{min-height:58px;padding:9px;gap:8px}
+ .np-action-primary{grid-column:1/-1}
+ .np-action-icon{width:30px;height:30px;font-size:21px}
+ .np-action strong{font-size:12px}
+ .np-action small{font-size:10px}
+ .water-panel{padding:16px;margin:13px 0}
+ .nav-item{width:20%;padding:4px 0;font-size:11px}
+ .nav-symbol{font-size:22px}
+}
+@media(max-width:355px){
+ .hero-main{grid-template-columns:98px minmax(0,1fr);gap:10px}
+ .ring{width:98px}
+ .ring-number{font-size:23px}
+ .macro-head b{font-size:11px}
+ .target-label{font-size:10px;padding:5px 8px}
+ .np-action small{display:none}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+
+/* Etapy 2–4: real data, interactive offline search, accessible analytics */
+.np-day-snapshot{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:10px;margin:12px 0 14px}
+.np-snapshot-item{display:flex;flex-direction:column;gap:4px;padding:13px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.np-snapshot-item span{font-size:12px;color:var(--muted)}
+.np-snapshot-item strong{font-variant-numeric:tabular-nums;font-size:18px}
+.np-snapshot-item strong.np-over-goal{color:var(--red)}
+.np-snapshot-budget{border-color:#396656}
+.np-portion-preset{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 4px}
+.np-portion-preset>span{font-size:13px;font-weight:700;margin-right:4px}
+.np-portion-preset button{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);padding:8px 13px;font-weight:700;font-size:13px}
+.np-portion-preset button:active{background:#244f42}
+.np-portion-note{font-size:12px;line-height:1.45;color:var(--muted);margin:4px 0 12px}
+.np-food-meta{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0 2px}
+.np-food-chip{background:#21483e;color:#a7f0d1;padding:4px 9px;border-radius:99px;font-size:12px;font-weight:700}
+.np-food-chip.np-food-estimate{background:#4c3528;color:#ffcf9d}
+.np-trend-panel{padding:20px;margin:16px 0}
+.np-trend-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.np-trend-heading h2{font-size:20px;margin:4px 0 0}
+.np-trend-unit{font-size:12px;color:var(--muted)}
+.np-history-chart{min-height:160px;overflow:hidden}
+.np-history-chart svg{display:block;width:100%;height:auto}
+.np-trend-legend{display:flex;gap:15px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 0}
+.np-trend-legend span{display:inline-flex;align-items:center;gap:6px}
+.np-trend-legend i{display:block;width:14px;height:9px;border:1px solid var(--accent)}
+.np-trend-legend .np-legend-logged{background:var(--accent)}
+.np-trend-legend .np-legend-empty{border-style:dashed;border-color:#7792a3}
+.np-trend-legend .np-legend-target{height:0;border:0;border-top:2px dashed var(--orange)}
+.np-trend-footnote{font-size:12px;line-height:1.55;color:var(--muted);margin:8px 0 0}
+.np-measure-recent{font-size:13px;color:#c0dadf;line-height:1.5;margin:8px 0}
+.weight-overview{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:630px){
+ .np-day-snapshot{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .np-snapshot-budget{grid-column:1/-1}
+ .np-snapshot-item{padding:11px 12px}
+ .np-snapshot-item span{font-size:12px}
+ .np-snapshot-item strong{font-size:17px}
+ .macro-head span,.macro-head b{font-size:13px}
+ .macro small,.macro-footer small{font-size:12px}
+ .np-action strong{font-size:13px}
+ .np-action small{font-size:12px}
+ .weight-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .np-trend-panel{padding:14px 10px}
+ .np-trend-heading{display:block}
+ .np-trend-unit{display:block;margin-top:4px}
+ .np-trend-legend{gap:8px}
+}
+
+/* Nutrition Performance v2.1 preview diagnostics */
+.np21-test-banner{padding:10px 14px;background:#3f3225;color:#ffe3b1;text-align:center;font-size:12px;font-weight:700;line-height:1.5}
+.np21-inline-save{border:1px solid #326451;background:#15362e;color:#b9fbd5;border-radius:12px;padding:10px 13px;margin:12px 0;font-size:12px;line-height:1.5}
+.np21-health{margin:14px 0;padding:18px 20px}
+.np21-health h3{margin:0 0 12px;font-size:18px}
+.np21-health p[role="status"]{border:1px solid #326451;background:#15362e;color:#b9fbd5;border-radius:10px;padding:10px 13px;margin:8px 0;font-size:13px;line-height:1.5}
+.np21-health p.np21-error,.np21-inline-save.np21-error{border-color:#a86868;background:#3e292a;color:#ffced0}
+.np21-health-actions{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.np21-health-actions button{min-height:44px;flex:1 1 190px}
+@media(max-width:630px){.np21-health{padding:14px}.np21-health-actions{flex-direction:column}.np21-health-actions button{width:100%}}
