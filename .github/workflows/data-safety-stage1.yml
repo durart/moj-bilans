@@ -1,0 +1,40 @@
+name: Moj Bilans - Stage 1 data safety acceptance
+on:
+  push:
+    branches:
+      - release/data-safety-v2.1.1
+    paths:
+      - 'app.js'
+      - 'index.html'
+      - 'sw.js'
+      - 'release-tests/**'
+      - 'package.json'
+      - '.github/workflows/data-safety-stage1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: PWA, storage compatibility and legacy regressions
+        run: node release-tests/np21-prod-safety.mjs && node release-tests/np-v2-safety.mjs && npm test
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright and Chromium
+        run: npm install --no-save --package-lock=false playwright && npx playwright install --with-deps chromium
+      - name: Legacy PWA mobile acceptance
+        run: node release-tests/np-v2-production-acceptance.mjs
+      - name: Fault injection, rollback, provenance and restoration
+        run: node release-tests/stage1-data-safety-browser.mjs
