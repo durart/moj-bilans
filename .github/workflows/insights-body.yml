@@ -11,6 +11,7 @@ on:
       - 'premium-insights.css'
       - 'body-progress.css'
       - 'body-progress-v25.js'
+      - 'preview/insights-body-v25/**'
       - 'sw.js'
       - 'test_*.mjs'
       - 'release-tests/**'
@@ -51,6 +52,8 @@ jobs:
         run: node release-tests/insights-browser.mjs
       - name: Body Progress 2.5 browser acceptance
         run: node release-tests/body-progress-browser.mjs
+      - name: Isolated live preview data and screenshots
+        run: node release-tests/insights-preview-isolation.mjs
       - name: Upload real UI screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,4 +62,5 @@ jobs:
           path: |
             test-artifacts/premium-history-*.png
             test-artifacts/body-progress-*.png
+            test-artifacts/live-preview-*.png
           if-no-files-found: ignore

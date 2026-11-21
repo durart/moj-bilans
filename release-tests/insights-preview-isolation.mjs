@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {mkdir} from 'node:fs/promises';
+import {chromium} from 'playwright';
+const PORT=4196,URL='http://127.0.0.1:'+PORT+'/preview/insights-body-v25/';
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const original=JSON.stringify({entries:[{id:'private-original',date:'2026-11-20',meal:'lunch',name:'Nigdy nie zmieniaj',grams:100,nutrients:{kcal:199,protein:15,carbs:10,fat:2}}],weights:[],measurements:[],goals:{kcal:2300,protein:160,carbs:240,fat:75,water:2500},custom:[],recent:[],favorites:[],portions:{},water:[],weightGoal:90});
+let browser,server;
+try{
+ server=spawn(process.execPath,['preview-server.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:['ignore','pipe','pipe']});
+ let start=false;for(let i=0;i<55;i++){try{if((await fetch(URL)).ok){start=true;break}}catch{}await wait(200)}
+ if(!start)throw Error('No preview page');
+ browser=await chromium.launch({headless:true});
+ const ctx=await browser.newContext({viewport:{width:390,height:844},locale:'pl-PL',isMobile:true,hasTouch:true,serviceWorkers:'block'});
+ const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('dialog',d=>d.accept());
+ await page.addInitScript(data=>{localStorage.setItem('moj-bilans-v1',data);},original);
+ await page.goto(URL,{waitUntil:'networkidle'});
+ assert.match(await page.title(),/TEST/);
+ assert.match(await page.locator('.ib25-demo-banner').innerText(),/przykładowe dane/i);
+ assert.equal(await page.evaluate(()=>localStorage.getItem('moj-bilans-v1')),original);
+ assert.match(await page.locator('#npFoodCount').innerText(),/\d/);
+ const demo=await page.evaluate(()=>JSON.parse(localStorage.getItem('moj-bilans-insights-body-preview-v1')));
+ assert.ok(demo.entries.length>=50&&demo.weights.length===8&&demo.measurements.length===3);
+ console.log('PASS Sample data isolated from production and correctly seeded');
+ await page.locator('[data-page="history"]').click();
+ assert.match(await page.locator('#h24AvgCalories').innerText(),/\d/);
+ await page.locator('[data-history-period="30d"]').click();
+ assert.match(await page.locator('#h24RangeCount').innerText(),/\d+ \/ 30/);
+ await mkdir('test-artifacts',{recursive:true});
+ await page.screenshot({path:'test-artifacts/live-preview-history.png',fullPage:true});
+ console.log('PASS History 2.4 works in isolated preview');
+ await page.locator('[data-page="weight"]').click();
+ assert.match(await page.locator('#bp25Current').innerText(),/99,2 kg/);
+ await page.screenshot({path:'test-artifacts/live-preview-weight.png',fullPage:true});
+ await page.locator('[data-bp-tab="measure"]').click();
+ assert.equal(await page.locator('.measure-stat').count(),6);
+ await page.screenshot({path:'test-artifacts/live-preview-circumferences.png',fullPage:true});
+ assert.equal(await page.evaluate(()=>localStorage.getItem('moj-bilans-v1')),original);
+ console.log('PASS Body Progress 2.5 renders with isolated demo measurements');
+ await page.reload({waitUntil:'networkidle'});
+ assert.equal(await page.evaluate(()=>localStorage.getItem('moj-bilans-v1')),original);
+ assert.deepEqual(errors,[]);
+ console.log('PASS Preview reload and runtime integrity');
+}finally{if(browser)await browser.close();if(server)server.kill('SIGTERM')}
