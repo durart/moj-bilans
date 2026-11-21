@@ -42,9 +42,11 @@ const r=await searcher.search(EAN);
 test('Exact barcode selects local product without calling OFF',()=>{
  assert.equal(r.status,'local-only');assert.equal(r.items[0].code,EAN);assert.equal(r.items[0].isEstimate,true);
 });
+const offlineEAN=await searcher.search(EAN,{online:false});
+const offlineName=await searcher.search('bakador chili',{online:false});
 test('Offline name and barcode work',()=>{
- assert.equal((await searcher.search(EAN,{online:false})).items[0].code,EAN);
- assert.ok((await searcher.search('bakador chili',{online:false})).items.some(x=>x.code===EAN));
+ assert.equal(offlineEAN.items[0].code,EAN);
+ assert.ok(offlineName.items.some(x=>x.code===EAN));
 });
 test('PWA precaches new module and retains original diary storage keys',()=>{
  const sw=fs.readFileSync('sw.js','utf8'),app=fs.readFileSync('app.js','utf8');
