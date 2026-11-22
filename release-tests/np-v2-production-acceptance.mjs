@@ -65,7 +65,7 @@ try{
   assert.match(await page.locator('#foodSearchStatus').innerText(),/Wyniki lokalne/);
  });
  await verify('150g portion scales kcal and saves alongside old diary data',async()=>{
-  await page.locator('#searchResults .food-card').filter({hasText:'Ziemniaki gotowane w wodzie'}).first().locator('.food-action').click();
+  await page.locator('#searchResults .food-card').filter({hasText:'Ziemniaki gotowane w wodzie'}).first().getByRole('button', {name:'Wybierz produkt'}).click();
   const initial=Number(await page.locator('#productKcal').inputValue());
   await page.locator('[data-np-grams="150"]').click();
   assert.equal(await page.locator('#productGrams').inputValue(),'150');
