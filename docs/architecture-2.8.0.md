@@ -40,7 +40,7 @@
 - No architectural refactor branch existed before this task.
 
 ## Verification status
-- Refactor modules extracted: domain/nutrition.js, domain/diary-format.js, domain/storage.js, domain/values.js, domain/products.js, domain/recipes.js and ui/dom.js.
+- Refactor modules extracted: domain/nutrition.js, domain/diary-format.js, domain/storage.js, domain/values.js, domain/products.js, domain/recipes.js and ui/dom.js, plus ui/navigation.js.
 - Automated and browser regression: both passed on commit a591cf89 (GitHub Actions run #45). Subsequent checks remain commit-specific; never assume later commits passed.
 - New regression suites cover nutrition, diary serialization, guarded persistence, DOM escaping, date/number conversions, product provenance and recipe rules.
 - Production storage key and JSON backup schema remain unchanged; no data migration.
@@ -54,3 +54,12 @@
 3. Publish isolated staging and verify online, offline, SW update, import/export and recovery on the actual staging URL.
 4. Complete UI controller extraction or explicitly document remaining debt.
 5. Prepare a rollback procedure and obtain explicit production approval before merging.
+
+## Staging deployment and rollback
+- PR #23 publishes only `preview/` to the GitHub Pages branch after both verify and browser jobs succeed.
+- Preview URL: https://durart.github.io/moj-bilans/preview/ (do not claim live availability until live-preview passes).
+- Preview data key: `moj-bilans-preview-v27`; preview IndexedDB: `moj-bilans-preview-copies-v27` (names retained to avoid breaking earlier preview data).
+- Production data key remains `moj-bilans-v1`; no data migration or production application files changed by the staging publisher.
+- Cache namespace: `moj-bilans-preview-recipes-v280-rc1` for preview; `moj-bilans-cache-v280-rc1` for future production after explicit approval.
+- Rollback preview by restoring the previous `preview/` directory from Git history; do not remove production root files or clear production storage.
+- Never merge PR #23 to main without explicit user approval.
