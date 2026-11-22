@@ -145,7 +145,7 @@ check('no duplicate IDs or unreferenced assets', () => {
 check('calculator scripts are loaded before app and remain offline-ready', () => {
   assert.ok(html.indexOf('goal-calculator.js') < html.indexOf('goal-calculator-ui.js'));
   assert.ok(html.indexOf('goal-calculator-ui.js') < html.indexOf('app.js?v='));
-  assert.match(cache, /v271-stable-1/);
+  assert.match(cache, /v271-stable-3/);
   assert.match(cache, /key\.startsWith\(PREFIX\)/);
 });
 console.log('Production calculator: 14 checks passed.');

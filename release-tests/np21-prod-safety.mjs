@@ -22,7 +22,7 @@ check(sw.includes("'./app.js?v=2.7.1'"),'offline app');
 check(sw.includes("'./interfejs-wyszukiwarki.mjs?v=2.7.1'"),'offline search');
 check(sw.includes("key.startsWith(PREFIX)"),'root SW removes its own previous caches');
 check(!sw.includes("k.startsWith('moj-bilans-np21-cache-')"),'no test cache cleanup');
-check(sw.includes("v271-stable-1"),'new production cache');
+check(sw.includes("v271-stable-3"),'new production cache');
 check(update.includes("registration.update()"),'manual update');
 check(!update.includes("setInterval("),'no update polling');
 check(!update.includes("TEST"),'no test labels');

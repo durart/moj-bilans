@@ -6,7 +6,7 @@ assert.match(a,/const KEY = 'moj-bilans-v1'/);
 assert.match(a,/const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1'/);
 assert.doesNotMatch(a,/moj-bilans-np-v2-v1|moj-bilans-np-v2-kopie-v1/);
 assert.match(a,/\$\$\('\[data-np-grams\]'\)\.forEach/);
-assert.match(sw,/const CACHE = PREFIX \+ 'v271-stable-1'/);
+assert.match(sw,/const CACHE = PREFIX \+ 'v271-stable-3'/);
 assert.match(sw,/key\.startsWith\(PREFIX\)/);
 assert.doesNotMatch(sw,/k\.startsWith\('moj-bilans-np-v2-cache-'/);
 assert.equal(manifest.id,'./');assert.equal(manifest.scope,'./');assert.equal(manifest.start_url,'./');
