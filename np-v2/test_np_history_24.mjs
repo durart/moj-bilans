@@ -88,7 +88,7 @@ check('Elementy i skrypty Sprintu 1 są podłączone przed app.js', () => {
 check('Najnowszy cache obsługuje offline i nie usuwa produkcji', () => {
   assert.match(sw, /np-history-24\.css/);
   assert.match(sw, /np-history-24\.js/);
-  assert.match(sw, /moj-bilans-np-v2-cache-goal-calculator-t1/);
+  assert.match(sw, /moj-bilans-np-v2-cache-goal-calculator-t2/);
   assert.doesNotMatch(sw,/k\.startsWith\('moj-bilans-cache-'/);
   assert.match(css, /prefers-reduced-motion/);
 });
