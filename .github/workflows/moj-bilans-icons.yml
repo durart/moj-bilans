@@ -1,0 +1,41 @@
+name: Mój Bilans - neon app icons
+
+on:
+  push:
+    branches:
+      - main
+      - feature/moj-bilans-new-icon-both-20261122
+    paths:
+      - 'icons/icon-neon-192.png'
+      - 'icons/icon-neon-512.png'
+      - 'icons/apple-touch-neon-180.png'
+      - 'icons/favicon-neon-48.png'
+      - 'manifest.webmanifest'
+      - 'np-v2/manifest.webmanifest'
+      - 'index.html'
+      - 'np-v2/index.html'
+      - 'np-v2/nowy.html'
+      - 'sw.js'
+      - 'np-v2/sw.js'
+      - 'test_app_icons.mjs'
+      - '.github/workflows/moj-bilans-icons.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-icons:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify PNG files, manifests and isolated offline caches
+        run: node test_app_icons.mjs
+      - name: Verify existing diary regression suite
+        run: npm test
+      - name: Verify test app structure
+        run: node np-v2/test_np_v2.mjs && node np-v2/test_layout_parity.mjs
