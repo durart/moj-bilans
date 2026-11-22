@@ -29,8 +29,10 @@ const server = http.createServer(async (request, response) => {
 await new Promise(resolve => server.listen(4192, '127.0.0.1', resolve));
 const base = 'http://127.0.0.1:4192/';
 const browser = await chromium.launch({ headless:true, executablePath:process.env.CHROMIUM_PATH || undefined });
+let phase = 'starting';
+const watchdog = setTimeout(() => { console.error('Timed out during: ' + phase); process.exit(1); }, 150000);
 let passed = 0;
-const check = async (name, action) => { await action(); console.log('PASS ' + name); passed++; };
+const check = async (name, action) => { phase=name; console.log('RUN ' + name); await action(); console.log('PASS ' + name); passed++; };
 const today = new Date().toISOString().slice(0,10);
 const product = { name:'Fixture product', brand:'Test', source:'manual', ean:'', nutrients:{kcal:200,protein:10,fat:8,carbs:20} };
 const recipe = { id:'recipe-fixture', name:'Fixture recipe', favorite:true, yieldGrams:200, ingredients:[{id:'ingredient',name:'Fixture ingredient',grams:100,kcal:200,protein:10,fat:8,carbs:20}] };
@@ -41,8 +43,9 @@ try {
   const page = await upgrade.newPage();
   page.on('pageerror', error => errors.push(String(error)));
   await page.addInitScript(fixture => { if (!localStorage.getItem('moj-bilans-v1')) localStorage.setItem('moj-bilans-v1',JSON.stringify(fixture)); }, fixture);
+  phase = 'baseline worker registration'; console.log('RUN ' + phase);
   await page.goto(base);
-  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.evaluate(() => Promise.race([navigator.serviceWorker.ready, new Promise((_, reject) => setTimeout(() => reject(Error('Baseline worker not ready')), 20000))]));
   await page.reload();
   await check('Production baseline loaded with original diary intact', async () => {
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-v1'))),fixture);
@@ -247,4 +250,4 @@ try {
   assert.deepEqual(errors,[]);
   console.log(`STABILITY 2.7.1: ${passed} browser scenarios passed; no page errors.`);
   await context.close();
-} finally { await browser.close(); await new Promise(resolve => server.close(resolve)); }
+} finally { clearTimeout(watchdog); await browser.close(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
