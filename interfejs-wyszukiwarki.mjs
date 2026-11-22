@@ -17,7 +17,7 @@ function node(tag, cls, text) {
 function displayDate(iso){try{return iso?new Date(iso).toLocaleString('pl-PL'):'jeszcze nie pobrano';}catch{return 'brak daty';}}
 
 /** Jeden wynik i jeden formularz niezależnie od źródła/sklepu. */
-export function mountFoodSearch({form,input,results,status,onSelect,searcher=defaultFoodSearcher}) {
+export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=()=>{},isFavorite=()=>false,searcher=defaultFoodSearcher}) {
   if(!form||!input||!results||!status||typeof onSelect!=='function') throw new TypeError('Brak wymaganych elementów');
   const importBtn=document.getElementById('foodCatalogImport');
   const catalogStatus=document.getElementById('foodCatalogStatus');
@@ -71,11 +71,20 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
         item.source==='Baza podstawowa'?(item.edible?'Orientacyjne / 100 g części jadalnej; W bez błonnika (szacunkowo). Sprawdź gramaturę i sposób przygotowania.':'Orientacyjne wartości referencyjne — sprawdź produkt, sposób przygotowania i porcję.'):
         'Dane społecznościowe Open Food Facts. Kontrola liczb nie zastępuje sprawdzenia etykiety.';
       const detail=node('p','food-detail',description);
+      const favorite=node('button','food-action',isFavorite(item)?'★ Ulubiony':'☆ Ulubiony');
+      favorite.type='button';
+      favorite.setAttribute('aria-pressed',String(isFavorite(item)));
+      favorite.addEventListener('click',()=>{
+        if(onFavorite(item)) {
+          favorite.textContent=isFavorite(item)?'★ Ulubiony':'☆ Ulubiony';
+          favorite.setAttribute('aria-pressed',String(isFavorite(item)));
+        }
+      });
       const blocked=Boolean(item.isIncomplete||item.isUnreliable);
       const action=node('button','food-action',blocked?'Wymaga sprawdzenia':'Wybierz produkt');
       action.type='button';action.disabled=blocked;
       if(!blocked) action.addEventListener('click',()=>onSelect({...item}));
-      card.append(head,label,macros,detail,action);
+      card.append(head,label,macros,detail,favorite,action);
       if(item.source !== 'Baza podstawowa' && item.code && /^\d{8,14}$/.test(item.code)){
         const link=node('a','food-off-link','Zobacz źródło OFF');
         link.href=`https://world.openfoodfacts.org/product/${item.code}`;link.target='_blank';link.rel='noopener noreferrer';
