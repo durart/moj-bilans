@@ -6,7 +6,12 @@ on:
       - main
       - feature/moj-bilans-new-icon-both-20261122
       - feature/moj-bilans-android-maskable-test
+      - feature/moj-bilans-larger-icons-maskable-v2
     paths:
+      - 'icons/icon-neon-large-192.png'
+      - 'icons/icon-neon-large-512.png'
+      - 'icons/apple-touch-neon-large-180.png'
+      - 'icons/favicon-neon-large-48.png'
       - 'icons/icon-neon-192.png'
       - 'icons/icon-neon-512.png'
       - 'icons/icon-maskable-192.png'
