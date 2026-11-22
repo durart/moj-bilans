@@ -37,7 +37,7 @@ check('Strictly isolated test storage and offline service worker',()=>{
  assert.match(app,/const LOCAL_COPIES_DB = 'moj-bilans-np-v2-kopie-v1'/);
  assert.doesNotMatch(app,/const KEY = 'moj-bilans-v1'/);
  assert.doesNotMatch(app,/const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1'/);
- assert.match(sw,/moj-bilans-np-v2-cache-goal-calculator-t3/);
+ assert.match(sw,/moj-bilans-np-v2-cache-neon-icons-v1/);
  assert.match(sw,/k\.startsWith\('moj-bilans-np-v2-cache-'/);
  assert.doesNotMatch(sw,/k\.startsWith\('moj-bilans-cache-'/);
 });
