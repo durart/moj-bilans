@@ -28,18 +28,9 @@
   const mealValid = x => MEALS.some(meal => meal.id === x);
   let storageFault = '';
   const dataFromStorage = () => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw === null) return {};
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.entries)) {
-        throw Error('Niepoprawny format dziennika');
-      }
-      return parsed;
-    } catch (err) {
-      storageFault = 'Błąd odczytu: ' + (err?.message || 'pamięć niedostępna') + '. Zapis zablokowano, aby nie nadpisać wcześniejszych danych.';
-      return {};
-    }
+    const result = globalThis.MojBilansStorage.read(localStorage, STORAGE_KEY);
+    storageFault = result.error || '';
+    return result.data;
   };
   let saved = dataFromStorage();
   let state = {
@@ -95,8 +86,7 @@
     }
     try {
       const json = globalThis.MojBilansDiaryFormat.serialize(state);
-      localStorage.setItem(STORAGE_KEY, json);
-      if (localStorage.getItem(STORAGE_KEY) !== json) throw Error('Odczyt po zapisie nie zgadza się z zapisaną treścią.');
+      globalThis.MojBilansStorage.write(localStorage, STORAGE_KEY, json);
       saveStatus('Dziennik zapisany w tym urządzeniu o ' + new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
       queueAutomaticLocalCopy();
       return true;
