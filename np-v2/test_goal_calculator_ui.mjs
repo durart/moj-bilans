@@ -6,7 +6,7 @@ const source = fs.readFileSync(new URL('goal-calculator.js', import.meta.url), '
 const uiSource = fs.readFileSync(new URL('goal-calculator-ui.js', import.meta.url), 'utf8');
 const names = [
   'gpForm','gpApply','gpResult','gpStatus','gpAge','gpHeight','gpWeight',
-  'gpEquation','gpActivity','gpGoal','gpMacroPreset','gpWeightSource',
+  'gpEquation','gpActivity','gpActivityHint','gpGoal','gpMacroPreset','gpWeightSource',
   'gpBmr','gpTdee','gpCalories','gpProtein','gpFat','gpCarbs',
   'gpProteinRatio','gpFatRatio','gpCarbsRatio','gpComparison',
   'goalKcal','goalProtein','goalFats','goalCarbs','goalsForm'
@@ -32,6 +32,18 @@ const fire = (id, eventType) => {
   handler({ preventDefault() {} });
 };
 const check = (title, fn) => { fn(); console.log('PASS ' + title); };
+check('activity descriptions explain steps and training without changing model categories', () => {
+  for (const [category, phrase] of [
+    ['sedentary', '4 tys.'],
+    ['light', '1–2 treningi'],
+    ['moderate', '3–4 treningi'],
+    ['high', 'fizyczna praca']
+  ]) {
+    el.gpActivity.value = category;
+    fire('gpActivity', 'change');
+    assert.match(el.gpActivityHint.textContent, new RegExp(phrase));
+  }
+});
 check('last saved weight is suggested but not persisted', () => {
   window.NPGoalCalculatorUI.setContext({
     latestWeight: { date: '2026-11-21', kg: 99.1 },
@@ -74,4 +86,4 @@ check('manual weight entry is not overwritten by a newer recorded weight', () =>
   window.NPGoalCalculatorUI.setContext({ latestWeight:{date:'2026-11-22',kg:97} });
   assert.equal(el.gpWeight.value,'98');
 });
-console.log('Goal calculator UI: 5 checks passed.');
+console.log('Goal calculator UI: 6 checks passed.');
