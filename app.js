@@ -117,17 +117,8 @@
   const plainNutrients = n => ({ kcal: number(n?.kcal), protein: number(n?.protein), carbs: number(n?.carbs), fat: number(n?.fat) });
   // Starsze wpisy zachowują swoją strukturę. Nowe mogą przenosić informację
   // o wiarygodności makro razem z wpisem, ulubionymi i kopią JSON.
-  const productProvenance = p => {
-    const result = {};
-    if (typeof p?.recipeId === 'string') result.recipeId = p.recipeId;
-    if (typeof p?.isEstimate === 'boolean') result.isEstimate = p.isEstimate;
-    if (typeof p?.verification === 'string' && p.verification) result.verification = p.verification.slice(0, 80);
-    if (typeof p?.sourceName === 'string' && p.sourceName) result.sourceName = p.sourceName.slice(0, 200);
-    if (typeof p?.sourceUrl === 'string' && /^https:\/\//i.test(p.sourceUrl)) result.sourceUrl = p.sourceUrl.slice(0, 600);
-    return result;
-  };
+  const { productKey, provenance: productProvenance } = globalThis.MojBilansProducts;
   const niceDate = date => date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
-  const productKey = p => p.ean && /^\d{8,14}$/.test(p.ean) ? `ean:${p.ean}` : `name:${String(p.name || '').trim().toLocaleLowerCase('pl')}|${String(p.brand || '').trim().toLocaleLowerCase('pl')}`;
   const normalizedDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') && dateKey(toDate(d)) === d;
   const mealName = id => MEALS.find(m => m.id === id)?.name || 'Posiłek';
   const goalField = key => `#goal${key === 'fat' ? 'Fats' : key[0].toUpperCase() + key.slice(1)}`;
