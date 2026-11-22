@@ -7,8 +7,12 @@ const reload = document.getElementById('np21ReloadUpdate');
 const report = (message, error=false) => {
   status.textContent=message; status.classList.toggle('np21-error',error);
 };
+let activationRequested = false;
 reload.addEventListener('click', () => {
   if (registration?.waiting) {
+    activationRequested = true;
+    reload.disabled = true;
+    report('Aktywuję aktualizację…');
     registration.waiting.postMessage({ type: 'SKIP_WAITING' });
   } else {
     window.location.reload();
@@ -32,6 +36,10 @@ check.addEventListener('click',async()=>{
   finally {check.disabled=false;}
 });
 navigator.serviceWorker.addEventListener('controllerchange',()=>{
+  if (activationRequested) {
+    window.location.reload();
+    return;
+  }
   report('Nowa wersja jest gotowa. Odśwież dopiero po zapisaniu danych.');
   reload.classList.remove('hidden');
 });
