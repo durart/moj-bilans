@@ -44,7 +44,7 @@ check('PWA manifest is only this folder',()=>{
 check('Every precached file exists',()=>{
   const files=[...sw.matchAll(/'(\.\/[^']+|\.\.\/icons\/[^']+)'/g)].map(x=>x[1]);
   assert.ok(files.length>=20,'too few cache entries');
-  for(const entry of files)assert.ok(fs.existsSync(path.resolve(dir,entry)),'missing precached file '+entry);
+  for(const entry of files)assert.ok(fs.existsSync(path.resolve(dir,entry.split('?')[0])),'missing precached file '+entry);
 });
 check('All five production navigation pages remain',()=>{
   for(const page of ['journal','products','history','weight','settings'])assert.ok(html.includes('data-page="'+page+'"'),page);
