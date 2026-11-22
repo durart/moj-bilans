@@ -205,7 +205,7 @@ try {
       if(!('serviceWorker' in navigator))return false;
       const keys=await caches.keys();
       return !!navigator.serviceWorker.controller &&
-        keys.includes('moj-bilans-np-v2-cache-maskable-v1');
+        keys.includes('moj-bilans-np-v2-cache-icon-large-maskable-v2');
     },null,{timeout:30000});
     const reg=await page.evaluate(async ()=>{
       const x=await navigator.serviceWorker.getRegistration('./');
