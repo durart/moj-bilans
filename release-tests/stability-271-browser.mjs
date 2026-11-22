@@ -165,6 +165,7 @@ try {
     const copy = JSON.parse(await readFile(await (await promise).path(),'utf8'));
     assert.equal(copy.goals.kcal,2100);
     await test.locator('[data-local-restore]').first().click();
+    await test.waitForFunction(() => document.querySelector('#localBackupStatus').textContent.includes('Przywrócono lokalny punkt'));
     assert.equal((await stored()).goals.kcal,2100);
   });
   await check('Recipe UI refreshes after restore; concurrent ingredient searches and removal work', async () => {
