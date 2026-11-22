@@ -167,6 +167,7 @@ try {
   });
   await check('Recipe UI refreshes after restore; concurrent ingredient searches and removal work', async () => {
     await upload({...exported,recipes:[{...recipe,name:'Restored recipe'}]});
+    await test.waitForFunction(() => JSON.parse(localStorage.getItem('moj-bilans-preview-v27')).recipes.some(row => row.name === 'Restored recipe'));
     await test.locator('.nav-item[data-page="products"]').click();
     assert.match(await test.locator('#recipeList').innerText(),/Restored recipe/);
     await test.locator('#recipeOpen').click();
