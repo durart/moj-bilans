@@ -2,6 +2,9 @@
 (() => {
   'use strict';
   const KEY = 'moj-bilans-v1';
+  const IS_PREVIEW = location.pathname.includes('/preview/');
+  const STORAGE_KEY = IS_PREVIEW ? 'moj-bilans-preview-v27' : KEY;
+  const COPIES_DB = IS_PREVIEW ? 'moj-bilans-preview-copies-v27' : LOCAL_COPIES_DB;
   const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1';
   const LOCAL_COPIES_STORE = 'copies';
   const DEFAULT_GOALS = { kcal: 2300, protein: 160, carbs: 240, fat: 75, water: 2500 };
@@ -26,7 +29,7 @@
   let storageFault = '';
   const dataFromStorage = () => {
     try {
-      const raw = localStorage.getItem(KEY);
+      const raw = localStorage.getItem(STORAGE_KEY);
       if (raw === null) return {};
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.entries)) {
@@ -45,6 +48,7 @@
     custom: Array.isArray(saved.custom) ? saved.custom : [],
     recent: Array.isArray(saved.recent) ? saved.recent : [],
     favorites: Array.isArray(saved.favorites) ? saved.favorites : [],
+    recipes: Array.isArray(saved.recipes) ? saved.recipes : [],
     portions: saved.portions && typeof saved.portions === 'object' && !Array.isArray(saved.portions) ? saved.portions : {},
     weights: Array.isArray(saved.weights) ? saved.weights : [],
     measurements: Array.isArray(saved.measurements) ? saved.measurements : [],
@@ -75,7 +79,7 @@
   let historyVisible = 40;
   let historyCustomFrom = '';
   let historyCustomTo = '';
-  const snapshot = () => ({ app: 'MojBilans', version: 5, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
+  const snapshot = () => ({ app: 'MojBilans', version: 6, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
   const saveStatus = (message, isError=false) => {
     for (const id of ['np21SaveStatus','np21SaveInline']) {
       const el = $('#'+id);
@@ -90,8 +94,8 @@
     }
     try {
       const json = JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
-      localStorage.setItem(KEY, json);
-      if (localStorage.getItem(KEY) !== json) throw Error('Odczyt po zapisie nie zgadza się z zapisaną treścią.');
+      localStorage.setItem(STORAGE_KEY, json);
+      if (localStorage.getItem(STORAGE_KEY) !== json) throw Error('Odczyt po zapisie nie zgadza się z zapisaną treścią.');
       saveStatus('Dziennik zapisany w tym urządzeniu o ' + new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
       queueAutomaticLocalCopy();
       return true;
@@ -357,6 +361,53 @@
       goals: state.goals
     });
   }
+  function validateRecipes(input) {
+    if (!Array.isArray(input)) return [];
+    return input.slice(0, 500).filter(recipe =>
+      recipe && typeof recipe.id === 'string' && typeof recipe.name === 'string' &&
+      recipe.name.length > 0 && recipe.name.length <= 100 &&
+      Number.isFinite(Number(recipe.yieldGrams)) && Number(recipe.yieldGrams) > 0 &&
+      Number(recipe.yieldGrams) <= 100000 && Array.isArray(recipe.ingredients) &&
+      recipe.ingredients.length > 0 && recipe.ingredients.length <= 100 &&
+      recipe.ingredients.every(item => item && typeof item.name === 'string' &&
+        item.name.length > 0 && item.name.length <= 100 &&
+        ['grams','kcal','protein','fat','carbs'].every(key =>
+          Number.isFinite(Number(item[key])) && Number(item[key]) >= 0 &&
+          Number(item[key]) <= 100000))
+    );
+  }
+  window.MojBilansRecipes = {
+    getRecipes: () => structuredClone(state.recipes),
+    getDate: () => state.selectedDate,
+    saveRecipe: recipe => {
+      if (!validateRecipes([recipe]).length) return false;
+      return commitMutation(draft => {
+        const index = draft.recipes.findIndex(item => item.id === recipe.id);
+        if (index >= 0) draft.recipes[index] = structuredClone(recipe);
+        else draft.recipes.push(structuredClone(recipe));
+      });
+    },
+    removeRecipe: id => commitMutation(draft => {
+      draft.recipes = draft.recipes.filter(recipe => recipe.id !== id);
+    }),
+    addPortion: ({ recipeId, grams, meal, date }) => {
+      const recipe = state.recipes.find(item => item.id === recipeId);
+      const portion = Number(grams);
+      if (!recipe || !mealValid(meal) || !normalizedDate(date) ||
+          !Number.isFinite(portion) || portion <= 0 || portion > 100000) return false;
+      const nutrients = {};
+      for (const key of ['kcal','protein','fat','carbs']) {
+        const total = recipe.ingredients.reduce((sum, item) =>
+          sum + Number(item.grams) * Number(item[key]) / 100, 0);
+        nutrients[key] = total * portion / Number(recipe.yieldGrams);
+      }
+      const entry = { id: productId(), name: recipe.name, grams: portion,
+        nutrients, meal, date, source: 'recipe', recipeId };
+      if (!commitMutation(draft => draft.entries.push(entry))) return false;
+      renderAll();
+      return true;
+    }
+  };
   function renderAll() { renderJournal(); renderProducts(); renderHistory(); renderWeight(); renderMeasurements(); renderSettings(); }
   function showPage(page) {
     $$('.page').forEach(el => el.classList.toggle('active', el.id === `page-${page}`));
@@ -790,7 +841,7 @@
       if (payload.portions && typeof payload.portions === 'object' && !Array.isArray(payload.portions)) for (const [k, v] of Object.entries(payload.portions).slice(0, 5000)) { if (k.length <= 240 && isNumber(v) && number(v) > 0 && number(v) <= 100000 && !['__proto__','constructor','prototype'].includes(k)) Object.defineProperty(portions, k, { value: Number(v), enumerable: true, writable: true, configurable: true }); }
       const target = number(payload.weightGoal);
       const previous = state;
-      state = { ...state, goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
+      state = { ...state, goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, recipes: validateRecipes(payload.recipes), weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
       if (!save()) { state = previous; return false; }
       renderAll(); toast(`Przywrócono ${entries.length} wpisów`);
       return true;
@@ -1253,7 +1304,7 @@
   function openLocalBackupDb() {
     return new Promise((resolve, reject) => {
       if (!('indexedDB' in window)) { reject(Error('Przeglądarka nie udostępnia pamięci kopii (IndexedDB).')); return; }
-      const req = indexedDB.open(LOCAL_COPIES_DB, 1);
+      const req = indexedDB.open(COPIES_DB, 1);
       req.onupgradeneeded = () => {
         if (!req.result.objectStoreNames.contains(LOCAL_COPIES_STORE)) {
           req.result.createObjectStore(LOCAL_COPIES_STORE, { keyPath: 'id' });
@@ -1515,7 +1566,7 @@
     $('#backupInspect').addEventListener('change', inspectBackupFile);
     listLocalCopies(true);
     // Rozpocznij lokalną historię dla istniejących danych bez wykonywania pobierania pliku.
-    if (!storageFault && localStorage.getItem(KEY)) queueAutomaticLocalCopy();
+    if (!storageFault && localStorage.getItem(STORAGE_KEY)) queueAutomaticLocalCopy();
   }
   function changeDay(days) { const d = toDate(state.selectedDate); d.setDate(d.getDate() + days); state.selectedDate = dateKey(d); renderAll(); }
   bind(); renderAll();
