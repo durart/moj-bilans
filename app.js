@@ -313,18 +313,7 @@
     }));
   }
   function renderSettings() {
-    for (const key of ['kcal', 'protein', 'carbs', 'fat', 'water']) {
-      $(goalField(key)).value = state.goals[key];
-    }
-    // The optional calculator only reads the latest recorded weight and current goals.
-    const latestWeight = [...state.weights]
-      .filter(item => item && normalizedDate(item.date) && isNumber(item.kg))
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .at(-1);
-    window.NPGoalCalculatorUI?.setContext({
-      latestWeight: latestWeight || null,
-      goals: state.goals
-    });
+    globalThis.MojBilansSettingsUI.render(state, $, goalField, normalizedDate, isNumber, window.NPGoalCalculatorUI);
   }
   const { validateRecipes, nutrientsPer100 } = globalThis.MojBilansRecipesDomain;
   window.MojBilansRecipes = {
