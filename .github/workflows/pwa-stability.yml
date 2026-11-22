@@ -24,6 +24,7 @@ jobs:
           node --check recipe-builder.mjs
           node --check pwa-updater.js
           node --check sw.js
+          for file in domain/*.js ui/*.js; do node --check "$file"; done
       - name: Build isolated preview from current source
         run: node build-staging.mjs
       - name: Run regression tests
