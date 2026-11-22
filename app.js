@@ -890,14 +890,7 @@
     })) { closeCopyDialog(); renderAll(); toast(`Skopiowano ${rows.length} produktów`); }
   }
   // v0.2: ręczny dziennik wody, dzienna suma i cofnięcie ostatniego wpisu.
-  function renderWater() {
-    const current = state.water.filter(w => w.date === state.selectedDate), total = current.reduce((s, w) => s + (Number(w.ml) || 0), 0);
-    $('#waterTotal').textContent = `${nf.format(total)} ml`;
-    $('#waterGoalText').textContent = nf.format(state.goals.water || 2500);
-    $('#waterBar').style.width = `${pct(total, state.goals.water || 2500)}%`;
-    $('#waterCount').textContent = `${current.length} ${current.length === 1 ? 'wpis' : 'wpisów'}`;
-    $('#undoWater').disabled = !current.length;
-  }
+  function renderWater() { globalThis.MojBilansWaterUI.render(state, $, value => nf.format(value), pct); }
   function addWater(ml) {
     if (!Number.isFinite(ml) || ml < 1 || ml > 5000) return;
     if (commitMutation(draft => { draft.water.push({ id: productId(), date: draft.selectedDate, ml }); })) {
