@@ -1,5 +1,5 @@
-import { defaultFoodSearcher, searchBasicFoods, isBarcode } from './wyszukiwarka.mjs';
-import { loadFoodCatalog, searchFoodCatalog, importFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from './katalog-produktow.mjs';
+import { defaultFoodSearcher, searchBasicFoods, isBarcode } from '../wyszukiwarka.mjs';
+import { loadFoodCatalog, searchFoodCatalog, importFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from '../katalog-produktow.mjs';
 
 const messages = Object.freeze({
   'too-short':'Wpisz przynajmniej 2 znaki lub zeskanuj kod EAN.',
@@ -17,12 +17,12 @@ function node(tag, cls, text) {
 function displayDate(iso){try{return iso?new Date(iso).toLocaleString('pl-PL'):'jeszcze nie pobrano';}catch{return 'brak daty';}}
 
 /** Jeden wynik i jeden formularz niezależnie od źródła/sklepu. */
-export function mountFoodSearch({form,input,results,status,onSelect,searcher=defaultFoodSearcher}) {
+export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=()=>{},isFavorite=()=>false,searcher=defaultFoodSearcher}) {
   if(!form||!input||!results||!status||typeof onSelect!=='function') throw new TypeError('Brak wymaganych elementów');
   const importBtn=document.getElementById('foodCatalogImport');
   const catalogStatus=document.getElementById('foodCatalogStatus');
   const filter=document.getElementById('foodStoreFilter');
-  let currentRequest=0,importing=false;
+  let currentRequest=0,importing=false,typingTimer=null;
   const selectedStore=()=>filter?.value||'all';
   function updateCatalogStatus(message='') {
     if(!catalogStatus)return;
@@ -42,18 +42,24 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       const sourceLabel=item.verification==='bakery-card'?'Pieczywo · dane piekarni / sklepu':
         item.verification==='manufacturer-example'?'Wędlina · wartości orientacyjne':
         item.verification==='label-photo'?'Wartości z etykiety · konkretny EAN':
+        item.verification==='ean-photo-macro-estimate'?'EAN ze zdjęcia · makro orientacyjne':
         item.category==='dish'?'Danie domowe · szacunek':
         item.verification==='estimated-generic'?'Produkt bazowy · szacunek':
         item.source==='Baza podstawowa'?(item.category==='fruit'?'Owoc · baza lokalna':item.category==='veg'?'Warzywo · baza lokalna':item.category==='bakery'?'Pieczywo · Biedronka':item.category==='cheese'?'Ser żółty · baza lokalna':'Podstawowe'):
         shops.length?`${shops.join(', ')} · OFF`:'Open Food Facts';
       head.append(heading,node('span','food-source',sourceLabel));
+      const label=node('div','np-food-meta');
+      label.append(node('span','np-food-chip',item.source==='Baza podstawowa'?'Baza lokalna':'Open Food Facts'));
+      if(item.isEstimate || item.category==='dish' || item.verification==='estimated-generic')label.append(node('span','np-food-chip np-food-estimate','Wartości orientacyjne'));
       const macros=node('p','food-macros',`${fmt(item.kcal)} kcal · B ${fmt(item.protein)} g · T ${fmt(item.fat)} g · W ${fmt(item.carbs)} g / 100 ${item.unit||'g'}`);
       const description=item.verification==='bakery-card'?
         '✓ Wartości z karty tego konkretnego cebularza; inne piekarnie mogą stosować odmienną recepturę.':
         item.verification==='manufacturer-example'?
         '⚖️ Przykładowe wartości ze wskazanej karty producenta; Twój baleron może mieć inne makro. Sprawdź etykietę swojego opakowania.':
         item.verification==='label-photo'?
-        '✓ Dane odczytane ze zdjęcia opakowania tego wariantu. Inne opakowania Sante mogą mieć zmieniony skład i makro.': 
+        '✓ Dane odczytane ze zdjęcia opakowania tego wariantu. Inne opakowania Sante mogą mieć zmieniony skład i makro.':
+        item.verification==='ean-photo-macro-estimate'?
+        '⚖️ EAN i smak potwierdzone zdjęciem. Kalorie oraz B/T/W są ORIENTACYJNE, przyjęte z podobnych orzeszków BakaD\'Or — to nie odczyt z tabeli tego opakowania.': 
         item.category==='dish' && item.recipeSummary?
         `⚖️ SZACUNEK dla przykładowej receptury gotowej potrawy: ${item.recipeSummary}. Skład i wchłonięty tłuszcz mogą się różnić; zweryfikuj własną porcję.`:
         item.verification==='estimated-generic'?
@@ -65,14 +71,28 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
         item.source==='Baza podstawowa'?(item.edible?'Orientacyjne / 100 g części jadalnej; W bez błonnika (szacunkowo). Sprawdź gramaturę i sposób przygotowania.':'Orientacyjne wartości referencyjne — sprawdź produkt, sposób przygotowania i porcję.'):
         'Dane społecznościowe Open Food Facts. Kontrola liczb nie zastępuje sprawdzenia etykiety.';
       const detail=node('p','food-detail',description);
+      const favorite=node('button','food-action',isFavorite(item)?'★ Ulubiony':'☆ Ulubiony');
+      favorite.type='button';
+      favorite.setAttribute('aria-pressed',String(isFavorite(item)));
+      favorite.addEventListener('click',()=>{
+        if(onFavorite(item)) {
+          favorite.textContent=isFavorite(item)?'★ Ulubiony':'☆ Ulubiony';
+          favorite.setAttribute('aria-pressed',String(isFavorite(item)));
+        }
+      });
       const blocked=Boolean(item.isIncomplete||item.isUnreliable);
       const action=node('button','food-action',blocked?'Wymaga sprawdzenia':'Wybierz produkt');
       action.type='button';action.disabled=blocked;
       if(!blocked) action.addEventListener('click',()=>onSelect({...item}));
-      card.append(head,macros,detail,action);
+      card.append(head,label,macros,detail,favorite,action);
       if(item.source !== 'Baza podstawowa' && item.code && /^\d{8,14}$/.test(item.code)){
         const link=node('a','food-off-link','Zobacz źródło OFF');
         link.href=`https://world.openfoodfacts.org/product/${item.code}`;link.target='_blank';link.rel='noopener noreferrer';
+        card.append(link);
+      }
+      if (item.verification==='ean-photo-macro-estimate' && item.sourceUrl) {
+        const link=node('a','food-off-link','Źródło szacunku — podobny produkt');
+        link.href=item.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';
         card.append(link);
       }
       if (item.verification==='manufacturer-example' && item.sourceUrl) {
@@ -93,8 +113,34 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
       results.append(card);
     }
   }
+  // Podczas pisania filtrujemy WYŁĄCZNIE katalogi lokalne.
+  // Wyszukiwanie sieciowe działa po świadomym kliknięciu "Sprawdź OFF".
+  function showLocalSuggestions() {
+    const query=input.value.trim(),store=selectedStore();
+    if(query.length<2){
+      results.replaceChildren();
+      status.textContent=messages['too-short'];
+      return;
+    }
+    const local=[...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})];
+    const seen=new Set();
+    const unique=local.filter(item=>{
+      const key=item.code ? 'ean:'+item.code : 'name:'+String(item.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pl')+'|'+String(item.brand||'').toLocaleLowerCase('pl');
+      if(seen.has(key))return false;
+      seen.add(key);return true;
+    });
+    render(unique);
+    status.textContent=`Wyniki lokalne: ${unique.length}. Aby wyszukać także w Open Food Facts, kliknij „Sprawdź OFF”.`;
+  }
+  function onInput() {
+    currentRequest++;
+    clearTimeout(typingTimer);
+    if(input.value.trim().length<2){showLocalSuggestions();return;}
+    typingTimer=setTimeout(showLocalSuggestions,120);
+  }
   async function handleSubmit(event){
     event?.preventDefault();
+    clearTimeout(typingTimer);
     const query=input.value.trim(),serial=++currentRequest,store=selectedStore();
     if(query.length<2){render([]);status.textContent=messages['too-short'];return;}
     const local=[...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})];
@@ -124,10 +170,11 @@ export function mountFoodSearch({form,input,results,status,onSelect,searcher=def
     }catch(e){updateCatalogStatus(`Pobieranie nie powiodło się: ${e?.message||'brak połączenia'}. Poprzednie produkty pozostają zapisane.`);}
     finally{importing=false;if(importBtn){importBtn.disabled=false;importBtn.textContent='Pobierz / odśwież produkty offline';}}
   }
-  function onFilterChanged(){currentRequest++;if(input.value.trim().length>=2)void handleSubmit();else{render([]);status.textContent='Wpisz nazwę lub kod produktu, aby wyszukać we wspólnej bazie.';}}
+  function onFilterChanged(){currentRequest++;clearTimeout(typingTimer);showLocalSuggestions();}
   form.addEventListener('submit',handleSubmit);
+  input.addEventListener('input',onInput);
   importBtn?.addEventListener('click',refreshCatalog);
   filter?.addEventListener('change',onFilterChanged);
   updateCatalogStatus();
-  return ()=>{currentRequest++;form.removeEventListener('submit',handleSubmit);importBtn?.removeEventListener('click',refreshCatalog);filter?.removeEventListener('change',onFilterChanged);};
+  return ()=>{currentRequest++;clearTimeout(typingTimer);input.removeEventListener('input',onInput);form.removeEventListener('submit',handleSubmit);importBtn?.removeEventListener('click',refreshCatalog);filter?.removeEventListener('change',onFilterChanged);};
 }
