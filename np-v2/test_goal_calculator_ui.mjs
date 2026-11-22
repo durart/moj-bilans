@@ -6,20 +6,27 @@ const source = fs.readFileSync(new URL('goal-calculator.js', import.meta.url), '
 const uiSource = fs.readFileSync(new URL('goal-calculator-ui.js', import.meta.url), 'utf8');
 const names = [
   'gpForm','gpApply','gpResult','gpStatus','gpAge','gpHeight','gpWeight',
-  'gpEquation','gpActivity','gpActivityHint','gpGoal','gpMacroPreset','gpWeightSource',
+  'gpEquation','gpActivity','gpActivityHint','gpGoal','gpMacroPreset','gpRecompositionHint','gpWeightSource',
   'gpBmr','gpTdee','gpCalories','gpProtein','gpFat','gpCarbs',
   'gpProteinRatio','gpFatRatio','gpCarbsRatio','gpComparison',
   'goalKcal','goalProtein','goalFats','goalCarbs','goalsForm'
 ];
 const eventMap = new Map();
 const el = Object.fromEntries(names.map(name => [name, {
-  id: name, value: '', textContent: '', dataset: {}, disabled: name === 'gpApply',
+  id: name, value: '', textContent: '', dataset: {}, attributes: {}, disabled: name === 'gpApply',
   classes: new Set(name === 'gpResult' ? ['hidden'] : []),
   classList: {
     add(className) { el[name].classes.add(className); },
-    remove(className) { el[name].classes.delete(className); }
+    remove(className) { el[name].classes.delete(className); },
+    toggle(className, force) {
+      const present = force === undefined ? !el[name].classes.has(className) : force;
+      if (present) el[name].classes.add(className);
+      else el[name].classes.delete(className);
+      return present;
+    }
   },
   addEventListener(type, handler) { const key = name + ':' + type; eventMap.set(key, [...(eventMap.get(key) || []), handler]); },
+  setAttribute(attribute, value) { this.attributes[attribute] = String(value); },
   scrollIntoView() {}, focus() {}
 }]));
 const document = { readyState: 'complete', getElementById: id => el[id] || null };
@@ -86,4 +93,24 @@ check('manual weight entry is not overwritten by a newer recorded weight', () =>
   window.NPGoalCalculatorUI.setContext({ latestWeight:{date:'2026-11-22',kg:97} });
   assert.equal(el.gpWeight.value,'98');
 });
-console.log('Goal calculator UI: 6 checks passed.');
+check('recomposition hides irrelevant macro presets and remains a preview', () => {
+  el.gpGoal.value = 'recomposition';
+  fire('gpGoal','change');
+  assert.equal(el.gpMacroPreset.disabled, true);
+  assert.equal(el.gpMacroPreset.attributes['aria-disabled'], 'true');
+  assert.equal(el.gpRecompositionHint.classes.has('hidden'), false);
+  assert.equal(el.gpApply.disabled, true);
+  fire('gpForm','submit');
+  assert.match(el.gpStatus.textContent, /Rekompozycja/);
+  assert.equal(el.gpMacroPreset.disabled, true);
+  assert.equal(el.gpApply.disabled, false);
+});
+check('switching back to manual macro presets restores full control', () => {
+  el.gpGoal.value = 'maintain';
+  fire('gpGoal','change');
+  assert.equal(el.gpMacroPreset.disabled, false);
+  assert.equal(el.gpMacroPreset.attributes['aria-disabled'], 'false');
+  assert.equal(el.gpRecompositionHint.classes.has('hidden'), true);
+  assert.equal(el.gpApply.disabled, true);
+});
+console.log('Goal calculator UI: 8 checks passed.');
