@@ -1,0 +1,54 @@
+name: Mój Bilans v2.7 production smoke checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'index.html'
+      - 'recipe-builder.mjs'
+      - 'interfejs-wyszukiwarki.mjs'
+      - 'sw.js'
+      - '.github/workflows/recipes-v27-production.yml'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks
+        run: |
+          node --check app.js
+          node --check recipe-builder.mjs
+          node --check interfejs-wyszukiwarki.mjs
+          node --check sw.js
+      - name: Verify production release invariants
+        run: |
+          node --input-type=module <<'EOF'
+          import { readFileSync, existsSync } from 'node:fs';
+          import assert from 'node:assert/strict';
+          const html=readFileSync('index.html','utf8');
+          const app=readFileSync('app.js','utf8');
+          const sw=readFileSync('sw.js','utf8');
+          const recipes=readFileSync('recipe-builder.mjs','utf8');
+          assert.ok(html.includes('src="./app.js?v=2.7.0"'));
+          assert.ok(html.includes('src="./recipe-builder.mjs?v=2.7.0"'));
+          assert.ok(html.includes('src="./pwa-updater.js?v=2.7.0"'));
+          assert.ok(app.includes("const KEY = 'moj-bilans-v1'"));
+          assert.ok(app.includes("IS_PREVIEW ? 'moj-bilans-preview-v27' : KEY"));
+          assert.ok(app.includes('productFavorites: state.productFavorites'));
+          assert.ok(app.includes('recipes: state.recipes'));
+          assert.ok(app.includes('recipes: validateRecipes(payload.recipes)'));
+          assert.ok(recipes.includes('id="recipeOpen"'));
+          assert.ok(recipes.includes('id="recipeEditor"'));
+          assert.ok(recipes.includes('favorite'));
+          assert.ok(sw.includes('moj-bilans-cache-recipes-v2.7.0'));
+          assert.ok(sw.includes('./recipe-builder.mjs?v=2.7.0'));
+          const assets=[...html.matchAll(/(?:src|href)="(\.\/[^"?]+)/g)];
+          for(const match of assets) assert.ok(existsSync(match[1].slice(2)), 'Missing '+match[1]);
+          console.log('Production v2.7 smoke invariants passed');
+          EOF
+      - name: Existing regression suite
+        run: npm test
