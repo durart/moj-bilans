@@ -78,6 +78,6 @@ check('skrypt statystyk uruchamia się przed aplikacją', () => {
   assert.ok(historyScript >= 0 && appScript > historyScript);
 });
 check('Historia obsługuje zmianę okresu', () => assert.ok(app.includes("button.dataset.historyPeriod") && app.includes("historyFrom').addEventListener")));
-check('PWA buforuje statystyki historii offline', () => assert.ok(sw.includes("'./historia-statystyki.js'")));
+check('PWA buforuje statystyki historii offline', () => assert.ok(/'\.\/historia-statystyki\.js(?:\?[^']*)?'/.test(sw)));
 check('zachowany format kopii danych użytkownika', () => assert.ok(app.includes('moj-bilans-v1')));
 console.log(checks + ' testów historii zaliczonych.');
