@@ -85,3 +85,14 @@ Tests: `node np-v2/test_goal_calculator.mjs`, `node np-v2/test_goal_calculator_u
 - A selection-dependent, accessible hint shows illustrative daily steps, workout frequency and physical-work context. Step counts are **not** hard thresholds or inputs to the equation.
 - A mixed-activity example (desk work, approximately 6,000 steps per day and three strength sessions per week) explains why light versus moderate activity requires judgement and later checking the weight trend.
 - Update the test-only Service Worker cache and versioned assets without modifying production or persistent data.
+
+## Body recomposition mode — isolated test v2.6.2
+
+The optional calculator now includes `recomposition` (fat loss with resistance-training support) as an additional energy goal.
+
+- Daily kcal: TDEE estimated from Mifflin–St Jeor and the chosen activity level, followed by a modest **10% deficit**.
+- Protein: approximately **1.8 g per kg of current body weight**, capped at **35% of total energy**. Fat: approximately **30% of energy**. Carbohydrates: remaining energy. This is a modeling starting point, not individualized clinical advice or a guarantee of muscle gain.
+- The ordinary percentage macro presets are disabled with a visible explanation while the recomposition goal is selected. Selecting any other goal restores them.
+- No changes to saved data or existing goal persistence. Calculations are previews only; the user still explicitly copies targets and separately saves the goals.
+- A lower-energy guard avoids automatic recomposition proposals below 1200 kcal. It is a validation threshold, not a diet recommendation.
+- Regression tests cover existing goals, recomposition macros, changes between goals, offline PWA and unchanged diary/measurement layout.
