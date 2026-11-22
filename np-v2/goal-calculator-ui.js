@@ -8,6 +8,22 @@
   let latestPreview = null;
   let currentGoals = null;
 
+  // Examples help explain PAL categories; they do not convert step counts into TDEE.
+  const activityExamples = Object.freeze({
+    sedentary: 'Przykład: do ok. 4 tys. kroków dziennie, praca głównie siedząca, bez regularnych treningów.',
+    light: 'Przykład: ok. 4–7 tys. kroków dziennie, spacery lub 1–2 treningi w tygodniu. Przy pracy siedzącej i trzech krótkich treningach ten poziom też może pasować.',
+    moderate: 'Przykład: ok. 7–10 tys. kroków dziennie i 3–4 treningi w tygodniu albo sporo codziennego ruchu. Same trzy treningi przy całym dniu siedzenia nie gwarantują tego poziomu.',
+    high: 'Przykład: większość dnia w ruchu, często ponad 10 tys. kroków i częste wymagające treningi albo fizyczna praca. Nie wybieraj wyłącznie na podstawie liczby treningów.'
+  });
+
+  function updateActivityHint() {
+    const hint = $('gpActivityHint');
+    const activity = $('gpActivity');
+    if (!hint || !activity) return;
+    hint.textContent = activityExamples[activity.value] ||
+      'Wybierz poziom, aby zobaczyć przykłady kroków i treningów.';
+  }
+
   function invalidate() {
     latestPreview = null;
     const apply = $('gpApply');
@@ -103,6 +119,8 @@
     if (!form) return;
     form.addEventListener('submit', calculate);
     $('gpApply').addEventListener('click', applyPreview);
+    $('gpActivity').addEventListener('change', updateActivityHint);
+    updateActivityHint();
     const ids = ['gpAge', 'gpHeight', 'gpWeight', 'gpEquation', 'gpActivity', 'gpGoal', 'gpMacroPreset'];
     for (const id of ids) {
       $(id).addEventListener('input', () => {
