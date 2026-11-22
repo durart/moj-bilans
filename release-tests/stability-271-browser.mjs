@@ -98,6 +98,7 @@ try {
   await test.reload();
   const stored = () => test.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-preview-v27')));
   const upload = async payload => {
+    await test.locator('#importData').setInputFiles([]);
     await test.locator('#importData').setInputFiles({name:'test-backup.json',mimeType:'application/json',buffer:Buffer.from(typeof payload === 'string' ? payload : JSON.stringify(payload))});
     await test.waitForFunction(() => document.querySelector('#importData').value === '');
   };
