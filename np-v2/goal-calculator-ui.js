@@ -24,6 +24,17 @@
       'Wybierz poziom, aby zobaczyć przykłady kroków i treningów.';
   }
 
+  function updateGoalMode() {
+    const recomposition = $('gpGoal')?.value === 'recomposition';
+    const macroPreset = $('gpMacroPreset');
+    const hint = $('gpRecompositionHint');
+    if (macroPreset) {
+      macroPreset.disabled = recomposition;
+      macroPreset.setAttribute('aria-disabled', String(recomposition));
+    }
+    hint?.classList.toggle('hidden', !recomposition);
+  }
+
   function invalidate() {
     latestPreview = null;
     const apply = $('gpApply');
@@ -68,7 +79,9 @@
         ? 'W porównaniu z obecnym celem ' + format(current) + ' kcal: ' +
           (result.kcal >= current ? '+' : '−') + format(Math.abs(result.kcal - current)) + ' kcal.'
         : 'Nie znaleziono obecnego celu do porównania.';
-      $('gpStatus').textContent = 'To propozycja — zapisane cele pozostają bez zmian.';
+      $('gpStatus').textContent = result.goal === 'recomposition'
+        ? 'Rekompozycja: orientacyjny deficyt 10%, więcej białka. Zapisane cele pozostają bez zmian.'
+        : 'To propozycja — zapisane cele pozostają bez zmian.';
       $('gpApply').disabled = false;
       $('gpResult').classList.remove('hidden');
     } catch (error) {
@@ -120,7 +133,10 @@
     form.addEventListener('submit', calculate);
     $('gpApply').addEventListener('click', applyPreview);
     $('gpActivity').addEventListener('change', updateActivityHint);
+    $('gpGoal').addEventListener('change', updateGoalMode);
+    $('gpGoal').addEventListener('input', updateGoalMode);
     updateActivityHint();
+    updateGoalMode();
     const ids = ['gpAge', 'gpHeight', 'gpWeight', 'gpEquation', 'gpActivity', 'gpGoal', 'gpMacroPreset'];
     for (const id of ids) {
       $(id).addEventListener('input', () => {
