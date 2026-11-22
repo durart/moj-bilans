@@ -103,3 +103,25 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "test(staging): publish verified Mój Bilans 2.7.1 preview"
           git push origin HEAD:main
+
+  live-preview:
+    needs: [publish-preview]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Verify public staging release and isolated worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://durart.github.io/moj-bilans/preview/"
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error --location "$URL" -o /tmp/bilans-preview.html &&
+               grep -q 'TEST · Mój Bilans 2.7.1' /tmp/bilans-preview.html; then
+              break
+            fi
+            sleep 10
+          done
+          grep -q 'TEST · Mój Bilans 2.7.1' /tmp/bilans-preview.html
+          grep -q 'moj-bilans-preview' <(curl --fail --silent --show-error --location "${URL}sw.js")
+          grep -q 'moj-bilans-preview-v27' <(curl --fail --silent --show-error --location "${URL}app.js?v=2.7.1")
+          grep -q 'MojBilansBackup' <(curl --fail --silent --show-error --location "${URL}backup-validation.js?v=2.7.1")
+          echo "PASS public staging reachable with isolated PWA, diary and backup validator"
