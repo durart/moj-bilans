@@ -1,13 +1,16 @@
-const CACHE = 'moj-bilans-cache-recipes-v270';
+const CACHE = 'moj-bilans-cache-recipes-v271';
 const STATIC = ['./', './index.html', './style.css', './np-design.css?v=np2.1.0', './daily-focus.css?v=df2.2.0', './premium-food-search.css?v=pfs2.3.0', './np-history-24.css?v=2.5.0', './np-body-25.css?v=2.5.0', './goal-calculator.css?v=2.6.2', './np-trends.js?v=2.5.0', './np-history-24.js?v=2.5.0', './np-body-25.js?v=2.5.0', './goal-calculator.js?v=2.6.2', './goal-calculator-ui.js?v=2.6.2', './np-ui.js?v=np2.1.0', './wyszukiwarka.css', './app.js?v=2.7.0', './recipe-builder.mjs?v=2.7.0', './historia-statystyki.js?v=2.5.0', './ostatnie-dziennik.js', './interfejs-wyszukiwarki.mjs?v=2.7.0', './wyszukiwarka.mjs', './produkty-podstawowe.mjs', './owoce-warzywa.mjs', './pieczywo-biedronka.mjs', './sery-zolte.mjs', './polskie-produkty.mjs', './polskie-dania.mjs', './produkty-z-etykiet.mjs', './bakador-chili.mjs', './pwa-updater.js?v=2.7.0', './baleron.mjs', './cebularz.mjs', './katalog-produktow.mjs', './walidacja-zywnosci.mjs', './assets/df-breakfast.svg', './assets/df-lunch.svg', './assets/df-dinner.svg', './assets/df-snack.svg', './manifest.webmanifest?v=icon-large-maskable-20261122-v2', './icons/icon-neon-large-192.png', './icons/icon-neon-large-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png', './icons/apple-touch-neon-large-180.png', './icons/favicon-neon-large-48.png'];
 self.addEventListener('install', evt => {
-  evt.waitUntil(caches.open(CACHE).then(cache => cache.addAll(STATIC)).then(() => self.skipWaiting()));
+  evt.waitUntil(caches.open(CACHE).then(cache => cache.addAll(STATIC)));
 });
 self.addEventListener('activate', evt => {
-  evt.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('moj-bilans-cache-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  evt.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('moj-bilans-cache-') && k !== CACHE).map(k => caches.delete(k)))).then(() => Promise.resolve()));
+});
+self.addEventListener('message', evt => {
+  if (evt.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 self.addEventListener('fetch', evt => {
   const url = new URL(evt.request.url);
   if (evt.request.method !== 'GET' || url.origin !== self.location.origin) return;
-  evt.respondWith(fetch(evt.request).then(response => { if (response.ok) { const copy = response.clone(); caches.open(CACHE).then(cache => cache.put(evt.request, copy)); } return response; }).catch(() => caches.match(evt.request)));
+  evt.respondWith(fetch(evt.request).then(response => { if (response.ok) { const copy = response.clone(); caches.open(CACHE).then(cache => cache.put(evt.request, copy)).catch(() => {}); } return response; }).catch(() => caches.match(evt.request)));
 });
