@@ -71,7 +71,7 @@ jobs:
 
   publish-preview:
     needs: [verify, browser]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'fix/stabilizacja-2.7.1'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'refactor/architecture-2.8.0'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -79,7 +79,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: fix/stabilizacja-2.7.1
+          ref: refactor/architecture-2.8.0
       - name: Publish only isolated preview directory to Pages branch
         shell: bash
         run: |
@@ -106,7 +106,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "test(staging): publish verified Mój Bilans 2.7.1 preview"
+          git commit -m "test(staging): publish verified Mój Bilans 2.8.0 preview"
           git push origin HEAD:main
 
   live-preview:
