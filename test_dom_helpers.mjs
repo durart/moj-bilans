@@ -16,6 +16,6 @@ assert.equal(escapeText('<script src="x">&\''), '&lt;script src=&quot;x&quot;&gt
 assert.equal(escapeText(0), '0');
 const html = readFileSync('index.html', 'utf8');
 const sw = readFileSync('sw.js', 'utf8');
-assert.ok(html.indexOf('ui/dom.js?v=2.8.0') < html.indexOf('app.js?v=2.7.1'));
+assert.ok(html.indexOf('ui/dom.js?v=2.8.0') < html.indexOf('app.js?v=2.8.1'));
 assert.match(sw, /ui\/dom\.js\?v=2\.8\.0/);
 console.log('DOM selection and HTML escaping compatibility verified.');

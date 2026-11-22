@@ -20,6 +20,6 @@ assert.deepEqual(validateRecipes([{ ...recipe, name: 'x'.repeat(101) }]), []);
 assert.equal(validateRecipes(Array.from({ length: 501 }, (_, i) => ({ ...recipe, id: String(i) }))).length, 500);
 const html = readFileSync('index.html', 'utf8');
 const sw = readFileSync('sw.js', 'utf8');
-assert.ok(html.indexOf('domain/recipes.js?v=2.8.0') < html.indexOf('app.js?v=2.7.1'));
+assert.ok(html.indexOf('domain/recipes.js?v=2.8.0') < html.indexOf('app.js?v=2.8.1'));
 assert.match(sw, /domain\/recipes\.js\?v=2\.8\.0/);
 console.log('Recipe validation, nutritional arithmetic and offline loading verified.');
