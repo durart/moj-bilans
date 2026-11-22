@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const helper = fs.readFileSync(new URL('./ostatnie-dziennik.js', import.meta.url), 'utf8');
+const helper = fs.readFileSync(new URL('./ostatnie-dziennik.js?v=np2.1.0', import.meta.url), 'utf8');
 const window = {};
 vm.runInNewContext(helper, { window });
 const recentDiary = window.MojBilansRecentDiary.recentDiary;
@@ -80,5 +80,5 @@ check('kopiowanie całego posiłku z nowymi ID', () =>
 check('zachowany klucz danych użytkownika i kopii JSON', () =>
   assert.ok(app.includes("const KEY = 'moj-bilans-v1'")));
 check('obsługa offline w PWA', () =>
-  assert.ok(sw.includes("'./ostatnie-dziennik.js'")));
+  assert.ok(sw.includes("'./ostatnie-dziennik.js?v=np2.1.0'")));
 console.log(tests + ' testów zakładki Ostatnie zaliczonych.');

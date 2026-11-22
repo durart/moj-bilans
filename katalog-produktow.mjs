@@ -6,8 +6,8 @@
  */
 import { assessNutrition } from './walidacja-zywnosci.mjs';
 
-export const FOOD_CATALOG_KEY = 'moj-bilans:off-food-catalog:v1';
-export const LEGACY_BIEDRONKA_KEY = 'moj-bilans:biedronka-off:v1';
+export const FOOD_CATALOG_KEY = (globalThis.location?.pathname.includes('/preview/') ? 'preview:moj-bilans:off-food-catalog:v1' : 'moj-bilans:off-food-catalog:v1');
+export const LEGACY_BIEDRONKA_KEY = (globalThis.location?.pathname.includes('/preview/') ? 'preview:moj-bilans:biedronka-off:v1' : 'moj-bilans:biedronka-off:v1');
 export const FOOD_CATALOG_MAX = 100;
 const OFF_SEARCH = 'https://world.openfoodfacts.org/api/v2/search';
 const OFF_FIELDS = 'code,product_name,product_name_pl,product_name_en,brands,stores,stores_tags,nutriments,unique_scans_n';

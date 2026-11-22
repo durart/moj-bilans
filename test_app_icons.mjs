@@ -89,9 +89,10 @@ verify('Both offline caches contain the new icon URLs', () => {
 });
 
 verify('Production and test caches remain strictly isolated', () => {
-  assert.match(prodWorker, /moj-bilans-cache-recipes-v270/);
+  assert.match(prodWorker, /v271-stable-3/);
   assert.match(testWorker, /moj-bilans-np-v2-cache-icon-large-maskable-v2/);
-  assert.match(prodWorker, /k\.startsWith\('moj-bilans-cache-'/);
+  assert.match(prodWorker, /key\.startsWith\(PREFIX\)/);
+  assert.match(prodWorker, /IS_PREVIEW \? 'moj-bilans-preview-recipes-' : 'moj-bilans-cache-'/);
   assert.match(testWorker, /k\.startsWith\('moj-bilans-np-v2-cache-'/);
   assert.doesNotMatch(testWorker, /k\.startsWith\('moj-bilans-cache-'/);
 });

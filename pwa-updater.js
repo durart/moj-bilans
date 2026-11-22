@@ -7,7 +7,17 @@ const reload = document.getElementById('np21ReloadUpdate');
 const report = (message, error=false) => {
   status.textContent=message; status.classList.toggle('np21-error',error);
 };
-reload.addEventListener('click',()=>window.location.reload());
+let activationRequested = false;
+reload.addEventListener('click', () => {
+  if (registration?.waiting) {
+    activationRequested = true;
+    reload.disabled = true;
+    report('Aktywuję aktualizację…');
+    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+  } else {
+    window.location.reload();
+  }
+});
 if (!('serviceWorker' in navigator)) {
   check.disabled=true;report('Ta przeglądarka nie obsługuje trybu PWA offline.',true);return;
 }
@@ -21,18 +31,22 @@ check.addEventListener('click',async()=>{
     if(registration.waiting) {
       report('Nowa wersja jest dostępna. Zakończ edycję i odśwież aplikację.');
       reload.classList.remove('hidden');
-    } else report('Sprawdzono aktualizacje. Wersja v2.7.0 jest aktualna.');
+    } else report('Sprawdzono aktualizacje. Brak oczekującej wersji.');
   } catch(err){report('Nie udało się sprawdzić aktualizacji: '+err.message,true);}
   finally {check.disabled=false;}
 });
 navigator.serviceWorker.addEventListener('controllerchange',()=>{
+  if (activationRequested) {
+    window.location.reload();
+    return;
+  }
   report('Nowa wersja jest gotowa. Odśwież dopiero po zapisaniu danych.');
   reload.classList.remove('hidden');
 });
 window.addEventListener('load',async()=>{
   try {
     registration=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
-    report('Wersja 2.6.2. Aktualizacje możesz sprawdzić ręcznie.');
+    report('Aktualizacje możesz sprawdzić ręcznie.');
     if(registration.waiting&&navigator.serviceWorker.controller) {
       report('Nowa wersja gotowa. Odśwież po zapisaniu danych.');
       reload.classList.remove('hidden');

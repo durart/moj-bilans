@@ -1,0 +1,127 @@
+name: PWA stability checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [fix/stabilizacja-2.7.1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check recipe-builder.mjs
+          node --check pwa-updater.js
+          node --check sw.js
+      - name: Run regression tests
+        run: npm test
+      - name: Validate backup records and staging parity
+        run: node test_backup_validation.mjs && node test_staging_parity.mjs
+      - name: Package isolated staging for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: moj-bilans-271-staging
+          path: preview/
+          if-no-files-found: error
+          retention-days: 14
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependency
+        run: npm install --no-save --package-lock=false playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Upgrade, offline, backup and staging acceptance
+        run: node release-tests/stability-271-browser.mjs
+      - name: Existing data safety fault injection
+        run: node release-tests/stage1-data-safety-browser.mjs
+      - name: Existing diary and offline regression
+        run: node release-tests/np-v2-production-acceptance.mjs
+      - name: Daily Focus regression
+        run: node release-tests/daily-focus-visual-acceptance.mjs
+      - name: Search regression
+        run: node release-tests/premium-food-search-acceptance.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stability-271-screenshots
+          path: test-artifacts/
+          if-no-files-found: ignore
+
+  publish-preview:
+    needs: [verify, browser]
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'fix/stabilizacja-2.7.1'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: fix/stabilizacja-2.7.1
+      - name: Publish only isolated preview directory to Pages branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add -B preview-release /tmp/moj-bilans-preview origin/main
+          mkdir -p /tmp/moj-bilans-preview/preview
+          echo "Source preview revision: $(git rev-parse HEAD)"
+          echo "Source preview version: $(grep -o 'TEST · Mój Bilans 2.7.1' preview/index.html | head -1)"
+          rsync -a --delete preview/ /tmp/moj-bilans-preview/preview/
+          sha256sum preview/index.html /tmp/moj-bilans-preview/preview/index.html
+          git -C /tmp/moj-bilans-preview ls-files -v preview/index.html
+          git -C /tmp/moj-bilans-preview diff --stat -- preview/index.html
+          git -C /tmp/moj-bilans-preview status --short -- preview/
+          cd /tmp/moj-bilans-preview
+          git add -A -- preview/
+          if git diff --cached --quiet; then
+            echo "Preview already up to date"
+            exit 0
+          fi
+          if git diff --cached --name-only | grep -v '^preview/'; then
+            echo "Refusing to modify production paths" >&2
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "test(staging): publish verified Mój Bilans 2.7.1 preview"
+          git push origin HEAD:main
+
+  live-preview:
+    needs: [publish-preview]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Verify public staging release and isolated worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://durart.github.io/moj-bilans/preview/"
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error --location "$URL" -o /tmp/bilans-preview.html &&
+               grep -q 'TEST · Mój Bilans 2.7.1' /tmp/bilans-preview.html; then
+              break
+            fi
+            sleep 10
+          done
+          grep -q 'TEST · Mój Bilans 2.7.1' /tmp/bilans-preview.html
+          grep -q 'moj-bilans-preview' <(curl --fail --silent --show-error --location "${URL}sw.js")
+          grep -q 'moj-bilans-preview-v27' <(curl --fail --silent --show-error --location "${URL}app.js?v=2.7.1")
+          grep -q 'MojBilansBackup' <(curl --fail --silent --show-error --location "${URL}backup-validation.js?v=2.7.1")
+          echo "PASS public staging reachable with isolated PWA, diary and backup validator"

@@ -10,7 +10,8 @@ const format = value => Number(value).toLocaleString('pl-PL', { maximumFractionD
 const emptyIngredient = () => ({ id: makeId(), name: '', grams: 100, kcal: 0, protein: 0, fat: 0, carbs: 0 });
 let ingredients = [emptyIngredient()];
 let editingId = null;
-let searchTimer;
+const searchTimers = new Map();
+const cancelSearch = id => { clearTimeout(searchTimers.get(id)); searchTimers.delete(id); };
 
 const root = document.createElement('section');
 root.className = 'recipe-builder';
@@ -52,6 +53,7 @@ function showTotals() {
     : 'Wprowadź prawidłową masę gotowego dania.';
 }
 function renderIngredients() {
+  for (const id of searchTimers.keys()) cancelSearch(id);
   const host = byId('recipeIngredients');
   host.replaceChildren();
   ingredients.forEach(item => {
@@ -66,7 +68,7 @@ function renderIngredients() {
     remove.textContent = 'Usuń';
     remove.className = 'danger-quiet';
     remove.disabled = ingredients.length === 1;
-    remove.addEventListener('click', () => { ingredients = ingredients.filter(row => row.id !== item.id); renderIngredients(); showTotals(); });
+    remove.addEventListener('click', () => { cancelSearch(item.id); ingredients = ingredients.filter(row => row.id !== item.id); renderIngredients(); showTotals(); });
     heading.append(title, remove);
     const nameLabel = document.createElement('label');
     nameLabel.className = 'field-label';
@@ -80,9 +82,10 @@ function renderIngredients() {
     results.className = 'recipe-search-results';
     name.addEventListener('input', () => {
       item.name = name.value;
-      clearTimeout(searchTimer);
+      cancelSearch(item.id);
       results.replaceChildren();
-      searchTimer = setTimeout(() => {
+      searchTimers.set(item.id, setTimeout(() => {
+        if (!name.isConnected || !ingredients.some(row => row.id === item.id)) return;
         const query = name.value.trim();
         if (query.length < 2) return;
         const seen = new Set();
@@ -101,7 +104,7 @@ function renderIngredients() {
           });
           results.append(button);
         }
-      }, 180);
+      }, 180));
     });
     nameLabel.append(name);
     card.append(heading, nameLabel, results);
@@ -122,6 +125,7 @@ function renderIngredients() {
   });
 }
 function reset() {
+  for (const id of searchTimers.keys()) cancelSearch(id);
   editingId = null; ingredients = [emptyIngredient()];
   byId('recipeName').value = ''; byId('recipeYield').value = '1000';
   byId('recipeFormHeading').textContent = 'Nowy przepis';
@@ -207,4 +211,5 @@ byId('recipeSave').addEventListener('click', () => {
   if (!api.saveRecipe(recipe)) { byId('recipeMessage').textContent = 'Nie udało się zapisać przepisu.'; return; }
   reset(); editorVisible(false); renderList(); byId('recipeMessage').textContent = 'Przepis zapisany.';
 });
+window.addEventListener('moj-bilans:restored', () => { reset(); editorVisible(false); renderList(); });
 reset(); editorVisible(false); renderList();
