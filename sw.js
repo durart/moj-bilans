@@ -4,7 +4,7 @@ self.addEventListener('install', evt => {
   evt.waitUntil(caches.open(CACHE).then(cache => cache.addAll(STATIC)));
 });
 self.addEventListener('activate', evt => {
-  evt.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('moj-bilans-cache-') && k !== CACHE).map(k => caches.delete(k)))).then(() => Promise.resolve()));
+  evt.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('moj-bilans-cache-') && k !== CACHE).map(k => caches.delete(k)))));
 });
 self.addEventListener('message', evt => {
   if (evt.data?.type === 'SKIP_WAITING') self.skipWaiting();
