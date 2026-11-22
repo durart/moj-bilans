@@ -16,10 +16,12 @@ const testWorker = read('np-v2/sw.js');
 let passed = 0;
 const verify = (name, fn) => { fn(); passed++; console.log('PASS ' + name); };
 const assets = [
-  ['icons/icon-neon-192.png', 192],
-  ['icons/icon-neon-512.png', 512],
-  ['icons/apple-touch-neon-180.png', 180],
-  ['icons/favicon-neon-48.png', 48]
+  ['icons/icon-neon-large-192.png', 192],
+  ['icons/icon-neon-large-512.png', 512],
+  ['icons/icon-maskable-192.png', 192],
+  ['icons/icon-maskable-512.png', 512],
+  ['icons/apple-touch-neon-large-180.png', 180],
+  ['icons/favicon-neon-large-48.png', 48]
 ];
 
 verify('Neon icons contain valid PNG headers and exact dimensions', () => {
@@ -38,10 +40,10 @@ verify('Both manifests use the same artwork with independent app scope', () => {
     assert.equal(manifest.start_url, './');
     assert.equal(manifest.id, './');
     assert.equal(manifest.scope, './');
-    assert.equal(manifest.icons.length, manifest === prod ? 2 : 4);
+    assert.equal(manifest.icons.length, 4);
     for (const [index, size] of [[0, 192], [1, 512]]) {
       const icon = manifest.icons[index];
-      assert.equal(icon.src, prefix + 'icon-neon-' + size + '.png');
+      assert.equal(icon.src, prefix + 'icon-neon-large-' + size + '.png');
       assert.equal(icon.sizes, size + 'x' + size);
       assert.equal(icon.type, 'image/png');
       assert.equal(icon.purpose, 'any');
@@ -49,46 +51,46 @@ verify('Both manifests use the same artwork with independent app scope', () => {
   }
 });
 
-verify('Test-only Android maskable variants are complete and preloaded', () => {
-  for (const [index, size] of [[2, 192], [3, 512]]) {
-    const file = 'icons/icon-maskable-' + size + '.png';
-    const icon = test.icons[index];
-    assert.equal(icon.src, '../' + file);
-    assert.equal(icon.sizes, size + 'x' + size);
-    assert.equal(icon.type, 'image/png');
-    assert.equal(icon.purpose, 'maskable');
-    assert.ok(testWorker.includes("'../" + file + "'"));
-    const bytes = fs.readFileSync(path.join(root, file));
-    assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
-    assert.equal(bytes.readUInt32BE(16), size);
-    assert.equal(bytes.readUInt32BE(20), size);
-    assert.ok(!bytes.includes(Buffer.from('tRNS')), 'Maskable icon must be opaque');
+verify('Both installs provide opaque maskable icons', () => {
+  for (const [manifest, worker, prefix] of [[prod, prodWorker, './icons/'], [test, testWorker, '../icons/']]) {
+    for (const [index, size] of [[2, 192], [3, 512]]) {
+      const src = prefix + 'icon-maskable-' + size + '.png';
+      const icon = manifest.icons[index];
+      assert.equal(icon.src, src);
+      assert.equal(icon.sizes, size + 'x' + size);
+      assert.equal(icon.type, 'image/png');
+      assert.equal(icon.purpose, 'maskable');
+      assert.ok(worker.includes("'" + src + "'"));
+      const bytes = fs.readFileSync(path.join(root, 'icons/icon-maskable-' + size + '.png'));
+      assert.equal(bytes.readUInt32BE(16), size);
+      assert.equal(bytes.readUInt32BE(20), size);
+      assert.ok(!bytes.includes(Buffer.from('tRNS')), 'Maskable icon must be opaque');
+    }
   }
-  assert.equal(prod.icons.some(icon => icon.purpose === 'maskable'), false);
 });
 
 verify('Favicon and Apple touch icon point to fresh assets in all entrypoints', () => {
   for (const [html, prefix] of [[prodHtml, './icons/'], [testHtml, '../icons/'], [alternateTestHtml, '../icons/']]) {
-    assert.ok(html.includes(prefix + 'favicon-neon-48.png'));
-    assert.ok(html.includes(prefix + 'apple-touch-neon-180.png'));
-    assert.ok(html.includes('./manifest.webmanifest?v=icon-neon-20261122'));
+    assert.ok(html.includes(prefix + 'favicon-neon-large-48.png'));
+    assert.ok(html.includes(prefix + 'apple-touch-neon-large-180.png'));
+    assert.ok(html.includes('./manifest.webmanifest?v=icon-large-maskable-20261122-v2'));
     assert.ok(!html.includes(prefix + 'icon-192.png'));
   }
 });
 
 verify('Both offline caches contain the new icon URLs', () => {
   for (const [worker, prefix] of [[prodWorker, './icons/'], [testWorker, '../icons/']]) {
-    for (const suffix of ['icon-neon-192.png','icon-neon-512.png','apple-touch-neon-180.png','favicon-neon-48.png']) {
+    for (const suffix of ['icon-neon-large-192.png','icon-neon-large-512.png','icon-maskable-192.png','icon-maskable-512.png','apple-touch-neon-large-180.png','favicon-neon-large-48.png']) {
       assert.ok(worker.includes("'" + prefix + suffix + "'"), suffix);
     }
-    assert.ok(worker.includes("'./manifest.webmanifest?v=icon-neon-20261122'"));
+    assert.ok(worker.includes("'./manifest.webmanifest?v=icon-large-maskable-20261122-v2'"));
     new Function(worker);
   }
 });
 
 verify('Production and test caches remain strictly isolated', () => {
-  assert.match(prodWorker, /moj-bilans-cache-neon-icons-v1/);
-  assert.match(testWorker, /moj-bilans-np-v2-cache-maskable-v1/);
+  assert.match(prodWorker, /moj-bilans-cache-icon-large-maskable-v2/);
+  assert.match(testWorker, /moj-bilans-np-v2-cache-icon-large-maskable-v2/);
   assert.match(prodWorker, /k\.startsWith\('moj-bilans-cache-'/);
   assert.match(testWorker, /k\.startsWith\('moj-bilans-np-v2-cache-'/);
   assert.doesNotMatch(testWorker, /k\.startsWith\('moj-bilans-cache-'/);
