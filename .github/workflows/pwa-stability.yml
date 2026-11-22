@@ -28,6 +28,13 @@ jobs:
         run: npm test
       - name: Validate backup records and staging parity
         run: node test_backup_validation.mjs && node test_staging_parity.mjs
+      - name: Package isolated staging for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: moj-bilans-271-staging
+          path: preview/
+          if-no-files-found: error
+          retention-days: 14
   browser:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
