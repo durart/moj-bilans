@@ -5,9 +5,12 @@ on:
     branches:
       - main
       - feature/moj-bilans-new-icon-both-20261122
+      - feature/moj-bilans-android-maskable-test
     paths:
       - 'icons/icon-neon-192.png'
       - 'icons/icon-neon-512.png'
+      - 'icons/icon-maskable-192.png'
+      - 'icons/icon-maskable-512.png'
       - 'icons/apple-touch-neon-180.png'
       - 'icons/favicon-neon-48.png'
       - 'manifest.webmanifest'
@@ -38,5 +41,5 @@ jobs:
         run: node test_app_icons.mjs
       - name: Verify existing diary regression suite
         run: npm test
-      - name: Verify test app structure
-        run: node np-v2/test_np_v2.mjs && node np-v2/test_layout_parity.mjs
+      - name: Verify test app structure and history/body regressions
+        run: node np-v2/test_np_v2.mjs && node np-v2/test_layout_parity.mjs && node np-v2/test_np_history_24.mjs && node np-v2/test_np_body_25.mjs
