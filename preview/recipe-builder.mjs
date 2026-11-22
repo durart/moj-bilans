@@ -37,7 +37,7 @@ const editorVisible = show => {
   byId('recipeOpen').textContent = show ? '− Zamknij kreator przepisu' : '+ Dodaj przepis';
 };
 const productPage = byId('page-products');
-productPage.append(root);
+byId('newOwnProduct').insertAdjacentElement('afterend', root);
 
 function totals() {
   return Object.fromEntries(fields.map(field => [field,
