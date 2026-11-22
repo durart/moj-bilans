@@ -80,7 +80,7 @@
   let historyVisible = 40;
   let historyCustomFrom = '';
   let historyCustomTo = '';
-  const snapshot = () => ({ app: 'MojBilans', version: 6, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, productFavorites: state.productFavorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
+  const snapshot = () => globalThis.MojBilansDiaryFormat.snapshot(state);
   const saveStatus = (message, isError=false) => {
     for (const id of ['np21SaveStatus','np21SaveInline']) {
       const el = $('#'+id);
@@ -94,7 +94,7 @@
       return false;
     }
     try {
-      const json = JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, productFavorites: state.productFavorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
+      const json = globalThis.MojBilansDiaryFormat.serialize(state);
       localStorage.setItem(STORAGE_KEY, json);
       if (localStorage.getItem(STORAGE_KEY) !== json) throw Error('Odczyt po zapisie nie zgadza się z zapisaną treścią.');
       saveStatus('Dziennik zapisany w tym urządzeniu o ' + new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
