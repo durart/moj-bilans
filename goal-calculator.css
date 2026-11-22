@@ -1,0 +1,86 @@
+/* Optional calorie and macro planning card, scoped to the test Settings screen. */
+#page-settings .gp-panel {
+  margin: 16px 0 22px;
+  padding: clamp(17px, 2.5vw, 25px);
+  background: linear-gradient(145deg, #163243 0%, #112330 85%);
+  border-top: 3px solid var(--accent);
+}
+.gp-header { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:12px; }
+.gp-header h3 { margin:4px 0 5px; font-size:clamp(20px,3vw,25px); letter-spacing:-.7px; }
+.gp-header p { margin:0; color:var(--muted); font-size:12px; line-height:1.6; max-width:680px; }
+.gp-tag { font-size:11px; white-space:nowrap; color:var(--accent); border:1px solid #386753; border-radius:100px; padding:6px 11px; font-weight:700; }
+.gp-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; margin-top:19px; }
+.gp-fields label { display:flex; flex-direction:column; align-items:stretch; gap:7px; min-width:0; font-size:12px; color:#c7d7de; font-weight:650; }
+.gp-fields input,.gp-fields select {
+  width:100%; max-width:100%; min-height:46px; padding:10px 12px; color:var(--text);
+  border:1px solid var(--line); border-radius:12px; background:#0e2532;
+  color-scheme:dark; font:inherit; font-size:15px;
+}
+.gp-fields input:focus-visible,.gp-fields select:focus-visible,.gp-actions button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.gp-fields select option { background:#112230; }
+.gp-field-hint { font-size:10px; font-weight:400; color:var(--muted); line-height:1.4; }
+.gp-note { color:var(--muted); font-size:11px; line-height:1.6; margin:14px 0; }
+.gp-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:17px; }
+.gp-actions button { min-height:46px; }
+.gp-status { font-size:12px; line-height:1.5; min-height:18px; color:#b8e7d5; margin:12px 0 0; }
+.gp-result { margin-top:16px; padding-top:18px; border-top:1px solid var(--line); }
+.gp-result[hidden],.gp-result.hidden { display:none; }
+.gp-result h4 { font-size:17px; margin:0 0 12px; }
+.gp-result-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+.gp-result-card { border:1px solid #2d4b5d; border-radius:13px; padding:14px; background:#172f3d; min-width:0; }
+.gp-result-card strong { display:block; font-size:clamp(18px,2.7vw,25px); letter-spacing:-.7px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.gp-result-card span { display:block; font-size:11px; line-height:1.4; color:var(--muted); margin-bottom:7px; }
+.gp-result-card.gp-highlight { border-color:#448d6c; background:#153b30; }
+.gp-result-card.gp-highlight strong { color:var(--accent); }
+.gp-macros { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin-top:10px; }
+.gp-macro { padding:12px; background:#112838; border-radius:12px; border:1px solid #2c485a; }
+.gp-macro span { display:block; font-size:11px; color:var(--muted); }
+.gp-macro strong { display:block; font-size:20px; letter-spacing:-.4px; margin:5px 0; }
+.gp-macro small { font-size:10px; color:#c0d7db; }
+.gp-result-meta { margin:12px 0 0; font-size:12px; line-height:1.6; color:#b5c9d1; }
+.gp-disclaimer { margin:14px 0 0; font-size:11px; line-height:1.6; color:var(--muted); }
+.gp-primary { background:var(--accent); color:#0c2c24; border:0; border-radius:12px; padding:12px 17px; font-weight:800; }
+.gp-primary:disabled { opacity:.45; cursor:not-allowed; }
+@media (max-width:630px) {
+  .gp-fields { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .gp-result-cards { grid-template-columns:1fr 1fr; }
+  .gp-result-card.gp-highlight { grid-column:1/-1; }
+  .gp-fields label { font-size:11px; }
+  .gp-macros { gap:6px; }
+  .gp-macro { padding:9px; }
+  .gp-macro strong { font-size:18px; }
+}
+@media (max-width:355px) { .gp-fields { grid-template-columns:1fr; } .gp-result-cards { grid-template-columns:1fr; } .gp-result-card.gp-highlight { grid-column:auto; } }
+@media (prefers-reduced-motion:reduce) { .gp-panel * { scroll-behavior:auto; } }
+
+/* Make activity selection legible without exposing opaque PAL multipliers. */
+.gp-fields .gp-activity-hint {
+  display: block;
+  padding: 10px 12px;
+  margin-top: 1px;
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(56, 115, 97, .18);
+  color: #d2eee4;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+/* Recomposition uses weight-based protein rather than the ordinary macro presets. */
+.gp-fields .gp-recomposition-hint {
+  display: block;
+  padding: 11px 12px;
+  border: 1px solid #3c816a;
+  border-radius: 10px;
+  background: rgba(39, 106, 80, .22);
+  color: #d4f4e7;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.gp-fields .gp-recomposition-hint.hidden { display: none; }
+.gp-fields select:disabled {
+  opacity: .54;
+  cursor: not-allowed;
+}
