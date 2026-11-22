@@ -369,11 +369,7 @@
     }
   };
   function renderAll() { renderJournal(); renderProducts(); renderHistory(); renderWeight(); renderMeasurements(); renderSettings(); }
-  function showPage(page) {
-    $$('.page').forEach(el => el.classList.toggle('active', el.id === `page-${page}`));
-    $$('.nav-item').forEach(el => { const active = el.dataset.page === page; el.classList.toggle('selected', active); if (active) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current'); });
-    window.scrollTo({ top: 0, behavior: 'instant' }); renderAll();
-  }
+  function showPage(page) { globalThis.MojBilansNavigation.showPage(page, renderAll); }
   // "Ostatnie" powstaje WYŁĄCZNIE z już zapisanych wpisów dziennika.
   // Nie utrzymujemy osobnej bazy ani nie zmieniamy formatu eksportów JSON.
   function renderRecentDiary() {
