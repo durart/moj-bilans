@@ -74,6 +74,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: fix/stabilizacja-2.7.1
       - name: Publish only isolated preview directory to Pages branch
         shell: bash
         run: |
@@ -81,7 +82,10 @@ jobs:
           git fetch origin main
           git worktree add -B preview-release /tmp/moj-bilans-preview origin/main
           mkdir -p /tmp/moj-bilans-preview/preview
+          echo "Source preview revision: $(git rev-parse HEAD)"
+          echo "Source preview version: $(grep -o 'TEST · Mój Bilans 2.7.1' preview/index.html | head -1)"
           rsync -a --delete preview/ /tmp/moj-bilans-preview/preview/
+          git -C /tmp/moj-bilans-preview status --short -- preview/
           cd /tmp/moj-bilans-preview
           git add -A -- preview/
           if git diff --cached --quiet; then
