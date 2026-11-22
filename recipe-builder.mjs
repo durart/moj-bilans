@@ -53,6 +53,7 @@ function showTotals() {
     : 'Wprowadź prawidłową masę gotowego dania.';
 }
 function renderIngredients() {
+  for (const id of searchTimers.keys()) cancelSearch(id);
   const host = byId('recipeIngredients');
   host.replaceChildren();
   ingredients.forEach(item => {
