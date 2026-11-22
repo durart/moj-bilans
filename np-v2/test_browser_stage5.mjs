@@ -227,6 +227,13 @@ try {
     await page.locator('#gpWeight').fill('100');
     await page.locator('#gpEquation').selectOption('male');
     await page.locator('#gpActivity').selectOption('light');
+    assert.match(await page.locator('#gpActivityHint').innerText(),/1–2 treningi/);
+    const activityOptions=await page.locator('#gpActivity option').allTextContents();
+    assert.ok(activityOptions.some(value=>value.includes('praca w ruchu')));
+    assert.ok(activityOptions.every(value=>!value.includes('×1,')), 'Activity labels should not show technical multipliers');
+    await page.locator('#gpActivity').selectOption('moderate');
+    assert.match(await page.locator('#gpActivityHint').innerText(),/3–4 treningi/);
+    await page.locator('#gpActivity').selectOption('light');
     await page.locator('#gpGoal').selectOption('reduce10');
     await page.locator('#gpMacroPreset').selectOption('higherProtein');
     await page.locator('#gpCalculate').click();
