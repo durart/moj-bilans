@@ -1,4 +1,4 @@
-const CACHE = 'moj-bilans-preview-recipes-v27-cache-1';
+const CACHE = 'moj-bilans-preview-recipes-v27-cache-2';
 const CORE = [
   './', './index.html', './app.js?v=2.7.0-staging',
   './recipe-builder.mjs?v=2.7.0-staging', './manifest.webmanifest?v=2.7.0-staging',
