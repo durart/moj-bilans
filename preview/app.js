@@ -263,12 +263,12 @@
     $('#favoriteMealsList').innerHTML = state.favorites.length ? state.favorites.map(f => `<div class="compact-item favorite-item"><div><strong>⭐ ${safeText(f.name)}</strong><small>${Array.isArray(f.items) ? f.items.length : 0} produktów · ${nf.format(Math.round(totalFor(f.items || []).kcal))} kcal · ${safeText(mealName(f.meal))}</small></div><div class="favorite-actions"><button type="button" data-addfavorite="${safeText(f.id)}">+ Dodaj</button><button type="button" class="danger-quiet" data-removefavorite="${safeText(f.id)}" aria-label="Usuń ${safeText(f.name)}">Usuń</button></div></div>`).join('') : '<div class="empty-list">Zapisz ulubiony zestaw z dziennika, wybierając ☆ Ulubiony pod posiłkiem.</div>';
     $$('[data-addfavorite]').forEach(b => b.addEventListener('click', () => addFavorite(b.dataset.addfavorite)));
     $$('[data-removefavorite]').forEach(b => b.addEventListener('click', () => removeFavorite(b.dataset.removefavorite)));
-    $('[data-product-favorite]').forEach(button => button.addEventListener('click', () => {
+    $$('[data-product-favorite]').forEach(button => button.addEventListener('click', () => {
       const products = button.dataset.productGroup === 'custom' ? state.custom : state.recent;
       const product = products[Number(button.dataset.index)];
       if (product) toggleProductFavorite(product);
     }));
-    $('[data-product-group]:not([data-product-favorite])').forEach(b => b.addEventListener('click', () => {
+    $$('[data-product-group]:not([data-product-favorite])').forEach(b => b.addEventListener('click', () => {
       const products = b.dataset.productGroup === 'custom' ? state.custom : state.recent;
       if ($('#modalBackdrop').classList.contains('hidden')) openModal('breakfast');
       selectProduct(products[Number(b.dataset.index)]);
