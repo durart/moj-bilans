@@ -26,30 +26,6 @@ jobs:
           node --check app.js
           node --check wyszukiwarka.mjs
       - name: Check staging isolation and asset references
-        run: |
-          node --input-type=module <<'EOF'
-          import { readFileSync, existsSync } from 'node:fs';
-          import assert from 'node:assert/strict';
-          const html = readFileSync('preview/index.html', 'utf8');
-          const app = readFileSync('preview/app.js', 'utf8');
-          const recipes = readFileSync('preview/recipe-builder.mjs', 'utf8');
-          assert.match(html, /src="\.\/app\.js\?v=2\.7\.0-staging"/);
-          assert.match(html, /src="\.\/recipe-builder\.mjs\?v=2\.7\.0-staging"/);
-          assert.doesNotMatch(html, /src="\.\.\/pwa-updater\.js/);
-          assert.match(app, /moj-bilans-preview-v27/);
-          assert.ok(html.includes('href="./manifest.webmanifest'));
-          assert.ok(html.includes('serviceWorker.register("./sw.js"'));
-          const sw = readFileSync('preview/sw.js', 'utf8');
-          assert.match(sw, /moj-bilans-preview-recipes-v27-cache/);
-          assert.match(app, /moj-bilans-preview-copies-v27/);
-          assert.match(app, /recipes: state\.recipes/);
-          assert.match(app, /recipes: validateRecipes\(payload\.recipes\)/);
-          assert.match(app, /draft\.entries\.push\(entry\)/);
-          assert.match(recipes, /searchBasicFoods/);
-          assert.match(recipes, /searchFoodCatalog/);
-          const paths = [...html.matchAll(/(?:src|href)="(\.\.\/[^"?]+)/g)];
-          for (const match of paths) assert.ok(existsSync('preview/' + match[1]), 'Missing asset: ' + match[1]);
-          console.log('Staging invariants and asset references passed');
-          EOF
+        run: node preview/verify-staging.mjs
       - name: Run existing regression tests
         run: npm test

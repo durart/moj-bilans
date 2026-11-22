@@ -1,5 +1,5 @@
-import { defaultFoodSearcher, searchBasicFoods, isBarcode } from '../wyszukiwarka.mjs';
-import { loadFoodCatalog, searchFoodCatalog, importFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from '../katalog-produktow.mjs';
+import { defaultFoodSearcher, searchBasicFoods, isBarcode } from './wyszukiwarka.mjs';
+import { loadFoodCatalog, searchFoodCatalog, importFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from './katalog-produktow.mjs';
 
 const messages = Object.freeze({
   'too-short':'Wpisz przynajmniej 2 znaki lub zeskanuj kod EAN.',

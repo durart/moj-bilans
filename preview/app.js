@@ -147,6 +147,7 @@
   // o wiarygodności makro razem z wpisem, ulubionymi i kopią JSON.
   const productProvenance = p => {
     const result = {};
+    if (typeof p?.recipeId === 'string') result.recipeId = p.recipeId;
     if (typeof p?.isEstimate === 'boolean') result.isEstimate = p.isEstimate;
     if (typeof p?.verification === 'string' && p.verification) result.verification = p.verification.slice(0, 80);
     if (typeof p?.sourceName === 'string' && p.sourceName) result.sourceName = p.sourceName.slice(0, 200);
@@ -215,7 +216,7 @@
       return `<article class="meal-card df-meal-card" data-meal-card="${safeId}">
         <div class="df-meal-row">
           <button class="df-meal-toggle" type="button" data-togglemeal="${safeId}" aria-expanded="${expanded}" aria-controls="df-meal-details-${safeId}" aria-label="${meal.name}: ${caption}, ${kcal} kcal. ${expanded ? 'Zwiń' : 'Rozwiń'} posiłek">
-            <span class="df-meal-art df-art-${safeId}" aria-hidden="true"><img class="df-meal-photo" src="../assets/df-${safeId}.svg" alt="" loading="lazy" decoding="async"></span>
+            <span class="df-meal-art df-art-${safeId}" aria-hidden="true"><img class="df-meal-photo" src="./assets/df-${safeId}.svg" alt="" loading="lazy" decoding="async"></span>
             <span class="df-meal-info"><strong>${meal.name}</strong><small>${caption}</small></span>
             <span class="df-meal-energy">${kcal} <small>kcal</small><span class="df-meal-chevron" aria-hidden="true">›</span></span>
           </button>
@@ -729,7 +730,7 @@
     try {
       // Najpierw lokalne, zweryfikowane etykiety. Skaner EAN musi działać
       // również offline, bez zastępowania konkretnej receptury inną z OFF.
-      const { searchBasicFoods, normalizeOffProduct } = await import('../wyszukiwarka.mjs');
+      const { searchBasicFoods, normalizeOffProduct } = await import('./wyszukiwarka.mjs');
       const local = searchBasicFoods(ean, 5).find(p => p.code === ean);
       if (local) {
         $('#eanResults').innerHTML = '';
@@ -831,18 +832,31 @@
   }
   function restorePayload(payload) {
        if (storageFault) throw Error('Dziennik jest nieczytelny. Przywracanie zablokowane, aby nie nadpisać oryginalnej pamięci.');
+      window.MojBilansBackup.validate(payload);
       if (payload.app !== 'MojBilans' || !Array.isArray(payload.entries) || !Array.isArray(payload.custom) || !Array.isArray(payload.recent)) throw Error('To nie jest prawidłowy plik Mój Bilans.');
       if (payload.entries.length > 20000 || payload.custom.length > 5000 || payload.recent.length > 5000) throw Error('Zbyt duży zestaw danych.');
       const validProduct = p => p && typeof p.name === 'string' && p.name.length <= 100 && p.nutrients && isNumber(p.nutrients.kcal) && number(p.nutrients.kcal) >= 0 && Number(p.nutrients.kcal) <= 10000;
-      const entries = payload.entries.filter(e => validProduct(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000).map(e => ({ id: productId(), name: e.name, date: e.date, meal: e.meal, grams: number(e.grams), nutrients: plainNutrients(e.nutrients), source: String(e.source || 'Import').slice(0, 50), brand: String(e.brand || '').slice(0, 100), ean: String(e.ean || '').slice(0, 14), ...productProvenance(e) }));
+      // Reject malformed records rather than silently dropping user data during restore.
+      if (!payload.entries.every(e => validProduct(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000)) {
+        throw Error('Kopia zawiera nieprawidłowe wpisy posiłków. Nie zmieniono danych.');
+      }
+      if (![payload.custom, payload.recent].every(rows => rows.every(validProduct))) {
+        throw Error('Kopia zawiera nieprawidłowe produkty. Nie zmieniono danych.');
+      }
+      for (const key of ['favorites', 'productFavorites', 'recipes', 'weights', 'water', 'measurements']) {
+        if (payload[key] !== undefined && !Array.isArray(payload[key])) {
+          throw Error('Nieprawidłowa struktura kopii: ' + key + '. Nie zmieniono danych.');
+        }
+      }
+      const entries = payload.entries.filter(e => validProduct(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000).map(e => ({ id: e.id || productId(), name: e.name, date: e.date, meal: e.meal, grams: number(e.grams), nutrients: plainNutrients(e.nutrients), source: String(e.source || 'Import').slice(0, 50), brand: String(e.brand || '').slice(0, 100), ean: String(e.ean || '').slice(0, 14), ...productProvenance(e) }));
       const products = arr => arr.filter(validProduct).map(p => ({ name: p.name, brand: String(p.brand || '').slice(0, 100), source: String(p.source || 'Import').slice(0, 50), ean: String(p.ean || '').slice(0, 14), nutrients: plainNutrients(p.nutrients), ...productProvenance(p) }));
       if (!confirm('Przywrócenie zastąpi bieżące dane na telefonie. Przedtem zalecamy eksport lokalnej kopii JSON. Kontynuować?')) return false;
       const goals = {};
       for (const key of ['kcal', 'protein', 'carbs', 'fat', 'water']) { const val = number(payload.goals?.[key]); goals[key] = val !== null && val >= (key === 'water' ? 100 : 1) && val <= (key === 'kcal' || key === 'water' ? 10000 : 1000) ? Math.round(val) : DEFAULT_GOALS[key]; }
       const favs = Array.isArray(payload.favorites) ? payload.favorites.slice(0, 300) : [];
-      const favorites = favs.filter(f => f && typeof f.name === 'string' && f.name.length <= 100 && mealValid(f.meal) && Array.isArray(f.items)).map(f => ({ id: productId(), name: f.name, meal: f.meal, items: f.items.slice(0, 100).filter(e => validProduct(e) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000).map(e => ({ ...products([e])[0], grams: number(e.grams) })) })).filter(f => f.items.length);
+      const favorites = favs.filter(f => f && typeof f.name === 'string' && f.name.length <= 100 && mealValid(f.meal) && Array.isArray(f.items)).map(f => ({ id: f.id || productId(), name: f.name, meal: f.meal, items: f.items.slice(0, 100).filter(e => validProduct(e) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000).map(e => ({ ...products([e])[0], grams: number(e.grams) })) })).filter(f => f.items.length);
       const weights = Array.isArray(payload.weights) ? payload.weights.slice(0, 20000).filter(w => normalizedDate(w.date) && isNumber(w.kg) && number(w.kg) >= 20 && number(w.kg) <= 400).map(w => ({ date: w.date, kg: number(w.kg) })) : [];
-      const water = Array.isArray(payload.water) ? payload.water.slice(0, 20000).filter(w => normalizedDate(w.date) && isNumber(w.ml) && number(w.ml) >= 1 && number(w.ml) <= 5000).map(w => ({ id: productId(), date: w.date, ml: number(w.ml) })) : [];
+      const water = Array.isArray(payload.water) ? payload.water.slice(0, 20000).filter(w => normalizedDate(w.date) && isNumber(w.ml) && number(w.ml) >= 1 && number(w.ml) <= 5000).map(w => ({ id: w.id || productId(), date: w.date, ml: number(w.ml) })) : [];
       // v0.1/v0.2 nie miały pomiarów obwodów; importujemy je tylko wtedy, gdy istnieją.
       const measurements = Array.isArray(payload.measurements) ? payload.measurements.slice(0, 20000).filter(m => m && normalizedDate(m.date)).map(m => {
         const row = { date: m.date };
@@ -858,7 +872,7 @@
       const previous = state;
       state = { ...state, goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, recipes: validateRecipes(payload.recipes), productFavorites: Array.isArray(payload.productFavorites) ? payload.productFavorites.filter(x => typeof x === 'string' && x.length <= 220).slice(0, 500) : [], weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
       if (!save()) { state = previous; return false; }
-      renderAll(); toast(`Przywrócono ${entries.length} wpisów`);
+      renderAll(); window.dispatchEvent(new Event('moj-bilans:restored')); toast(`Przywrócono ${entries.length} wpisów`);
       return true;
   }
   async function importData(event) {
@@ -1390,6 +1404,7 @@
     }
   }
   function validateBackupPreview(data) {
+    window.MojBilansBackup.validate(data);
     if (!data || data.app !== 'MojBilans' || !Array.isArray(data.entries) || !Array.isArray(data.custom) || !Array.isArray(data.recent)) {
       throw Error('To nie jest prawidłowy plik kopii Mój Bilans.');
     }
@@ -1529,7 +1544,7 @@
     // v0.6: podłącz zintegrowaną wyszukiwarkę (ziemniaki/produkty podstawowe + OFF).
     // Jeśli moduł się nie załaduje, zachowaj starą wyszukiwarkę, aby nie blokować dziennika.
     $('#searchForm').addEventListener('submit', searchName);
-    import('./interfejs-wyszukiwarki.mjs?v=2.7.1-staging').then(({ mountFoodSearch }) => {
+    import('./interfejs-wyszukiwarki.mjs?v=2.7.1').then(({ mountFoodSearch }) => {
       $('#searchForm').removeEventListener('submit', searchName);
       mountFoodSearch({
         form: $('#searchForm'), input: $('#searchName'), results: $('#searchResults'),

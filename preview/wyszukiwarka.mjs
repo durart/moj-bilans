@@ -3,7 +3,8 @@ import { searchFoodCatalog, filterFoodStore, extractStores } from './katalog-pro
 import { assessNutrition } from './walidacja-zywnosci.mjs';
 
 const OFF_ORIGIN = 'https://world.openfoodfacts.org';
-const CACHE_KEY = 'moj-bilans:preview-off-search-cache:v1';
+const CACHE_KEY = globalThis.location?.pathname.includes('/preview/')
+  ? 'preview:moj-bilans:off-search-cache:v1' : 'moj-bilans:off-search-cache:v1';
 const TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 40;
 const MAX_API_SEARCHES_PER_MINUTE = 9; // OFF dokumentuje limit 10/min/IP
