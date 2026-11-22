@@ -1,0 +1,29 @@
+name: NP v2 - calorie and macro calculator test suite
+
+on:
+  push:
+    branches:
+      - feature/np-v2-calorie-macro-calculator
+    paths:
+      - 'np-v2/**'
+      - '.github/workflows/np-v2-goal-calculator.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-and-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate calorie and macro formulas and explicit consent
+        run: node np-v2/test_goal_calculator.mjs && node np-v2/test_goal_calculator_ui.mjs
+      - name: Validate application data isolation and layout parity
+        run: node np-v2/test_np_v2.mjs && node np-v2/test_layout_parity.mjs
+      - name: Validate history, weight, UI and food regressions
+        run: node np-v2/test_np_v2_stages234.mjs && node np-v2/test_np_history_24.mjs && node np-v2/test_np_body_25.mjs && npm test
