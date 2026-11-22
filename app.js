@@ -949,10 +949,8 @@
 
 
   // v0.3: datowane obwody, niezależne serie i aktualizacja częściowych pomiarów.
-  function sortedMeasurements() {
-    return [...state.measurements].filter(m => m && normalizedDate(m.date)).sort((a, b) => a.date.localeCompare(b.date));
-  }
-  function measureValue(value) { return isNumber(value) && Number(value) >= 10 && Number(value) <= 300 ? Number(value) : null; }
+  function sortedMeasurements() { return globalThis.MojBilansMeasurements.sorted(state.measurements, normalizedDate); }
+  function measureValue(value) { return globalThis.MojBilansMeasurements.value(value, isNumber); }
   function readMeasurementsAtDate() {
     const row = state.measurements.find(m => m.date === $('#measurementDate').value);
     for (const m of MEASURES) $(`#measurement${m.id}`).value = measureValue(row?.[m.key]) === null ? '' : String(row[m.key]);
