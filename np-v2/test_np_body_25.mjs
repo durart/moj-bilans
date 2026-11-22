@@ -70,7 +70,7 @@ test('HTML, aplikacja i Service Worker zawierają Body Progress 2.5',()=>{
  assert.ok(html.indexOf('np-body-25.js')<html.indexOf('app.js'));
  assert.match(app,/NPBody25\?\.renderMeasures/);assert.match(app,/NPBody25\?\.weightChart/);
  assert.match(sw,/np-body-25\.js/);assert.match(sw,/np-body-25\.css/);
- assert.match(sw,/moj-bilans-np-v2-cache-goal-calculator-t3/);
+ assert.match(sw,/moj-bilans-np-v2-cache-neon-icons-v1/);
  assert.match(css,/prefers-reduced-motion/);
 });
 test('Moduł odczytowy nie zapisuje i nie zmienia identyfikatora produkcji',()=>{
