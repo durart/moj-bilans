@@ -128,7 +128,7 @@
   const toast = text => { const el = $('#toast'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2800); };
   const feedback = text => { $('#feedback').textContent = text || ''; };
   // Shared, side-effect-free calculations; load domain/nutrition.js before app.js.
-  const { percentage: pct, macroProgress, totalFor } = globalThis.MojBilansNutrition;
+  const { percentage: pct, macroProgress, sum, totalFor } = globalThis.MojBilansNutrition;
   const currentEntries = () => state.entries.filter(entry => entry.date === state.selectedDate);
   const plainNutrients = n => ({ kcal: number(n?.kcal), protein: number(n?.protein), carbs: number(n?.carbs), fat: number(n?.fat) });
   // Starsze wpisy zachowują swoją strukturę. Nowe mogą przenosić informację
