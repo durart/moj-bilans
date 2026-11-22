@@ -7,17 +7,21 @@ import { join, extname } from 'node:path';
 import { chromium } from 'playwright';
 const root = process.cwd();
 const baseline = await mkdtemp(join(tmpdir(), 'bilans-baseline-'));
-const archive = execFileSync('git', ['archive', '56f3b86163eee9bde75674fd09e412f9d9403303']);
-execFileSync('tar', ['-x', '-C', baseline], { input: archive });
+const archive = join(baseline, 'baseline.tar');
+execFileSync('git', ['archive', '--output', archive, '56f3b86163eee9bde75674fd09e412f9d9403303']);
+execFileSync('tar', ['-xf', archive, '-C', baseline]);
 let serving = baseline;
 let brokenRequiredAsset = false;
+let workerRevision = '1';
+let failedAssetRequests = 0;
 const mime = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json', '.webmanifest':'application/manifest+json', '.png':'image/png', '.svg':'image/svg+xml' };
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, 'http://localhost');
   const file = url.pathname.endsWith('/') ? url.pathname + 'index.html' : url.pathname;
-  if (brokenRequiredAsset && file.endsWith('/backup-validation.js')) { response.writeHead(503); response.end(); return; }
+  if (brokenRequiredAsset && file.endsWith('/backup-validation.js')) { failedAssetRequests++; response.writeHead(503); response.end(); return; }
   try {
-    const bytes = await readFile(join(serving, file));
+    let bytes = await readFile(join(serving, file));
+    if (serving === root && file.endsWith('/sw.js')) bytes = Buffer.from(bytes.toString().replaceAll('v271-stable-1','v271-stable-' + workerRevision));
     response.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control':'no-store' });
     response.end(bytes);
   } catch { response.writeHead(404); response.end(); }
@@ -184,6 +188,37 @@ try {
     await test.locator('.nav-item[data-page="journal"]').click();
     await test.screenshot({path:'test-artifacts/stability-271-mobile.png',fullPage:true});
   });
+  await check('Failed worker update keeps active release and cached offline assets', async () => {
+    brokenRequiredAsset = true; workerRevision = '2';
+    await test.evaluate(async () => {
+      const registration = await navigator.serviceWorker.getRegistration();
+      await registration.update();
+      const installing = registration.installing;
+      if (installing) await new Promise(resolve => { installing.addEventListener('statechange', () => { if (installing.state === 'redundant') resolve(); }); });
+    });
+    assert.ok(failedAssetRequests > 0);
+    assert.equal(await test.evaluate(async () => !!(await navigator.serviceWorker.getRegistration()).waiting),false);
+    await context.setOffline(true); await test.reload();
+    await test.locator('#recipeOpen').waitFor({state:'attached'});
+    assert.equal(await test.locator('#npFoodCount').innerText(),'1');
+    await context.setOffline(false); brokenRequiredAsset=false;
+  });
+  await check('Manual worker activation reloads only requesting tab and preserves other edits', async () => {
+    const other = await context.newPage();
+    await other.goto(base + 'preview/');
+    await other.locator('.nav-item[data-page="settings"]').click();
+    await other.locator('#goalKcal').fill('2222');
+    await test.locator('.nav-item[data-page="settings"]').click();
+    await test.locator('#np21CheckUpdate').click();
+    await test.waitForFunction(async () => !!(await navigator.serviceWorker.getRegistration())?.waiting);
+    assert.equal(await other.locator('#goalKcal').inputValue(),'2222');
+    const navigation = test.waitForNavigation();
+    await test.locator('#np21ReloadUpdate').click();
+    await navigation;
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v271-stable-2'));
+    assert.equal(await other.locator('#goalKcal').inputValue(),'2222');
+    await other.close();
+  });
   await check('Preview offline restart retains data and leaves production sentinel intact', async () => {
     const before=await stored();
     await context.setOffline(true);
@@ -198,8 +233,14 @@ try {
     brokenRequiredAsset = true;
     const incomplete = await browser.newContext();
     const empty = await incomplete.newPage();
+    const failuresBefore = failedAssetRequests;
     await empty.goto(base);
-    await empty.waitForFunction(async () => { const registration=await navigator.serviceWorker.getRegistration(); return !registration || (!registration.active && !registration.installing); });
+    await empty.evaluate(async () => {
+      const registration = await navigator.serviceWorker.register('./sw.js');
+      const installing = registration.installing;
+      if (installing && installing.state !== 'redundant') await new Promise(resolve => installing.addEventListener('statechange', () => { if (installing.state === 'redundant') resolve(); }));
+    });
+    assert.ok(failedAssetRequests > failuresBefore);
     assert.equal(await empty.evaluate(() => navigator.serviceWorker.controller),null);
     await incomplete.close(); brokenRequiredAsset=false;
   });
