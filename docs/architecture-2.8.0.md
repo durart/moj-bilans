@@ -40,8 +40,17 @@
 - No architectural refactor branch existed before this task.
 
 ## Verification status
-- Baseline metadata and repository structure inspected.
-- Automated tests: NOT YET RUN.
-- Browser tests: NOT YET RUN.
-- Preview deployment for 2.8.0: NOT YET PUBLISHED.
-- Data migration: NONE.
+- Refactor modules extracted: domain/nutrition.js, domain/diary-format.js, domain/storage.js, domain/values.js, domain/products.js, domain/recipes.js and ui/dom.js.
+- Automated and browser regression: both passed on commit a591cf89 (GitHub Actions run #45). Subsequent checks remain commit-specific; never assume later commits passed.
+- New regression suites cover nutrition, diary serialization, guarded persistence, DOM escaping, date/number conversions, product provenance and recipe rules.
+- Production storage key and JSON backup schema remain unchanged; no data migration.
+- Existing preview builder is exercised in CI, but 2.8.0 has not been published to a publicly reachable staging URL.
+- Service-worker cache revision and public staging verification remain release blockers.
+- Production merge and deployment: NOT AUTHORIZED.
+
+## Release gate
+1. Obtain a green unit and browser CI run on the final candidate commit.
+2. Review script order and cache revision, ensure offline module graph is complete.
+3. Publish isolated staging and verify online, offline, SW update, import/export and recovery on the actual staging URL.
+4. Complete UI controller extraction or explicitly document remaining debt.
+5. Prepare a rollback procedure and obtain explicit production approval before merging.
