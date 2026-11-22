@@ -15,48 +15,19 @@
     { id: 'dinner', name: 'Kolacja', icon: '🌙' },
     { id: 'snack', name: 'Przekąski', icon: '🍎' }
   ];
-  const $ = selector => document.querySelector(selector);
-  const $$ = selector => [...document.querySelectorAll(selector)];
+  const { query: $, queryAll: $$, escapeText: safeText } = globalThis.MojBilansDom;
   const nf = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 0 });
   const nf1 = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 1 });
-  const todayKey = () => dateKey(new Date());
-  const dateKey = date => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
-  const toDate = key => new Date(`${key}T12:00:00`);
-  const safeText = x => String(x ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const isNumber = x => x !== null && x !== '' && Number.isFinite(Number(x));
-  const number = x => isNumber(x) ? Number(x) : null;
+  const { todayKey, dateKey, toDate, isNumber, number } = globalThis.MojBilansValues;
   const mealValid = x => MEALS.some(meal => meal.id === x);
   let storageFault = '';
   const dataFromStorage = () => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw === null) return {};
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.entries)) {
-        throw Error('Niepoprawny format dziennika');
-      }
-      return parsed;
-    } catch (err) {
-      storageFault = 'Błąd odczytu: ' + (err?.message || 'pamięć niedostępna') + '. Zapis zablokowano, aby nie nadpisać wcześniejszych danych.';
-      return {};
-    }
+    const result = globalThis.MojBilansStorage.read(localStorage, STORAGE_KEY);
+    storageFault = result.error || '';
+    return result.data;
   };
   let saved = dataFromStorage();
-  let state = {
-    goals: { ...DEFAULT_GOALS, ...(saved.goals || {}) },
-    entries: Array.isArray(saved.entries) ? saved.entries : [],
-    custom: Array.isArray(saved.custom) ? saved.custom : [],
-    recent: Array.isArray(saved.recent) ? saved.recent : [],
-    favorites: Array.isArray(saved.favorites) ? saved.favorites : [],
-    productFavorites: Array.isArray(saved.productFavorites) ? saved.productFavorites : [],
-    recipes: Array.isArray(saved.recipes) ? saved.recipes : [],
-    portions: saved.portions && typeof saved.portions === 'object' && !Array.isArray(saved.portions) ? saved.portions : {},
-    weights: Array.isArray(saved.weights) ? saved.weights : [],
-    measurements: Array.isArray(saved.measurements) ? saved.measurements : [],
-    weightGoal: isNumber(saved.weightGoal) && Number(saved.weightGoal) >= 20 && Number(saved.weightGoal) <= 400 ? Number(saved.weightGoal) : 90,
-    water: Array.isArray(saved.water) ? saved.water : [],
-    selectedDate: todayKey()
-  };
+  let state = globalThis.MojBilansDiaryState.initialize(saved, DEFAULT_GOALS, todayKey, isNumber);
   let currentMeal = 'breakfast';
   // Ephemeral accordion state; never part of diary, localStorage or exported backups.
   let expandedMeals = new Set();
@@ -80,7 +51,7 @@
   let historyVisible = 40;
   let historyCustomFrom = '';
   let historyCustomTo = '';
-  const snapshot = () => ({ app: 'MojBilans', version: 6, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, productFavorites: state.productFavorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
+  const snapshot = () => globalThis.MojBilansDiaryFormat.snapshot(state);
   const saveStatus = (message, isError=false) => {
     for (const id of ['np21SaveStatus','np21SaveInline']) {
       const el = $('#'+id);
@@ -94,9 +65,8 @@
       return false;
     }
     try {
-      const json = JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, productFavorites: state.productFavorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
-      localStorage.setItem(STORAGE_KEY, json);
-      if (localStorage.getItem(STORAGE_KEY) !== json) throw Error('Odczyt po zapisie nie zgadza się z zapisaną treścią.');
+      const json = globalThis.MojBilansDiaryFormat.serialize(state);
+      globalThis.MojBilansStorage.write(localStorage, STORAGE_KEY, json);
       saveStatus('Dziennik zapisany w tym urządzeniu o ' + new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
       queueAutomaticLocalCopy();
       return true;
@@ -127,35 +97,14 @@
   }
   const toast = text => { const el = $('#toast'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2800); };
   const feedback = text => { $('#feedback').textContent = text || ''; };
-  const pct = (value, target) => Math.max(0, Math.min(100, target > 0 ? value / target * 100 : 0));
-  // Paski mają tę samą szerokość. Przy nadwyżce ciemna część obrazuje
-  // udział nadwyżki w rzeczywistym spożyciu; procent pod paskiem względem celu.
-  const macroProgress = (value, goal) => {
-    const eaten = Number.isFinite(value) ? Math.max(0, value) : 0;
-    const target = Number.isFinite(goal) ? goal : 0;
-    if (target <= 0) return { filled: 0, extra: 0, excessGrams: 0, excessPercent: 0 };
-    const excessGrams = Math.max(0, eaten - target);
-    if (excessGrams === 0) return { filled: Math.min(100, eaten / target * 100), extra: 0, excessGrams: 0, excessPercent: 0 };
-    return { filled: target / eaten * 100, extra: excessGrams / eaten * 100,
-      excessGrams, excessPercent: excessGrams / target * 100 };
-  };
-  const sum = (entries, key) => entries.reduce((acc, entry) => acc + ((Number(entry.nutrients?.[key]) || 0) * (Number(entry.grams) || 0) / 100), 0);
-  const totalFor = entries => ({ kcal: sum(entries, 'kcal'), protein: sum(entries, 'protein'), carbs: sum(entries, 'carbs'), fat: sum(entries, 'fat') });
+  // Shared, side-effect-free calculations; load domain/nutrition.js before app.js.
+  const { percentage: pct, macroProgress, sum, totalFor } = globalThis.MojBilansNutrition;
   const currentEntries = () => state.entries.filter(entry => entry.date === state.selectedDate);
   const plainNutrients = n => ({ kcal: number(n?.kcal), protein: number(n?.protein), carbs: number(n?.carbs), fat: number(n?.fat) });
   // Starsze wpisy zachowują swoją strukturę. Nowe mogą przenosić informację
   // o wiarygodności makro razem z wpisem, ulubionymi i kopią JSON.
-  const productProvenance = p => {
-    const result = {};
-    if (typeof p?.recipeId === 'string') result.recipeId = p.recipeId;
-    if (typeof p?.isEstimate === 'boolean') result.isEstimate = p.isEstimate;
-    if (typeof p?.verification === 'string' && p.verification) result.verification = p.verification.slice(0, 80);
-    if (typeof p?.sourceName === 'string' && p.sourceName) result.sourceName = p.sourceName.slice(0, 200);
-    if (typeof p?.sourceUrl === 'string' && /^https:\/\//i.test(p.sourceUrl)) result.sourceUrl = p.sourceUrl.slice(0, 600);
-    return result;
-  };
+  const { productKey, provenance: productProvenance } = globalThis.MojBilansProducts;
   const niceDate = date => date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
-  const productKey = p => p.ean && /^\d{8,14}$/.test(p.ean) ? `ean:${p.ean}` : `name:${String(p.name || '').trim().toLocaleLowerCase('pl')}|${String(p.brand || '').trim().toLocaleLowerCase('pl')}`;
   const normalizedDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') && dateKey(toDate(d)) === d;
   const mealName = id => MEALS.find(m => m.id === id)?.name || 'Posiłek';
   const goalField = key => `#goal${key === 'fat' ? 'Fats' : key[0].toUpperCase() + key.slice(1)}`;
@@ -364,34 +313,9 @@
     }));
   }
   function renderSettings() {
-    for (const key of ['kcal', 'protein', 'carbs', 'fat', 'water']) {
-      $(goalField(key)).value = state.goals[key];
-    }
-    // The optional calculator only reads the latest recorded weight and current goals.
-    const latestWeight = [...state.weights]
-      .filter(item => item && normalizedDate(item.date) && isNumber(item.kg))
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .at(-1);
-    window.NPGoalCalculatorUI?.setContext({
-      latestWeight: latestWeight || null,
-      goals: state.goals
-    });
+    globalThis.MojBilansSettingsUI.render(state, $, goalField, normalizedDate, isNumber, window.NPGoalCalculatorUI);
   }
-  function validateRecipes(input) {
-    if (!Array.isArray(input)) return [];
-    return input.slice(0, 500).filter(recipe =>
-      recipe && typeof recipe.id === 'string' && typeof recipe.name === 'string' &&
-      recipe.name.length > 0 && recipe.name.length <= 100 &&
-      Number.isFinite(Number(recipe.yieldGrams)) && Number(recipe.yieldGrams) > 0 &&
-      Number(recipe.yieldGrams) <= 100000 && Array.isArray(recipe.ingredients) &&
-      recipe.ingredients.length > 0 && recipe.ingredients.length <= 100 &&
-      recipe.ingredients.every(item => item && typeof item.name === 'string' &&
-        item.name.length > 0 && item.name.length <= 100 &&
-        ['grams','kcal','protein','fat','carbs'].every(key =>
-          Number.isFinite(Number(item[key])) && Number(item[key]) >= 0 &&
-          Number(item[key]) <= 100000))
-    );
-  }
+  const { validateRecipes, nutrientsPer100 } = globalThis.MojBilansRecipesDomain;
   window.MojBilansRecipes = {
     getRecipes: () => structuredClone(state.recipes),
     getDate: () => state.selectedDate,
@@ -411,12 +335,7 @@
       const portion = Number(grams);
       if (!recipe || !mealValid(meal) || !normalizedDate(date) ||
           !Number.isFinite(portion) || portion <= 0 || portion > 100000) return false;
-      const nutrients = {};
-      for (const key of ['kcal','protein','fat','carbs']) {
-        const total = recipe.ingredients.reduce((sum, item) =>
-          sum + Number(item.grams) * Number(item[key]) / 100, 0);
-        nutrients[key] = total * 100 / Number(recipe.yieldGrams);
-      }
+      const nutrients = nutrientsPer100(recipe);
       const entry = { id: productId(), name: recipe.name, grams: portion,
         nutrients, meal, date, source: 'recipe', recipeId };
       if (!commitMutation(draft => draft.entries.push(entry))) return false;
@@ -425,11 +344,7 @@
     }
   };
   function renderAll() { renderJournal(); renderProducts(); renderHistory(); renderWeight(); renderMeasurements(); renderSettings(); }
-  function showPage(page) {
-    $$('.page').forEach(el => el.classList.toggle('active', el.id === `page-${page}`));
-    $$('.nav-item').forEach(el => { const active = el.dataset.page === page; el.classList.toggle('selected', active); if (active) el.setAttribute('aria-current', 'page'); else el.removeAttribute('aria-current'); });
-    window.scrollTo({ top: 0, behavior: 'instant' }); renderAll();
-  }
+  function showPage(page) { globalThis.MojBilansNavigation.showPage(page, renderAll); }
   // "Ostatnie" powstaje WYŁĄCZNIE z już zapisanych wpisów dziennika.
   // Nie utrzymujemy osobnej bazy ani nie zmieniamy formatu eksportów JSON.
   function renderRecentDiary() {
@@ -964,23 +879,16 @@
     })) { closeCopyDialog(); renderAll(); toast(`Skopiowano ${rows.length} produktów`); }
   }
   // v0.2: ręczny dziennik wody, dzienna suma i cofnięcie ostatniego wpisu.
-  function renderWater() {
-    const current = state.water.filter(w => w.date === state.selectedDate), total = current.reduce((s, w) => s + (Number(w.ml) || 0), 0);
-    $('#waterTotal').textContent = `${nf.format(total)} ml`;
-    $('#waterGoalText').textContent = nf.format(state.goals.water || 2500);
-    $('#waterBar').style.width = `${pct(total, state.goals.water || 2500)}%`;
-    $('#waterCount').textContent = `${current.length} ${current.length === 1 ? 'wpis' : 'wpisów'}`;
-    $('#undoWater').disabled = !current.length;
-  }
+  function renderWater() { globalThis.MojBilansWaterUI.render(state, $, value => nf.format(value), pct); }
   function addWater(ml) {
-    if (!Number.isFinite(ml) || ml < 1 || ml > 5000) return;
+    if (!globalThis.MojBilansWaterDomain.validAmount(ml)) return;
     if (commitMutation(draft => { draft.water.push({ id: productId(), date: draft.selectedDate, ml }); })) {
       renderAll(); toast(`Dodano ${nf.format(ml)} ml wody`);
     }
   }
   function undoWater() {
-    const i = state.water.map((w, index) => w.date === state.selectedDate ? index : -1).filter(x => x >= 0).pop();
-    if (i === undefined) return;
+    const i = globalThis.MojBilansWaterDomain.lastIndex(state.water, state.selectedDate);
+    if (i === -1) return;
     if (commitMutation(draft => { draft.water.splice(i, 1); })) { renderAll(); toast('Cofnięto ostatni wpis wody'); }
   }
   // v0.2: masa ciała, datowany dziennik, proporcjonalna oś czasu i cel.
@@ -1041,10 +949,8 @@
 
 
   // v0.3: datowane obwody, niezależne serie i aktualizacja częściowych pomiarów.
-  function sortedMeasurements() {
-    return [...state.measurements].filter(m => m && normalizedDate(m.date)).sort((a, b) => a.date.localeCompare(b.date));
-  }
-  function measureValue(value) { return isNumber(value) && Number(value) >= 10 && Number(value) <= 300 ? Number(value) : null; }
+  function sortedMeasurements() { return globalThis.MojBilansMeasurements.sorted(state.measurements, normalizedDate); }
+  function measureValue(value) { return globalThis.MojBilansMeasurements.value(value, isNumber); }
   function readMeasurementsAtDate() {
     const row = state.measurements.find(m => m.date === $('#measurementDate').value);
     for (const m of MEASURES) $(`#measurement${m.id}`).value = measureValue(row?.[m.key]) === null ? '' : String(row[m.key]);
