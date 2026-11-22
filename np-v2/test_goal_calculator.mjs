@@ -145,7 +145,7 @@ check('no duplicate IDs or unreferenced assets', () => {
 check('calculator scripts are loaded before app and remain offline-ready', () => {
   assert.ok(html.indexOf('goal-calculator.js') < html.indexOf('goal-calculator-ui.js'));
   assert.ok(html.indexOf('goal-calculator-ui.js') < html.indexOf('app.js?v='));
-  assert.match(cache, /moj-bilans-np-v2-cache-goal-calculator-t2/);
+  assert.match(cache, /moj-bilans-np-v2-cache-goal-calculator-t3/);
   assert.doesNotMatch(cache, /k\.startsWith\('moj-bilans-cache-'/);
 });
 console.log('Goal calculator: 14 checks passed.');
