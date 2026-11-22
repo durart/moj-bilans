@@ -6,6 +6,6 @@
   "scripts": {
     "start": "node preview-server.mjs",
     "dev": "node preview-server.mjs",
-    "test": "node test_v08_produce.mjs && node test_bakery.mjs && node test_cheeses.mjs && node test_macro_bars.mjs && node test_history.mjs && node test_recent_diary.mjs && node test_polish_foods.mjs && node test_sante_musli.mjs && node test_baleron.mjs && node test_cebularz.mjs && node test_bakador_chili.mjs && node test_pwa_stability.mjs && node test_backup_validation.mjs && node test_nutrition_domain.mjs && node test_diary_format.mjs"
+    "test": "node test_v08_produce.mjs && node test_bakery.mjs && node test_cheeses.mjs && node test_macro_bars.mjs && node test_history.mjs && node test_recent_diary.mjs && node test_polish_foods.mjs && node test_sante_musli.mjs && node test_baleron.mjs && node test_cebularz.mjs && node test_bakador_chili.mjs && node test_pwa_stability.mjs && node test_backup_validation.mjs && node test_nutrition_domain.mjs && node test_diary_format.mjs && node test_storage_domain.mjs"
   }
 }
