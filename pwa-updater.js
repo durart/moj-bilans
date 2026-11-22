@@ -21,7 +21,7 @@ check.addEventListener('click',async()=>{
     if(registration.waiting) {
       report('Nowa wersja jest dostępna. Zakończ edycję i odśwież aplikację.');
       reload.classList.remove('hidden');
-    } else report('Sprawdzono aktualizacje. Wersja v2.6.2 jest aktualna.');
+    } else report('Sprawdzono aktualizacje. Wersja v2.7.0 jest aktualna.');
   } catch(err){report('Nie udało się sprawdzić aktualizacji: '+err.message,true);}
   finally {check.disabled=false;}
 });
