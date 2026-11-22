@@ -24,6 +24,8 @@ jobs:
           node --check recipe-builder.mjs
           node --check pwa-updater.js
           node --check sw.js
+      - name: Build isolated preview from current source
+        run: node build-staging.mjs
       - name: Run regression tests
         run: npm test
       - name: Validate backup records and staging parity
@@ -45,6 +47,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Build isolated preview from current source
+        run: node build-staging.mjs
       - name: Install browser test dependency
         run: npm install --no-save --package-lock=false playwright@1.58.2 && npx playwright install --with-deps chromium
       - name: Upgrade, offline, backup and staging acceptance
