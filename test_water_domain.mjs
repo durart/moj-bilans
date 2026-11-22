@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+await import('./domain/water.js');
+const { validAmount, lastIndex } = globalThis.MojBilansWaterDomain;
+for(const amount of [1,250,5000])assert.equal(validAmount(amount),true);
+for(const amount of [0,-1,5001,NaN,Infinity,'250',null])assert.equal(validAmount(amount),false);
+const entries=[{date:'2026-11-22',ml:200},{date:'2026-11-21',ml:300},{date:'2026-11-22',ml:250}];
+assert.equal(lastIndex(entries,'2026-11-22'),2);
+assert.equal(lastIndex(entries,'2026-11-21'),1);
+assert.equal(lastIndex(entries,'2026-11-20'),-1);
+assert.equal(lastIndex([],'2026-11-22'),-1);
+assert.equal(entries.length,3);
+const html=readFileSync('index.html','utf8');
+assert.ok(html.indexOf('domain/water.js?v=2.8.0') < html.indexOf('app.js?v=2.7.1'));
+assert.match(readFileSync('sw.js','utf8'),/domain\/water\.js\?v=2\.8\.0/);
+console.log('Hydration domain tests passed.');
