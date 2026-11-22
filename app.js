@@ -834,6 +834,18 @@
       if (payload.app !== 'MojBilans' || !Array.isArray(payload.entries) || !Array.isArray(payload.custom) || !Array.isArray(payload.recent)) throw Error('To nie jest prawidłowy plik Mój Bilans.');
       if (payload.entries.length > 20000 || payload.custom.length > 5000 || payload.recent.length > 5000) throw Error('Zbyt duży zestaw danych.');
       const validProduct = p => p && typeof p.name === 'string' && p.name.length <= 100 && p.nutrients && isNumber(p.nutrients.kcal) && number(p.nutrients.kcal) >= 0 && Number(p.nutrients.kcal) <= 10000;
+      // Reject malformed records rather than silently dropping user data during restore.
+      if (!payload.entries.every(e => validProduct(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000)) {
+        throw Error('Kopia zawiera nieprawidłowe wpisy posiłków. Nie zmieniono danych.');
+      }
+      if (![payload.custom, payload.recent].every(rows => rows.every(validProduct))) {
+        throw Error('Kopia zawiera nieprawidłowe produkty. Nie zmieniono danych.');
+      }
+      for (const key of ['favorites', 'productFavorites', 'recipes', 'weights', 'water', 'measurements']) {
+        if (payload[key] !== undefined && !Array.isArray(payload[key])) {
+          throw Error('Nieprawidłowa struktura kopii: ' + key + '. Nie zmieniono danych.');
+        }
+      }
       const entries = payload.entries.filter(e => validProduct(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000).map(e => ({ id: productId(), name: e.name, date: e.date, meal: e.meal, grams: number(e.grams), nutrients: plainNutrients(e.nutrients), source: String(e.source || 'Import').slice(0, 50), brand: String(e.brand || '').slice(0, 100), ean: String(e.ean || '').slice(0, 14), ...productProvenance(e) }));
       const products = arr => arr.filter(validProduct).map(p => ({ name: p.name, brand: String(p.brand || '').slice(0, 100), source: String(p.source || 'Import').slice(0, 50), ean: String(p.ean || '').slice(0, 14), nutrients: plainNutrients(p.nutrients), ...productProvenance(p) }));
       if (!confirm('Przywrócenie zastąpi bieżące dane na telefonie. Przedtem zalecamy eksport lokalnej kopii JSON. Kontynuować?')) return false;
