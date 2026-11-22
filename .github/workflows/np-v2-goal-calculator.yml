@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/np-v2-calorie-macro-calculator
+      - feature/np-v2-activity-examples
     paths:
       - 'np-v2/**'
       - '.github/workflows/np-v2-goal-calculator.yml'
