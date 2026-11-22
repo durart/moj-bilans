@@ -228,7 +228,7 @@ try {
     const navigation = test.waitForNavigation();
     await test.locator('#np21ReloadUpdate').click();
     await navigation;
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v280-rc2'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v281-rc2'));
     assert.equal(await other.locator('#goalKcal').inputValue(),'2222');
     await other.close();
   });
