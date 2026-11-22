@@ -10,7 +10,7 @@ const CORE = [
   '../np-history-24.js?v=2.5.0', '../np-body-25.js?v=2.5.0',
   '../goal-calculator.js?v=2.6.2', '../goal-calculator-ui.js?v=2.6.2',
   '../np-ui.js?v=np2.1.0', '../wyszukiwarka.mjs',
-  '../interfejs-wyszukiwarki.mjs?v=np2.1.1', '../produkty-podstawowe.mjs',
+  './interfejs-wyszukiwarki.mjs?v=2.7.1-staging', '../produkty-podstawowe.mjs',
   '../katalog-produktow.mjs', '../walidacja-zywnosci.mjs',
   '../owoce-warzywa.mjs', '../pieczywo-biedronka.mjs',
   '../sery-zolte.mjs', '../polskie-produkty.mjs',
