@@ -17,7 +17,8 @@ root.className = 'recipe-builder';
 root.innerHTML = `
   <h3 class="subheading">🍲 Moje przepisy</h3>
   <p class="help">Zbuduj danie z produktów z bazy. Wartości składników dotyczą 100 g, a porcje liczymy według masy gotowego dania.</p>
-  <div class="recipe-card">
+  <button id="recipeOpen" type="button" class="primary-button wide" aria-expanded="false">+ Dodaj przepis</button>
+  <div id="recipeEditor" class="recipe-card" hidden>
     <h3 id="recipeFormHeading">Nowy przepis</h3>
     <label class="field-label">Nazwa przepisu<input id="recipeName" maxlength="100" placeholder="Np. domowy bigos"></label>
     <label class="field-label">Masa gotowego dania (g)<input id="recipeYield" type="number" min="1" max="100000" step="1" value="1000"></label>
@@ -30,6 +31,11 @@ root.innerHTML = `
   </div>
   <h3 class="subheading">Zapisane przepisy</h3>
   <div id="recipeList"></div>`;
+const editorVisible = show => {
+  byId('recipeEditor').hidden = !show;
+  byId('recipeOpen').setAttribute('aria-expanded', String(show));
+  byId('recipeOpen').textContent = show ? '− Zamknij kreator przepisu' : '+ Dodaj przepis';
+};
 const productPage = byId('page-products');
 productPage.append(root);
 
@@ -124,7 +130,7 @@ function reset() {
 function renderList() {
   const list = byId('recipeList');
   list.replaceChildren();
-  for (const recipe of api.getRecipes()) {
+  for (const recipe of api.getRecipes().sort((a, b) => Number(Boolean(b.favorite)) - Number(Boolean(a.favorite)))) {
     const row = document.createElement('div');
     row.className = 'recipe-card';
     const title = document.createElement('strong');
@@ -141,7 +147,7 @@ function renderList() {
       byId('recipeName').value = recipe.name;
       byId('recipeYield').value = recipe.yieldGrams;
       byId('recipeFormHeading').textContent = 'Edytuj przepis';
-      renderIngredients(); showTotals(); root.scrollIntoView({ behavior: 'smooth' });
+      renderIngredients(); showTotals(); editorVisible(true); root.scrollIntoView({ behavior: 'smooth' });
     });
     const duplicate = document.createElement('button');
     duplicate.type = 'button'; duplicate.textContent = 'Duplikuj'; duplicate.className = 'secondary-button';
@@ -151,7 +157,15 @@ function renderList() {
     remove.addEventListener('click', () => {
       if (confirm('Trwale usunąć przepis „' + recipe.name + '”?') && api.removeRecipe(recipe.id)) renderList();
     });
-    controls.append(edit, duplicate, remove);
+    const favorite = document.createElement('button');
+    favorite.type = 'button'; favorite.className = 'secondary-button';
+    const isFavorite = Boolean(recipe.favorite);
+    favorite.textContent = isFavorite ? '★ Ulubiony' : '☆ Ulubiony';
+    favorite.setAttribute('aria-pressed', String(isFavorite));
+    favorite.addEventListener('click', () => {
+      if (api.saveRecipe({ ...recipe, favorite: !isFavorite })) renderList();
+    });
+    controls.append(favorite, edit, duplicate, remove);
     const portion = document.createElement('input');
     portion.type = 'number'; portion.min = '0.1'; portion.max = '100000'; portion.step = 'any'; portion.value = '200';
     portion.setAttribute('aria-label', 'Masa porcji w gramach');
@@ -174,7 +188,12 @@ function renderList() {
 }
 byId('recipeAddIngredient').addEventListener('click', () => { ingredients.push(emptyIngredient()); renderIngredients(); showTotals(); });
 byId('recipeYield').addEventListener('input', showTotals);
-byId('recipeCancel').addEventListener('click', reset);
+byId('recipeOpen').addEventListener('click', () => {
+  const opening = byId('recipeEditor').hidden;
+  if (opening) reset();
+  editorVisible(opening);
+});
+byId('recipeCancel').addEventListener('click', () => { reset(); editorVisible(false); });
 byId('recipeSave').addEventListener('click', () => {
   const name = byId('recipeName').value.trim();
   const yieldGrams = Number(byId('recipeYield').value);
@@ -183,8 +202,9 @@ byId('recipeSave').addEventListener('click', () => {
       Number.isFinite(Number(item[field])) && Number(item[field]) >= 0 && Number(item[field]) <= 100000)) &&
     ingredients.some(item => Number(item.grams) > 0);
   if (!valid) { byId('recipeMessage').textContent = 'Uzupełnij nazwę, masę gotowego dania i składniki.'; return; }
-  const recipe = { id: editingId || makeId(), name, yieldGrams, ingredients: structuredClone(ingredients) };
+  const old = api.getRecipes().find(item => item.id === editingId);
+  const recipe = { id: editingId || makeId(), name, yieldGrams, ingredients: structuredClone(ingredients), favorite: Boolean(old?.favorite) };
   if (!api.saveRecipe(recipe)) { byId('recipeMessage').textContent = 'Nie udało się zapisać przepisu.'; return; }
-  reset(); renderList(); byId('recipeMessage').textContent = 'Przepis zapisany.';
+  reset(); editorVisible(false); renderList(); byId('recipeMessage').textContent = 'Przepis zapisany.';
 });
-reset(); renderList();
+reset(); editorVisible(false); renderList();
