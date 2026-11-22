@@ -1,0 +1,36 @@
+name: Mój Bilans - production calculator regression
+
+on:
+  push:
+    branches:
+      - main
+      - release/moj-bilans-2-6-2-goal-calculator
+    paths:
+      - 'index.html'
+      - 'app.js'
+      - 'goal-calculator.js'
+      - 'goal-calculator-ui.js'
+      - 'goal-calculator.css'
+      - 'sw.js'
+      - 'pwa-updater.js'
+      - 'test_goal_calculator_production.mjs'
+      - 'test_goal_calculator_ui_production.mjs'
+      - '.github/workflows/moj-bilans-calculator-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-production-calculator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate calculator and two-step consent flow
+        run: node test_goal_calculator_production.mjs && node test_goal_calculator_ui_production.mjs
+      - name: Run existing production regression suite
+        run: npm test
