@@ -57,7 +57,7 @@ check('link and source metadata preserved in search',()=>{
 check('offline files included in Service Worker',()=>{
  const sw=fs.readFileSync('./sw.js','utf8');
  assert.ok(sw.includes("'./cebularz.mjs'"));
- assert.ok(/moj-bilans-cache-(?:v08-|np-v2-|np-v21-|daily-focus-|premium-food-)/.test(sw));
+ assert.ok(/const CACHE = 'moj-bilans-cache-[a-z0-9-]+'/.test(sw));
 });
 check('correct UI source labels',()=>{
  const ui=fs.readFileSync('./interfejs-wyszukiwarki.mjs','utf8');
