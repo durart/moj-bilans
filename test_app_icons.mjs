@@ -38,7 +38,7 @@ verify('Both manifests use the same artwork with independent app scope', () => {
     assert.equal(manifest.start_url, './');
     assert.equal(manifest.id, './');
     assert.equal(manifest.scope, './');
-    assert.equal(manifest.icons.length, 2);
+    assert.equal(manifest.icons.length, manifest === prod ? 2 : 4);
     for (const [index, size] of [[0, 192], [1, 512]]) {
       const icon = manifest.icons[index];
       assert.equal(icon.src, prefix + 'icon-neon-' + size + '.png');
@@ -47,6 +47,24 @@ verify('Both manifests use the same artwork with independent app scope', () => {
       assert.equal(icon.purpose, 'any');
     }
   }
+});
+
+verify('Test-only Android maskable variants are complete and preloaded', () => {
+  for (const [index, size] of [[2, 192], [3, 512]]) {
+    const file = 'icons/icon-maskable-' + size + '.png';
+    const icon = test.icons[index];
+    assert.equal(icon.src, '../' + file);
+    assert.equal(icon.sizes, size + 'x' + size);
+    assert.equal(icon.type, 'image/png');
+    assert.equal(icon.purpose, 'maskable');
+    assert.ok(testWorker.includes("'../" + file + "'"));
+    const bytes = fs.readFileSync(path.join(root, file));
+    assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+    assert.equal(bytes.readUInt32BE(16), size);
+    assert.equal(bytes.readUInt32BE(20), size);
+    assert.ok(!bytes.includes(Buffer.from('tRNS')), 'Maskable icon must be opaque');
+  }
+  assert.equal(prod.icons.some(icon => icon.purpose === 'maskable'), false);
 });
 
 verify('Favicon and Apple touch icon point to fresh assets in all entrypoints', () => {
@@ -70,7 +88,7 @@ verify('Both offline caches contain the new icon URLs', () => {
 
 verify('Production and test caches remain strictly isolated', () => {
   assert.match(prodWorker, /moj-bilans-cache-neon-icons-v1/);
-  assert.match(testWorker, /moj-bilans-np-v2-cache-neon-icons-v1/);
+  assert.match(testWorker, /moj-bilans-np-v2-cache-maskable-v1/);
   assert.match(prodWorker, /k\.startsWith\('moj-bilans-cache-'/);
   assert.match(testWorker, /k\.startsWith\('moj-bilans-np-v2-cache-'/);
   assert.doesNotMatch(testWorker, /k\.startsWith\('moj-bilans-cache-'/);
