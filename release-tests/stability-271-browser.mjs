@@ -12,7 +12,7 @@ execFileSync('git', ['archive', '--output', archive, '56f3b86163eee9bde75674fd09
 execFileSync('tar', ['-xf', archive, '-C', baseline]);
 let serving = baseline;
 let brokenRequiredAsset = false;
-let workerRevision = '3';
+let workerRevision = '1';
 let failedAssetRequests = 0;
 const mime = { '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json', '.webmanifest':'application/manifest+json', '.png':'image/png', '.svg':'image/svg+xml' };
 const server = http.createServer(async (request, response) => {
@@ -21,7 +21,7 @@ const server = http.createServer(async (request, response) => {
   if (brokenRequiredAsset && file.endsWith('/backup-validation.js')) { failedAssetRequests++; response.writeHead(503); response.end(); return; }
   try {
     let bytes = await readFile(join(serving, file));
-    if (serving === root && file.endsWith('/sw.js')) bytes = Buffer.from(bytes.toString().replaceAll('v271-stable-3','v271-stable-' + workerRevision));
+    if (serving === root && file.endsWith('/sw.js')) bytes = Buffer.from(bytes.toString().replaceAll('v280-rc1','v280-rc' + workerRevision));
     response.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control':'no-store' });
     response.end(bytes);
   } catch { response.writeHead(404); response.end(); }
@@ -71,7 +71,7 @@ try {
     assert.match(await page.title(),/2.7.1/);
     console.log('Baseline errors before fixed release:', errors.splice(0));
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-v1'))),fixture);
-    assert.ok((await page.evaluate(() => caches.keys())).includes('moj-bilans-cache-v271-stable-3'));
+    assert.ok((await page.evaluate(() => caches.keys())).includes('moj-bilans-cache-v280-rc1'));
   });
   await check('Offline restart with query string and complete module graph', async () => {
     await upgrade.setOffline(true);
@@ -106,7 +106,7 @@ try {
   await check('Preview uses separate diary, IndexedDB, cache and PWA scope', async () => {
     await test.evaluate(async () => { const cache = await caches.open('moj-bilans-cache-production-sentinel'); await cache.put('/production-sentinel',new Response('keep')); });
     assert.equal(await test.evaluate(() => localStorage.getItem('moj-bilans-v1')),'production-sentinel');
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v271-stable-3'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v280-rc1'));
     assert.ok((await test.evaluate(async () => (await navigator.serviceWorker.getRegistration()).scope)).endsWith('/preview/'));
     await test.waitForFunction(async () => (await indexedDB.databases()).some(db => db.name === 'moj-bilans-preview-copies-v27'));
     assert.ok(!(await test.evaluate(() => indexedDB.databases())).some(db => db.name === 'moj-bilans-kopie-lokalne-v1'));
@@ -202,7 +202,7 @@ try {
     await test.screenshot({path:'test-artifacts/stability-271-mobile.png',fullPage:true});
   });
   await check('Failed worker update keeps active release and cached offline assets', async () => {
-    brokenRequiredAsset = true; workerRevision = '4';
+    brokenRequiredAsset = true; workerRevision = '2';
     await test.evaluate(async () => {
       const registration = await navigator.serviceWorker.getRegistration();
       await registration.update();
@@ -228,7 +228,7 @@ try {
     const navigation = test.waitForNavigation();
     await test.locator('#np21ReloadUpdate').click();
     await navigation;
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v271-stable-4'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v280-rc2'));
     assert.equal(await other.locator('#goalKcal').inputValue(),'2222');
     await other.close();
   });
