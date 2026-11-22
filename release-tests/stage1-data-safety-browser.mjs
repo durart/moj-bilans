@@ -44,8 +44,8 @@ try{
    await page.locator('#npQuickAdd').click();
    await page.locator('#searchName').fill('orzeszki chili');
    const result=page.locator('#searchResults .food-card').filter({hasText:'BakaD'}).first();
-   await result.locator('.food-action').waitFor({timeout:12000});
-   await result.locator('.food-action').click();
+   await result.getByRole('button', {name:'Wybierz produkt'}).waitFor({timeout:12000});
+   await result.getByRole('button', {name:'Wybierz produkt'}).click();
    await fail(true);
    await page.locator('#productForm button[type=submit]').click();
    assert.equal(await page.locator('#modalBackdrop').isVisible(),true);
