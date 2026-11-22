@@ -205,7 +205,7 @@ try {
       if(!('serviceWorker' in navigator))return false;
       const keys=await caches.keys();
       return !!navigator.serviceWorker.controller &&
-        keys.includes('moj-bilans-np-v2-cache-goal-calculator-t1');
+        keys.includes('moj-bilans-np-v2-cache-goal-calculator-t3');
     },null,{timeout:30000});
     const reg=await page.evaluate(async ()=>{
       const x=await navigator.serviceWorker.getRegistration('./');
@@ -246,6 +246,32 @@ try {
     await page.locator('.nav-item[data-page="settings"]').click();
     assert.equal(await page.locator('#goalKcal').inputValue(),oldGoal,
       'Unconfirmed preview must not persist target changes');
+  });
+  verify('Rekompozycja shows a small deficit and high protein without auto-saving goals',async ()=>{
+    await page.locator('.nav-item[data-page="settings"]').click();
+    const initialGoal = await page.locator('#goalKcal').inputValue();
+    await page.locator('#gpAge').fill('47');
+    await page.locator('#gpHeight').fill('179');
+    await page.locator('#gpWeight').fill('100');
+    await page.locator('#gpEquation').selectOption('male');
+    await page.locator('#gpActivity').selectOption('light');
+    await page.locator('#gpGoal').selectOption('recomposition');
+    assert.equal(await page.locator('#gpMacroPreset').isDisabled(),true);
+    assert.equal(await page.locator('#gpRecompositionHint').isVisible(),true);
+    await page.locator('#gpCalculate').click();
+    assert.match(await page.locator('#gpStatus').innerText(),/Rekompozycja/);
+    const kcal = Number((await page.locator('#gpCalories').innerText()).replace(/[^0-9]/g,''));
+    const tdee = Number((await page.locator('#gpTdee').innerText()).replace(/[^0-9]/g,''));
+    assert.ok(Math.abs(kcal/tdee-0.9)<0.01);
+    assert.equal(await page.locator('#goalKcal').inputValue(),initialGoal);
+    await page.locator('#gpApply').click();
+    assert.notEqual(await page.locator('#goalKcal').inputValue(),initialGoal);
+    await page.reload({waitUntil:'networkidle'});
+    await page.locator('.nav-item[data-page="settings"]').click();
+    assert.equal(await page.locator('#goalKcal').inputValue(),initialGoal);
+    await page.locator('#gpGoal').selectOption('maintain');
+    assert.equal(await page.locator('#gpMacroPreset').isEnabled(),true);
+    assert.equal(await page.locator('#gpRecompositionHint').isHidden(),true);
   });
   verify('Brak błędów JavaScript w aplikacji',async ()=>{
     assert.deepEqual(pageErrors,[]);
