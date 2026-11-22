@@ -85,6 +85,9 @@ jobs:
           echo "Source preview revision: $(git rev-parse HEAD)"
           echo "Source preview version: $(grep -o 'TEST · Mój Bilans 2.7.1' preview/index.html | head -1)"
           rsync -a --delete preview/ /tmp/moj-bilans-preview/preview/
+          sha256sum preview/index.html /tmp/moj-bilans-preview/preview/index.html
+          git -C /tmp/moj-bilans-preview ls-files -v preview/index.html
+          git -C /tmp/moj-bilans-preview diff --stat -- preview/index.html
           git -C /tmp/moj-bilans-preview status --short -- preview/
           cd /tmp/moj-bilans-preview
           git add -A -- preview/
