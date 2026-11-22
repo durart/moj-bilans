@@ -53,6 +53,37 @@ check('all macro presets distribute 100 percent of calories', () => {
     }
   }
 });
+check('recomposition uses a modest 10% energy deficit and weight-based protein', () => {
+  const reference = { ...base, goal: 'recomposition', activity: 'light' };
+  const output = planner.calculate(reference);
+  const maintenance = planner.calculate({ ...reference, goal: 'maintain' });
+  assert.ok(Math.abs(output.kcal - maintenance.tdee * 0.9) <= 5);
+  assert.equal(output.protein, 180);
+  assert.equal(output.macroPreset, 'recomposition');
+  assert.ok(Math.abs(output.fat * 9 / output.kcal - 0.3) < 0.01);
+  assert.equal(Object.values(output.percentages).reduce((sum, x) => sum + x, 0), 100);
+  assert.ok(Math.abs(output.macrosKcal - output.kcal) <= 4);
+});
+check('recomposition macro distribution ignores ordinary presets', () => {
+  const balanced = planner.calculate({ ...base, goal: 'recomposition', macroPreset: 'balanced' });
+  const higherCarbs = planner.calculate({ ...base, goal: 'recomposition', macroPreset: 'higherCarbs' });
+  assert.equal(balanced.protein, higherCarbs.protein);
+  assert.equal(balanced.fat, higherCarbs.fat);
+  assert.equal(balanced.carbs, higherCarbs.carbs);
+  assert.ok(balanced.protein * 4 / balanced.kcal <= 0.35);
+});
+check('recomposition caps protein energy at 35 percent and rejects too-low energy', () => {
+  const capped = planner.calculate({
+    age: 100, heightCm: 120, weightKg: 200, sexCoefficient: 'female',
+    activity: 'sedentary', goal: 'recomposition', macroPreset: 'balanced'
+  });
+  assert.ok(capped.protein * 4 / capped.kcal <= 0.35);
+  assert.ok(capped.protein > 0 && capped.fat > 0 && capped.carbs > 0);
+  assert.throws(() => planner.calculate({
+    ...base, age: 100, heightCm: 120, weightKg: 30,
+    sexCoefficient: 'female', goal: 'recomposition'
+  }));
+});
 check('bad inputs are rejected, not converted into plausible defaults', () => {
   for (const override of [
     { age: '' },
@@ -117,4 +148,4 @@ check('calculator scripts are loaded before app and remain offline-ready', () =>
   assert.match(cache, /moj-bilans-np-v2-cache-goal-calculator-t2/);
   assert.doesNotMatch(cache, /k\.startsWith\('moj-bilans-cache-'/);
 });
-console.log('Goal calculator: 11 checks passed.');
+console.log('Goal calculator: 14 checks passed.');
