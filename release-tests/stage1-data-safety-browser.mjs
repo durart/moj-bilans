@@ -15,7 +15,7 @@ try{
  let logs='';server.stdout.on('data',x=>logs+=x);server.stderr.on('data',x=>logs+=x);
  let live=false;for(let attempt=0;attempt<50;attempt++){try{if((await fetch(base)).ok){live=true;break}}catch{}await wait(240)}
  if(!live)throw Error('Preview server unavailable '+logs);
- browser=await chromium.launch({headless:true});
+ browser=await chromium.launch({headless:true, executablePath:process.env.CHROMIUM_PATH || undefined});
  const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,locale:'pl-PL',serviceWorkers:'block'});
  await ctx.route('https://world.openfoodfacts.org/**',r=>r.abort('blockedbyclient'));
  const page=await ctx.newPage();page.on('pageerror',e=>errors.push(String(e)));

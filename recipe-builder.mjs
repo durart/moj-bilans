@@ -211,4 +211,5 @@ byId('recipeSave').addEventListener('click', () => {
   if (!api.saveRecipe(recipe)) { byId('recipeMessage').textContent = 'Nie udało się zapisać przepisu.'; return; }
   reset(); editorVisible(false); renderList(); byId('recipeMessage').textContent = 'Przepis zapisany.';
 });
+window.addEventListener('moj-bilans:restored', () => { reset(); editorVisible(false); renderList(); });
 reset(); editorVisible(false); renderList();

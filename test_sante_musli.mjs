@@ -67,7 +67,7 @@ check('karta wskazuje źródło danych z etykiety',()=>{
 });
 check('PWA buforuje etykiety i zmienia wersję cache',()=>{
   assert.ok(sw.includes("'./produkty-z-etykiet.mjs'"));
-  assert.ok(/const CACHE = 'moj-bilans-cache-[a-z0-9-]+'/.test(sw));
+  assert.ok(/const CACHE = PREFIX \+ 'v271-stable-1'/.test(sw));
 });
 check('nie zmieniono lokalnego magazynu dziennika',()=>{
   assert.ok(app.includes("const KEY = 'moj-bilans-v1'"));

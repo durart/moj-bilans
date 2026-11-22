@@ -6,6 +6,7 @@ import { POLISH_DISHES } from './polskie-dania.mjs';
 import { LABELED_PRODUCTS } from './produkty-z-etykiet.mjs';
 import { BALERON_REFERENCE } from './baleron.mjs';
 import { CEBULARZE } from './cebularz.mjs';
+import { BAKADOR_CHILI } from './bakador-chili.mjs';
 /**
  * Mój Bilans – baza podstawowych produktów (wartości ORIENTACYJNE na 100 g/ml).
  * Nie jest to baza produktów konkretnych marek ani dokumentacja medyczna.
@@ -68,5 +69,6 @@ export const BASIC_FOODS = Object.freeze([
   ...POLISH_DISHES,
   ...LABELED_PRODUCTS,
   ...BALERON_REFERENCE,
-  ...CEBULARZE
+  ...CEBULARZE,
+  ...BAKADOR_CHILI
 ]);

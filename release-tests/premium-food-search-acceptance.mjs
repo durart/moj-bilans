@@ -19,7 +19,7 @@ try{
  let logs='';server.stdout.on('data',b=>logs+=String(b));server.stderr.on('data',b=>logs+=String(b));
  let ready=false;for(let i=0;i<55;i++){try{if((await fetch(BASE)).ok){ready=true;break}}catch{}await pause(220)}
  if(!ready)throw Error('Preview unavailable: '+logs);
- browser=await chromium.launch({headless:true});
+ browser=await chromium.launch({headless:true, executablePath:process.env.CHROMIUM_PATH || undefined});
  const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,locale:'pl-PL',deviceScaleFactor:1,serviceWorkers:'block'});
  await ctx.route('https://world.openfoodfacts.org/**',r=>r.abort('blockedbyclient'));
  const page=await ctx.newPage();page.on('pageerror',e=>errors.push(String(e)));page.on('dialog',d=>d.accept());

@@ -24,7 +24,7 @@ assert.match(recipes, /!name\.isConnected/);
 const assets = [...worker.matchAll(/'((?:\.\/)[^']+)'/g)].map(match => match[1]);
 for (const asset of assets) {
   const relativePath = asset.split('?')[0];
-  if (relativePath === './') continue;
+  if (relativePath === './' || relativePath === './icons/') continue;
   assert.doesNotThrow(() => read(relativePath), `Missing precache asset: ${asset}`);
 }
 assert.match(html, /pwa-updater\.js/);

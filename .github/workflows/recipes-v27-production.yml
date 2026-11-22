@@ -33,9 +33,9 @@ jobs:
           const app=readFileSync('app.js','utf8');
           const sw=readFileSync('sw.js','utf8');
           const recipes=readFileSync('recipe-builder.mjs','utf8');
-          assert.ok(html.includes('src="./app.js?v=2.7.0"'));
-          assert.ok(html.includes('src="./recipe-builder.mjs?v=2.7.0"'));
-          assert.ok(html.includes('src="./pwa-updater.js?v=2.7.0"'));
+          assert.ok(html.includes('src="./app.js?v=2.7.1"'));
+          assert.ok(html.includes('src="./recipe-builder.mjs?v=2.7.1"'));
+          assert.ok(html.includes('src="./pwa-updater.js?v=2.7.1"'));
           assert.ok(app.includes("const KEY = 'moj-bilans-v1'"));
           assert.ok(app.includes("IS_PREVIEW ? 'moj-bilans-preview-v27' : KEY"));
           assert.ok(app.includes('productFavorites: state.productFavorites'));
@@ -44,8 +44,8 @@ jobs:
           assert.ok(recipes.includes('id="recipeOpen"'));
           assert.ok(recipes.includes('id="recipeEditor"'));
           assert.ok(recipes.includes('favorite'));
-          assert.ok(sw.includes('moj-bilans-cache-recipes-v270'));
-          assert.ok(sw.includes('./recipe-builder.mjs?v=2.7.0'));
+          assert.ok(sw.includes('v271-stable-1'));
+          assert.ok(sw.includes('./recipe-builder.mjs?v=2.7.1'));
           const assets=[...html.matchAll(/(?:src|href)="(\.\/[^"?]+)/g)];
           for(const match of assets) assert.ok(existsSync(match[1].slice(2)), 'Missing '+match[1]);
           console.log('Production v2.7 smoke invariants passed');

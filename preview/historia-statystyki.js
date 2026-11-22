@@ -30,9 +30,9 @@
     const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12);
     if (Number.isNaN(end.getTime())) throw new RangeError('Nieprawidłowa data.');
     let start;
-    if (period === '7d' || period === '14d') {
+    if (period === '7d' || period === '14d' || period === '30d') {
       start = new Date(end);
-      start.setDate(start.getDate() - (period === '7d' ? 6 : 13));
+      start.setDate(start.getDate() - (period === '7d' ? 6 : period === '14d' ? 13 : 29));
     } else if (period === '1m' || period === '6m' || period === '1y') {
       start = shiftMonths(end, period === '1m' ? -1 : period === '6m' ? -6 : -12);
       start.setDate(start.getDate() + 1);
@@ -49,14 +49,14 @@
       if (!entry || typeof entry.date !== 'string' || entry.date < from || entry.date > to || !parseDate(entry.date)) continue;
       const grams = Number(entry.grams);
       if (!Number.isFinite(grams) || grams <= 0) continue;
-      if (!days.has(entry.date)) days.set(entry.date, { date: entry.date, items: 0, totals: zero() });
+      if (!days.has(entry.date)) days.set(entry.date, { date: entry.date, items: 0, totals: zero(), kcalComplete: true, complete: { kcal: true, protein: true, fat: true, carbs: true } });
       const day = days.get(entry.date);
       day.items += 1;
       let incomplete = false;
       for (const key of KEYS) {
         const value = entry.nutrients?.[key];
         const per100 = value === null || value === undefined || value === '' ? NaN : Number(value);
-        if (!Number.isFinite(per100) || per100 < 0) { incomplete = true; continue; }
+        if (!Number.isFinite(per100) || per100 < 0) { incomplete = true; day.complete[key] = false; if (key === 'kcal') day.kcalComplete = false; continue; }
         day.totals[key] += per100 * grams / 100;
       }
       if (incomplete) incompleteEntries += 1;
@@ -65,8 +65,10 @@
     const totals = zero();
     for (const day of rows) for (const key of KEYS) totals[key] += day.totals[key];
     const loggedDays = rows.length;
-    const averages = loggedDays ? Object.fromEntries(KEYS.map(k => [k, totals[k] / loggedDays])) : null;
-    return { from, to, rangeDays, loggedDays, incompleteEntries, averages, totals, days: rows };
+    // Każdy składnik ma własny mianownik: brak B/T/W lub kcal nie może udawać zera.
+    const validDays = Object.fromEntries(KEYS.map(k => [k, rows.filter(day => day.complete[k]).length]));
+    const averages = loggedDays ? Object.fromEntries(KEYS.map(k => [k, validDays[k] ? rows.reduce((sum, day) => sum + (day.complete[k] ? day.totals[k] : 0), 0) / validDays[k] : null])) : null;
+    return { from, to, rangeDays, loggedDays, incompleteEntries, averages, validDays, totals, days: rows };
   }
   root.MojBilansHistory = Object.freeze({ periodRange, historySummary, dateCount });
 })(typeof window !== 'undefined' ? window : globalThis);

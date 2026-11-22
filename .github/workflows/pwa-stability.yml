@@ -26,3 +26,33 @@ jobs:
           node --check sw.js
       - name: Run regression tests
         run: npm test
+      - name: Validate backup records and staging parity
+        run: node test_backup_validation.mjs && node test_staging_parity.mjs
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependency
+        run: npm install --no-save --package-lock=false playwright@1.58.2 && npx playwright install --with-deps chromium
+      - name: Upgrade, offline, backup and staging acceptance
+        run: node release-tests/stability-271-browser.mjs
+      - name: Existing data safety fault injection
+        run: node release-tests/stage1-data-safety-browser.mjs
+      - name: Existing diary and offline regression
+        run: node release-tests/np-v2-production-acceptance.mjs
+      - name: Daily Focus regression
+        run: node release-tests/daily-focus-visual-acceptance.mjs
+      - name: Search regression
+        run: node release-tests/premium-food-search-acceptance.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stability-271-screenshots
+          path: test-artifacts/
+          if-no-files-found: ignore

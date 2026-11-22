@@ -20,7 +20,7 @@ try{
  let started=false;
  for(let i=0;i<45;i++){try{if((await fetch(BASE)).ok){started=true;break;}}catch{}await sleep(250);}
  if(!started)throw Error('Preview server failed: '+logs);
- browser=await chromium.launch({headless:true});
+ browser=await chromium.launch({headless:true, executablePath:process.env.CHROMIUM_PATH || undefined});
  const context=await browser.newContext({viewport:{width:390,height:844},locale:'pl-PL',isMobile:true,hasTouch:true,serviceWorkers:'allow'});
  await context.route('https://world.openfoodfacts.org/**',route=>route.abort('blockedbyclient'));
  const page=await context.newPage();page.on('pageerror',err=>errors.push(String(err)));
@@ -31,7 +31,7 @@ try{
  },{fixture,sentinel});
  await page.goto(BASE,{waitUntil:'networkidle'});
  await verify('Root URL and original PWA identity',async()=>{
-  assert.match(await page.title(),/Premium Food Search v2\.3/);
+  assert.match(await page.title(),/Mój Bilans 2\.7\.1/);
   const manifest=await page.evaluate(async()=>await (await fetch(document.querySelector('link[rel=manifest]').href)).json());
   assert.equal(manifest.id,'./');assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');
   assert.equal(await page.locator('.np-env-banner').count(),0);
@@ -120,7 +120,7 @@ try{
   await page.reload({waitUntil:'networkidle'});
   assert.equal(await page.locator('#npFoodCount').innerText(),'2');
   await page.waitForFunction(async()=>{
-   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-premium-food-v23');
+   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-v271-stable-1');
   },null,{timeout:30000});
   const reg=await page.evaluate(async()=>{
    const r=await navigator.serviceWorker.getRegistration('./');return {scope:r?.scope,script:r?.active?.scriptURL};
