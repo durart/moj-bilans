@@ -80,6 +80,8 @@ jobs:
         with:
           fetch-depth: 0
           ref: refactor/architecture-2.8.0
+      - name: Rebuild preview from tested refactor commit
+        run: node build-staging.mjs
       - name: Publish only isolated preview directory to Pages branch
         shell: bash
         run: |
