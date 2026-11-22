@@ -255,10 +255,10 @@
     })) renderProducts();
   }
   function renderProducts() {
-    const custom = state.custom.filter(p => p && p.name).sort((a,b) => Number(state.productFavorites.includes(favoriteProductKey(b))) - Number(state.productFavorites.includes(favoriteProductKey(a))));
-    const recent = state.recent.filter(p => p && p.name).sort((a,b) => Number(state.productFavorites.includes(favoriteProductKey(b))) - Number(state.productFavorites.includes(favoriteProductKey(a))));
-    $('#customProductsList').innerHTML = custom.length ? custom.map((p, i) => productRow(p, 'custom', i)).join('') : '<div class="empty-list">Tu pojawią się produkty dodane ręcznie.</div>';
-    $('#recentProductsList').innerHTML = recent.length ? recent.map((p, i) => productRow(p, 'recent', i)).join('') : '<div class="empty-list">Ostatnio dodawane produkty zobaczysz tutaj.</div>';
+    const custom = state.custom.map((p,i) => ({p,i})).filter(x => x.p && x.p.name).sort((a,b) => Number(state.productFavorites.includes(favoriteProductKey(b.p))) - Number(state.productFavorites.includes(favoriteProductKey(a.p))));
+    const recent = state.recent.map((p,i) => ({p,i})).filter(x => x.p && x.p.name).sort((a,b) => Number(state.productFavorites.includes(favoriteProductKey(b.p))) - Number(state.productFavorites.includes(favoriteProductKey(a.p))));
+    $('#customProductsList').innerHTML = custom.length ? custom.map(({p,i}) => productRow(p, 'custom', i)).join('') : '<div class="empty-list">Tu pojawią się produkty dodane ręcznie.</div>';
+    $('#recentProductsList').innerHTML = recent.length ? recent.map(({p,i}) => productRow(p, 'recent', i)).join('') : '<div class="empty-list">Ostatnio dodawane produkty zobaczysz tutaj.</div>';
     $('#favoriteMealsList').innerHTML = state.favorites.length ? state.favorites.map(f => `<div class="compact-item favorite-item"><div><strong>⭐ ${safeText(f.name)}</strong><small>${Array.isArray(f.items) ? f.items.length : 0} produktów · ${nf.format(Math.round(totalFor(f.items || []).kcal))} kcal · ${safeText(mealName(f.meal))}</small></div><div class="favorite-actions"><button type="button" data-addfavorite="${safeText(f.id)}">+ Dodaj</button><button type="button" class="danger-quiet" data-removefavorite="${safeText(f.id)}" aria-label="Usuń ${safeText(f.name)}">Usuń</button></div></div>`).join('') : '<div class="empty-list">Zapisz ulubiony zestaw z dziennika, wybierając ☆ Ulubiony pod posiłkiem.</div>';
     $$('[data-addfavorite]').forEach(b => b.addEventListener('click', () => addFavorite(b.dataset.addfavorite)));
     $$('[data-removefavorite]').forEach(b => b.addEventListener('click', () => removeFavorite(b.dataset.removefavorite)));
