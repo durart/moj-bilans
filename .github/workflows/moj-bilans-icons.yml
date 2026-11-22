@@ -18,6 +18,7 @@ on:
       - 'sw.js'
       - 'np-v2/sw.js'
       - 'test_app_icons.mjs'
+      - 'test_v08_produce.mjs'
       - '.github/workflows/moj-bilans-icons.yml'
   workflow_dispatch:
 
