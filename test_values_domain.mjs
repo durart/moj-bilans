@@ -17,6 +17,6 @@ assert.equal(isNumber('  '), true, 'Legacy whitespace behavior remains unchanged
 assert.equal(number('  '), 0);
 const html = readFileSync('index.html', 'utf8');
 const sw = readFileSync('sw.js', 'utf8');
-assert.ok(html.indexOf('domain/values.js?v=2.8.0') < html.indexOf('app.js?v=2.7.1'));
+assert.ok(html.indexOf('domain/values.js?v=2.8.0') < html.indexOf('app.js?v=2.8.1'));
 assert.match(sw, /domain\/values\.js\?v=2\.8\.0/);
 console.log('Local calendar and numeric conversion compatibility verified.');
