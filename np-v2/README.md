@@ -61,3 +61,20 @@ Po zgłoszeniu różnicy względem wersji głównej przyjęto jako wzorzec **akt
 - Nadal pozostają izolowane: localStorage `moj-bilans-np-v2-v1`, IndexedDB `moj-bilans-np-v2-kopie-v1`, manifest, Service Worker scope `./` i cache `moj-bilans-np-v2-cache-layout-parity-v1`.
 - Do testów statycznych: `node np-v2/test_layout_parity.mjs`. Dodatkowe kroki akceptacyjne Chromium obejmują nawigację i modale Daily Focus/Premium Food Search. Testy przeglądarkowe wymagają wykonania w środowisku z Chromium.
 - Zmiana obejmuje tylko folder `np-v2/`. Produkcyjny dziennik pozostaje nietknięty.
+
+## Optional calorie and macro calculator — test branch
+
+This feature is available on branch `feature/np-v2-calorie-macro-calculator` only. Production files in the repository root are unchanged.
+
+- **Manual mode:** the existing daily calorie, protein, fat and carbohydrate goals remain fully editable.
+- **Calculated proposal:** enter adult age (18–100), height (cm), weight (kg), the applicable Mifflin–St Jeor equation, activity level, goal adjustment and one of three macro distributions.
+- **Weights:** the calculator offers the latest saved test-app weight when present, but allows manual override. No age, height, sex, or activity profile is stored by this first version.
+- **Energy:** calculate BMR with the Mifflin–St Jeor equation; estimate TDEE with a selected activity factor (1.2 / 1.375 / 1.55 / 1.725). Choose maintain, −10/−15/−20%, or +5/+10%; use 10-kcal rounding.
+- **Macros:** choose 25/30/45, 30/25/45, or 20/25/55 percentages (protein/fat/carbs). Display approximate grams using 4/9/4 kcal per gram; small energy discrepancies are caused by integer rounding.
+- **Explicit confirmation:** Calculate only shows a preview. Apply copies the proposal to the existing editable inputs, and the user must separately click **Save goals** to persist it. If the page reloads before Save, old goals are retained.
+- **No production or schema changes:** use the pre-existing isolated test storage and backup format; no data migration, new storage key, network request, telemetry or API is needed. All calculations are local.
+- **Caveat:** TDEE is not a measurement. Activity factors and deficit percentages are modeling assumptions, not guaranteed weight-change results. The feature is intended for adults and does not replace individualized clinical advice.
+
+References: Mifflin MD et al., *Am J Clin Nutr* 1990;51:241–247 (PMID 2305711); adult acceptable macronutrient distribution ranges (National Academies / Health Canada).
+
+Tests: `node np-v2/test_goal_calculator.mjs`, `node np-v2/test_goal_calculator_ui.mjs`, plus layout parity, history/body regressions and browser acceptance (where Chromium is available).
