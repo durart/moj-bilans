@@ -75,6 +75,15 @@ check('input and calculation results are immutable', () => {
   assert.equal(JSON.stringify(input), snapshot);
   assert.equal(Object.isFrozen(output), true);
 });
+check('activity labels give relatable examples without altering PAL coefficients', () => {
+  assert.match(html, /Mała — głównie siedzenie/);
+  assert.match(html, /Lekka — spacery, 1–2 treningi/);
+  assert.match(html, /Umiarkowana — ruch i 3–4 treningi/);
+  assert.match(html, /Wysoka — praca w ruchu/);
+  assert.match(html, /gpActivityHint/);
+  assert.equal(planner.activityFactors.sedentary, 1.2);
+  assert.equal(planner.activityFactors.moderate, 1.55);
+});
 check('one button calculates and a separate button applies', () => {
   for (const id of [
     'gpForm', 'gpAge', 'gpHeight', 'gpWeight', 'gpEquation',
@@ -105,7 +114,7 @@ check('no duplicate IDs or unreferenced assets', () => {
 check('calculator scripts are loaded before app and remain offline-ready', () => {
   assert.ok(html.indexOf('goal-calculator.js') < html.indexOf('goal-calculator-ui.js'));
   assert.ok(html.indexOf('goal-calculator-ui.js') < html.indexOf('app.js?v='));
-  assert.match(cache, /moj-bilans-np-v2-cache-goal-calculator-t1/);
+  assert.match(cache, /moj-bilans-np-v2-cache-goal-calculator-t2/);
   assert.doesNotMatch(cache, /k\.startsWith\('moj-bilans-cache-'/);
 });
-console.log('Goal calculator: 10 checks passed.');
+console.log('Goal calculator: 11 checks passed.');
