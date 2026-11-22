@@ -19,7 +19,7 @@ check('Latest production design CSS copies are identical',()=>{
    assert.equal(read(name),read('../'+name),name+' differs from production');
 });
 check('Test HTML includes sprint panels and source styles',()=>{
- for(const name of ['np-history-24.js','np-body-25.js','np-history-24.css','np-body-25.css',
+ for(const name of ['np-history-24.js','np-body-25.js','np-history-24.css','np-body-25.css', 'goal-calculator.js', 'goal-calculator-ui.js', 'goal-calculator.css',
                      'daily-focus.css','premium-food-search.css','pwa-updater.js'])
    assert.ok(testHtml.includes('./'+name),name);
  for(const id of ['npGoalDifference','npDailyCompare','npBodyProgressPercent','npBodyProgressBar','npBodySmoothed'])
@@ -37,7 +37,7 @@ check('Strictly isolated test storage and offline service worker',()=>{
  assert.match(app,/const LOCAL_COPIES_DB = 'moj-bilans-np-v2-kopie-v1'/);
  assert.doesNotMatch(app,/const KEY = 'moj-bilans-v1'/);
  assert.doesNotMatch(app,/const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1'/);
- assert.match(sw,/moj-bilans-np-v2-cache-layout-parity-v1/);
+ assert.match(sw,/moj-bilans-np-v2-cache-goal-calculator-t1/);
  assert.match(sw,/k\.startsWith\('moj-bilans-np-v2-cache-'/);
  assert.doesNotMatch(sw,/k\.startsWith\('moj-bilans-cache-'/);
 });
@@ -52,7 +52,7 @@ check('Every new stylesheet, script and critical image are precached offline',()
   'np-history-24.js','np-body-25.js','np-history-24.css','np-body-25.css'])
    assert.ok(sw.includes("'./"+asset+"'"),asset);
  for(const item of [...sw.matchAll(/'(\.\.?\/[^']+)'/g)].map(x=>x[1]))
-   assert.ok(fs.existsSync(new URL(item,new URL('.',import.meta.url))),'precache missing '+item);
+   assert.ok(fs.existsSync(new URL(item.split('?')[0],new URL('.',import.meta.url))),'precache missing '+item);
 });
 check('JavaScript syntax valid without build tools',()=>{
  new Function(app);for(const name of ['np-history-24.js','np-body-25.js','np-trends.js','historia-statystyki.js','pwa-updater.js'])
