@@ -6,6 +6,8 @@ on:
       - 'preview/index.html'
       - 'preview/app.js'
       - 'preview/recipe-builder.mjs'
+      - 'preview/sw.js'
+      - 'preview/manifest.webmanifest'
       - '.github/workflows/recipes-v27-staging.yml'
   workflow_dispatch:
 jobs:
@@ -20,6 +22,7 @@ jobs:
         run: |
           node --check preview/app.js
           node --check preview/recipe-builder.mjs
+          node --check preview/sw.js
           node --check app.js
           node --check wyszukiwarka.mjs
       - name: Check staging isolation and asset references
@@ -34,6 +37,10 @@ jobs:
           assert.match(html, /src="\.\/recipe-builder\.mjs\?v=2\.7\.0-staging"/);
           assert.doesNotMatch(html, /src="\.\.\/pwa-updater\.js/);
           assert.match(app, /moj-bilans-preview-v27/);
+          assert.match(html, /href="\\.\\/manifest\\.webmanifest/);
+          assert.match(html, /serviceWorker\\.register\\("\\.\\/sw\\.js"/);
+          const sw = readFileSync('preview/sw.js', 'utf8');
+          assert.match(sw, /moj-bilans-preview-recipes-v27-cache/);
           assert.match(app, /moj-bilans-preview-copies-v27/);
           assert.match(app, /recipes: state\.recipes/);
           assert.match(app, /recipes: validateRecipes\(payload\.recipes\)/);
