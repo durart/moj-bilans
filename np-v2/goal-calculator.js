@@ -12,6 +12,7 @@
   const GOAL_ADJUSTMENTS = Object.freeze({
     maintain: 0,
     reduce10: -0.10,
+    recomposition: -0.10,
     reduce15: -0.15,
     reduce20: -0.20,
     gain5: 0.05,
@@ -65,10 +66,35 @@
 
     // Daily intake target rounded to 10 kcal for a practical diary setting.
     const kcal = Math.round(tdee * (1 + GOAL_ADJUSTMENTS[goal]) / 10) * 10;
+    const isRecomposition = goal === 'recomposition';
     const ratios = MACRO_PRESETS[macroPreset];
-    const protein = Math.round(kcal * ratios.protein / 4);
-    const fat = Math.round(kcal * ratios.fat / 9);
-    const carbs = Math.round((kcal - protein * 4 - fat * 9) / 4);
+    let protein, fat, carbs, percentages;
+    if (isRecomposition) {
+      if (kcal < 1200) {
+        throw new RangeError('Wyliczony cel jest zbyt niski dla automatycznej rekompozycji. Skonsultuj indywidualne zapotrzebowanie.');
+      }
+      // Weight-based protein supports resistance training while capping at 35% energy.
+      // This keeps protein within the adult AMDR and leaves energy for fats/carbs.
+      protein = Math.min(Math.round(weightKg * 1.8), Math.floor(kcal * 0.35 / 4));
+      fat = Math.round(kcal * 0.30 / 9);
+      carbs = Math.round((kcal - protein * 4 - fat * 9) / 4);
+      const proteinPercent = Math.round(protein * 4 / kcal * 100);
+      const fatPercent = Math.round(fat * 9 / kcal * 100);
+      percentages = Object.freeze({
+        protein: proteinPercent,
+        fat: fatPercent,
+        carbs: 100 - proteinPercent - fatPercent
+      });
+    } else {
+      protein = Math.round(kcal * ratios.protein / 4);
+      fat = Math.round(kcal * ratios.fat / 9);
+      carbs = Math.round((kcal - protein * 4 - fat * 9) / 4);
+      percentages = Object.freeze({
+        protein: Math.round(ratios.protein * 100),
+        fat: Math.round(ratios.fat * 100),
+        carbs: Math.round(ratios.carbs * 100)
+      });
+    }
     const sumKcal = protein * 4 + fat * 9 + carbs * 4;
 
     return Object.freeze({
@@ -79,15 +105,11 @@
       fat,
       carbs,
       macrosKcal: sumKcal,
-      macroPreset,
+      macroPreset: isRecomposition ? 'recomposition' : macroPreset,
       goal,
       activity,
       weightKg,
-      percentages: Object.freeze({
-        protein: Math.round(ratios.protein * 100),
-        fat: Math.round(ratios.fat * 100),
-        carbs: Math.round(ratios.carbs * 100)
-      })
+      percentages
     });
   }
 
