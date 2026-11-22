@@ -15,14 +15,12 @@
     { id: 'dinner', name: 'Kolacja', icon: '🌙' },
     { id: 'snack', name: 'Przekąski', icon: '🍎' }
   ];
-  const $ = selector => document.querySelector(selector);
-  const $$ = selector => [...document.querySelectorAll(selector)];
+  const { query: $, queryAll: $$, escapeText: safeText } = globalThis.MojBilansDom;
   const nf = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 0 });
   const nf1 = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 1 });
   const todayKey = () => dateKey(new Date());
   const dateKey = date => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
   const toDate = key => new Date(`${key}T12:00:00`);
-  const safeText = x => String(x ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const isNumber = x => x !== null && x !== '' && Number.isFinite(Number(x));
   const number = x => isNumber(x) ? Number(x) : null;
   const mealValid = x => MEALS.some(meal => meal.id === x);
