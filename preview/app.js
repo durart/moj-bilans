@@ -881,14 +881,14 @@
   // v0.2: ręczny dziennik wody, dzienna suma i cofnięcie ostatniego wpisu.
   function renderWater() { globalThis.MojBilansWaterUI.render(state, $, value => nf.format(value), pct); }
   function addWater(ml) {
-    if (!Number.isFinite(ml) || ml < 1 || ml > 5000) return;
+    if (!globalThis.MojBilansWaterDomain.validAmount(ml)) return;
     if (commitMutation(draft => { draft.water.push({ id: productId(), date: draft.selectedDate, ml }); })) {
       renderAll(); toast(`Dodano ${nf.format(ml)} ml wody`);
     }
   }
   function undoWater() {
-    const i = state.water.map((w, index) => w.date === state.selectedDate ? index : -1).filter(x => x >= 0).pop();
-    if (i === undefined) return;
+    const i = globalThis.MojBilansWaterDomain.lastIndex(state.water, state.selectedDate);
+    if (i === -1) return;
     if (commitMutation(draft => { draft.water.splice(i, 1); })) { renderAll(); toast('Cofnięto ostatni wpis wody'); }
   }
   // v0.2: masa ciała, datowany dziennik, proporcjonalna oś czasu i cel.
