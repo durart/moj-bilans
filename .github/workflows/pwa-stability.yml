@@ -88,7 +88,7 @@ jobs:
           git worktree add -B preview-release /tmp/moj-bilans-preview origin/main
           mkdir -p /tmp/moj-bilans-preview/preview
           echo "Source preview revision: $(git rev-parse HEAD)"
-          echo "Source preview version: $(grep -o 'TEST · Mój Bilans 2.7.1' preview/index.html | head -1)"
+          echo "Source preview version: $(grep -o 'TEST · Mój Bilans 2.8.0' preview/index.html | head -1)"
           rsync -a --delete preview/ /tmp/moj-bilans-preview/preview/
           sha256sum preview/index.html /tmp/moj-bilans-preview/preview/index.html
           git -C /tmp/moj-bilans-preview ls-files -v preview/index.html
@@ -120,12 +120,12 @@ jobs:
           URL="https://durart.github.io/moj-bilans/preview/"
           for attempt in {1..12}; do
             if curl --fail --silent --show-error --location "$URL" -o /tmp/bilans-preview.html &&
-               grep -q 'TEST · Mój Bilans 2.7.1' /tmp/bilans-preview.html; then
+               grep -q 'TEST · Mój Bilans 2.8.0' /tmp/bilans-preview.html; then
               break
             fi
             sleep 10
           done
-          grep -q 'TEST · Mój Bilans 2.7.1' /tmp/bilans-preview.html
+          grep -q 'TEST · Mój Bilans 2.8.0' /tmp/bilans-preview.html
           grep -q 'moj-bilans-preview' <(curl --fail --silent --show-error --location "${URL}sw.js")
           grep -q 'moj-bilans-preview-v27' <(curl --fail --silent --show-error --location "${URL}app.js?v=2.7.1")
           grep -q 'MojBilansBackup' <(curl --fail --silent --show-error --location "${URL}backup-validation.js?v=2.7.1")
