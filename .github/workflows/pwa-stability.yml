@@ -63,3 +63,36 @@ jobs:
           name: stability-271-screenshots
           path: test-artifacts/
           if-no-files-found: ignore
+
+  publish-preview:
+    needs: [verify, browser]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/fix/stabilizacja-2.7.1'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Publish only isolated preview directory to Pages branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add -B preview-release /tmp/moj-bilans-preview origin/main
+          mkdir -p /tmp/moj-bilans-preview/preview
+          rsync -a --delete preview/ /tmp/moj-bilans-preview/preview/
+          cd /tmp/moj-bilans-preview
+          git add -A -- preview/
+          if git diff --cached --quiet; then
+            echo "Preview already up to date"
+            exit 0
+          fi
+          if git diff --cached --name-only | grep -v '^preview/'; then
+            echo "Refusing to modify production paths" >&2
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "test(staging): publish verified Mój Bilans 2.7.1 preview"
+          git push origin HEAD:main
