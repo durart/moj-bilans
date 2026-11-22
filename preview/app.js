@@ -1529,11 +1529,22 @@
     // v0.6: podłącz zintegrowaną wyszukiwarkę (ziemniaki/produkty podstawowe + OFF).
     // Jeśli moduł się nie załaduje, zachowaj starą wyszukiwarkę, aby nie blokować dziennika.
     $('#searchForm').addEventListener('submit', searchName);
-    import('../interfejs-wyszukiwarki.mjs?v=np2.1.1').then(({ mountFoodSearch }) => {
+    import('./interfejs-wyszukiwarki.mjs?v=2.7.1-staging').then(({ mountFoodSearch }) => {
       $('#searchForm').removeEventListener('submit', searchName);
       mountFoodSearch({
         form: $('#searchForm'), input: $('#searchName'), results: $('#searchResults'),
         status: $('#foodSearchStatus'),
+        isFavorite: product => state.productFavorites.includes(favoriteProductKey({name:product.name,brand:product.brand,ean:product.code})),
+        onFavorite: product => {
+          const key = favoriteProductKey({name:product.name,brand:product.brand,ean:product.code});
+          if (!commitMutation(draft => {
+            draft.productFavorites = draft.productFavorites.includes(key)
+              ? draft.productFavorites.filter(item => item !== key)
+              : [...draft.productFavorites, key];
+          })) return false;
+          renderProducts();
+          return true;
+        },
         onSelect: product => selectProduct({
           name: product.name, brand: product.brand || '', ean: product.code || '',
           source: product.source || 'Baza podstawowa',
