@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="./premium-food-search.css?v=layout-df22-pfs23-20261121-r2" />
   <link rel="stylesheet" href="./np-history-24.css?v=layout-df22-pfs23-20261121-r2" />
   <link rel="stylesheet" href="./np-body-25.css?v=layout-df22-pfs23-20261121-r2" />
+  <link rel="stylesheet" href="./goal-calculator.css?v=gp26t1" />
   <title>Mój Bilans — Daily Focus + Historia 2.4 + Body Progress 2.5 · TEST</title>
 </head>
 <body>
@@ -204,6 +205,69 @@
       <section id="page-settings" class="page" aria-label="Ustawienia">
         <div class="page-heading"><div class="eyebrow">DOPASUJ DO SIEBIE</div><h1>Ustawienia</h1><p>Twoje cele, dane i prywatność.</p></div>
         <form id="goalsForm" class="panel settings-form"><h3>Cele dzienne</h3><label>Kalorie <span>kcal</span><input id="goalKcal" type="number" min="1" max="10000" inputmode="numeric" required /></label><label>Białko <span>g</span><input id="goalProtein" type="number" min="1" max="1000" inputmode="numeric" required /></label><label>Węglowodany <span>g</span><input id="goalCarbs" type="number" min="1" max="1000" inputmode="numeric" required /></label><label>Tłuszcze <span>g</span><input id="goalFats" type="number" min="1" max="1000" inputmode="numeric" required /></label><label>Woda <span>ml</span><input id="goalWater" type="number" min="100" max="10000" step="50" inputmode="numeric" required /></label><button class="primary-button" type="submit">Zapisz cele</button></form>
+        <section class="panel gp-panel" aria-labelledby="gpTitle">
+          <div class="gp-header">
+            <div><span class="np-eyebrow">ODŻYWIANIE / KALKULATOR CELÓW</span><h3 id="gpTitle">Wylicz kalorie i makro</h3>
+              <p>Wylicz propozycję z wieku, wzrostu, masy ciała i aktywności. Obecne cele pozostaną bez zmian, dopóki ich nie zapiszesz.</p></div>
+            <span class="gp-tag">Opcjonalnie</span>
+          </div>
+          <form id="gpForm" novalidate>
+            <div class="gp-fields">
+              <label>Wiek (lata)<input id="gpAge" type="number" min="18" max="100" step="1" inputmode="numeric" placeholder="np. 47" required></label>
+              <label>Wzrost (cm)<input id="gpHeight" type="number" min="120" max="230" step="1" inputmode="numeric" placeholder="np. 179" required></label>
+              <label>Masa ciała (kg)<input id="gpWeight" type="number" min="30" max="350" step="0.1" inputmode="decimal" placeholder="np. 99,5" required><span id="gpWeightSource" class="gp-field-hint">Ostatnia waga z Pomiarów lub wpisana ręcznie.</span></label>
+              <label>Wariant równania
+                <select id="gpEquation" required><option value="">Wybierz wariant</option><option value="male">Równanie dla mężczyzn</option><option value="female">Równanie dla kobiet</option></select>
+              </label>
+              <label>Typowa aktywność
+                <select id="gpActivity" required>
+                  <option value="">Wybierz poziom</option>
+                  <option value="sedentary">Mała (×1,2)</option>
+                  <option value="light">Lekka (×1,375)</option>
+                  <option value="moderate">Umiarkowana (×1,55)</option>
+                  <option value="high">Wysoka (×1,725)</option>
+                </select>
+              </label>
+              <label>Cel
+                <select id="gpGoal" required>
+                  <option value="">Wybierz cel</option>
+                  <option value="maintain">Utrzymanie masy</option>
+                  <option value="reduce10">Redukcja łagodna (−10%)</option>
+                  <option value="reduce15">Redukcja umiarkowana (−15%)</option>
+                  <option value="reduce20">Redukcja większa (−20%)</option>
+                  <option value="gain5">Przyrost mały (+5%)</option>
+                  <option value="gain10">Przyrost (+10%)</option>
+                </select>
+              </label>
+              <label>Podział makroskładników
+                <select id="gpMacroPreset" required>
+                  <option value="balanced">Zbilansowany: B25 / T30 / W45%</option>
+                  <option value="higherProtein">Więcej białka: B30 / T25 / W45%</option>
+                  <option value="higherCarbs">Więcej węgli: B20 / T25 / W55%</option>
+                </select>
+              </label>
+            </div>
+            <p class="gp-note">Uwzględnij treningi w wyborze aktywności — nie doliczaj ich ponownie do celu. Równanie jest oszacowaniem dla dorosłych, a nie indywidualnym pomiarem metabolizmu.</p>
+            <div class="gp-actions"><button class="gp-primary" type="submit" id="gpCalculate">Wylicz propozycję</button></div>
+          </form>
+          <p id="gpStatus" class="gp-status" role="status" aria-live="polite">Wartości zapisane w aplikacji pozostają bez zmian.</p>
+          <div id="gpResult" class="gp-result hidden" aria-labelledby="gpResultTitle">
+            <h4 id="gpResultTitle">Proponowane cele dzienne</h4>
+            <div class="gp-result-cards">
+              <div class="gp-result-card"><span>BMR — spoczynkowe kcal</span><strong id="gpBmr">—</strong></div>
+              <div class="gp-result-card"><span>TDEE — utrzymanie</span><strong id="gpTdee">—</strong></div>
+              <div class="gp-result-card gp-highlight"><span>Cel kalorii</span><strong id="gpCalories">—</strong></div>
+            </div>
+            <div class="gp-macros">
+              <div class="gp-macro"><span>Białko</span><strong id="gpProtein">—</strong><small id="gpProteinRatio">—</small></div>
+              <div class="gp-macro"><span>Tłuszcze</span><strong id="gpFat">—</strong><small id="gpFatRatio">—</small></div>
+              <div class="gp-macro"><span>Węglowodany</span><strong id="gpCarbs">—</strong><small id="gpCarbsRatio">—</small></div>
+            </div>
+            <p id="gpComparison" class="gp-result-meta"></p>
+            <p class="gp-disclaimer">To punkt wyjścia, nie obietnica tempa utraty masy. Zweryfikuj go trendem wagi i samopoczuciem. Przy szczególnych potrzebach zdrowotnych uzgodnij cele ze specjalistą.</p>
+            <div class="gp-actions"><button id="gpApply" class="gp-primary" type="button" disabled>Przenieś do pól celów</button></div>
+          </div>
+        </section>
         <section class="panel np21-health" aria-labelledby="np21StatusTitle">
           <h3 id="np21StatusTitle">Bezpieczeństwo danych · 2.1</h3>
           <p id="np21SaveStatus" role="status" aria-live="polite">Sprawdzam pamięć aplikacji…</p>
@@ -308,6 +372,8 @@
   <script src="./np-trends.js?v=layout-df22-pfs23-20261121-r2" defer></script>
   <script src="./np-history-24.js?v=layout-df22-pfs23-20261121-r2" defer></script>
   <script src="./np-body-25.js?v=layout-df22-pfs23-20261121-r2" defer></script>
+  <script src="./goal-calculator.js?v=gp26t1" defer></script>
+  <script src="./goal-calculator-ui.js?v=gp26t1" defer></script>
   <script src="./app.js?v=layout-df22-pfs23-20261121-r2" defer></script>
   <script src="./np-ui.js?v=layout-df22-pfs23-20261121-r2" defer></script>
   <script src="./pwa-updater.js?v=layout-df22-pfs23-20261121-r2" defer></script>
