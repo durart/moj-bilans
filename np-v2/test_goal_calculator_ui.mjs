@@ -19,7 +19,7 @@ const el = Object.fromEntries(names.map(name => [name, {
     add(className) { el[name].classes.add(className); },
     remove(className) { el[name].classes.delete(className); }
   },
-  addEventListener(type, handler) { eventMap.set(name + ':' + type, handler); },
+  addEventListener(type, handler) { const key = name + ':' + type; eventMap.set(key, [...(eventMap.get(key) || []), handler]); },
   scrollIntoView() {}, focus() {}
 }]));
 const document = { readyState: 'complete', getElementById: id => el[id] || null };
@@ -27,9 +27,9 @@ const window = { document };
 vm.runInNewContext(source, { window });
 vm.runInNewContext(uiSource, { window, document, Intl, Number, Error, Object, String });
 const fire = (id, eventType) => {
-  const handler = eventMap.get(id + ':' + eventType);
-  assert.ok(handler, 'missing listener ' + id + ':' + eventType);
-  handler({ preventDefault() {} });
+  const handlers = eventMap.get(id + ':' + eventType);
+  assert.ok(handlers?.length, 'missing listener ' + id + ':' + eventType);
+  for (const handler of handlers) handler({ preventDefault() {} });
 };
 const check = (title, fn) => { fn(); console.log('PASS ' + title); };
 check('activity descriptions explain steps and training without changing model categories', () => {
