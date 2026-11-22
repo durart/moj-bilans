@@ -205,7 +205,7 @@ try {
       if(!('serviceWorker' in navigator))return false;
       const keys=await caches.keys();
       return !!navigator.serviceWorker.controller &&
-        keys.includes('moj-bilans-np-v2-cache-layout-parity-v1');
+        keys.includes('moj-bilans-np-v2-cache-goal-calculator-t1');
     },null,{timeout:30000});
     const reg=await page.evaluate(async ()=>{
       const x=await navigator.serviceWorker.getRegistration('./');
@@ -218,6 +218,27 @@ try {
     assert.equal(await page.locator('#npFoodCount').innerText(),'1');
     assert.equal(await page.locator('#npHistoryChart').count(),1);
     await context.setOffline(false);
+  });
+  verify('Goal calculator preview requires explicit confirmation before changing goals',async ()=>{
+    await page.locator('.nav-item[data-page="settings"]').click();
+    const oldGoal=await page.locator('#goalKcal').inputValue();
+    await page.locator('#gpAge').fill('47');
+    await page.locator('#gpHeight').fill('179');
+    await page.locator('#gpWeight').fill('100');
+    await page.locator('#gpEquation').selectOption('male');
+    await page.locator('#gpActivity').selectOption('light');
+    await page.locator('#gpGoal').selectOption('reduce10');
+    await page.locator('#gpMacroPreset').selectOption('higherProtein');
+    await page.locator('#gpCalculate').click();
+    assert.match(await page.locator('#gpTdee').innerText(),/kcal/);
+    assert.equal(await page.locator('#goalKcal').inputValue(),oldGoal);
+    assert.equal(await page.locator('#gpApply').isEnabled(),true);
+    await page.locator('#gpApply').click();
+    assert.notEqual(await page.locator('#goalKcal').inputValue(),oldGoal);
+    await page.reload({waitUntil:'networkidle'});
+    await page.locator('.nav-item[data-page="settings"]').click();
+    assert.equal(await page.locator('#goalKcal').inputValue(),oldGoal,
+      'Unconfirmed preview must not persist target changes');
   });
   verify('Brak błędów JavaScript w aplikacji',async ()=>{
     assert.deepEqual(pageErrors,[]);
