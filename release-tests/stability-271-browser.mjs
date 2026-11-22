@@ -97,9 +97,10 @@ try {
   await test.evaluate(() => navigator.serviceWorker.ready);
   await test.reload();
   const stored = () => test.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-preview-v27')));
+  let uploadNumber = 0;
   const upload = async payload => {
     await test.locator('#importData').setInputFiles([]);
-    await test.locator('#importData').setInputFiles({name:'test-backup.json',mimeType:'application/json',buffer:Buffer.from(typeof payload === 'string' ? payload : JSON.stringify(payload))});
+    await test.locator('#importData').setInputFiles({name:'test-backup-' + (++uploadNumber) + '.json',mimeType:'application/json',buffer:Buffer.from(typeof payload === 'string' ? payload : JSON.stringify(payload))});
     await test.waitForFunction(() => document.querySelector('#importData').value === '');
   };
   await check('Preview uses separate diary, IndexedDB, cache and PWA scope', async () => {
