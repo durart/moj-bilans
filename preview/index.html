@@ -3,72 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#101b26" />
+  <meta name="theme-color" content="#0a1420" />
   <meta name="description" content="Dziennik kalorii i makro, woda, waga oraz obwody ciała z wykresami i Open Food Facts." />
   <meta name="color-scheme" content="dark" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="icon" href="../icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="../icons/icon-192.png" />
-  <link rel="stylesheet" href="./style.css" />
-  <link rel="stylesheet" href="./wyszukiwarka.css" />
-  <title>Mój Bilans TEST — cebularz w wyszukiwarce</title>
-</head>
-<body>
-<div class="preview-banner" role="status">🧪 WERSJA TESTOWA · cebularz w czterech wariantach · dane oddzielone od produkcji</div>
+  <link rel="manifest" href="../manifest.webmanifest?v=icon-large-maskable-20261122-v2" />
+  <link rel="icon" type="image/png" sizes="48x48" href="../icons/favicon-neon-large-48.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../icons/apple-touch-neon-large-180.png" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../wyszukiwarka.css" />
+  <link rel="stylesheet" href="../np-design.css?v=np2.1.0" />
+  <link rel="stylesheet" href="../daily-focus.css?v=df2.2.0" />
+  <link rel="stylesheet" href="../premium-food-search.css?v=pfs2.3.0" />
+  <link rel="stylesheet" href="../np-history-24.css?v=2.5.0" />
+  <link rel="stylesheet" href="../np-body-25.css?v=2.5.0" />
+  <link rel="stylesheet" href="../goal-calculator.css?v=2.6.2" />
+  <title>TEST 2.7 · Mój Bilans — Daily Focus i kalkulator kalorii 2.6.2</title>
+<style>
+.recipe-builder{margin:22px 0 32px}.recipe-card{background:var(--card,#17283a);border:1px solid rgba(130,160,185,.3);border-radius:16px;padding:16px;margin:12px 0}.recipe-ingredient{border:1px solid rgba(130,160,185,.25);padding:12px;border-radius:12px;margin:12px 0}.recipe-ingredient-heading,.recipe-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between}.recipe-ingredient-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.recipe-ingredient-grid label{font-size:12px}.recipe-ingredient-grid input,.recipe-card input,.recipe-card select{display:block;width:100%;max-width:100%;min-width:0;padding:10px;margin:5px 0 10px;border-radius:9px;border:1px solid #607489;background:#102033;color:#fff}.recipe-search-results{display:grid;gap:5px}.recipe-search-option{padding:10px;text-align:left;border-radius:8px;background:#25415a;color:#fff;border:1px solid #526e86}.recipe-totals{padding:12px 0;line-height:1.8}.recipe-card>strong{display:block;margin-bottom:8px}
+</style></head>
+<body><div role="status" style="padding:10px;background:#274b5c;color:white;text-align:center;font-weight:700">🧪 TEST 2.7 — oddzielne dane, bez wpływu na produkcję</div>
   <div class="app-shell">
     <header class="topbar">
       <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M7 23h26" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M9 25c0-8 4-14 11-14s11 6 11 14" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="20" cy="8" r="2" fill="currentColor"/></svg></div>
-      <div class="brand-copy"><strong>Mój Bilans</strong><span>Twoje odżywianie pod kontrolą</span></div>
+      <div class="brand-copy"><strong>Mój Bilans</strong><span id="dfTopDate">Twój dzienny bilans</span></div>
       <button class="icon-button" id="todayButton" type="button" aria-label="Przejdź do dzisiaj" title="Dzisiaj"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg></button>
     </header>
 
     <main>
-      <section id="page-journal" class="page active" aria-label="Dziennik kalorii">
-        <div class="date-bar">
-          <button class="chevron" id="prevDay" aria-label="Poprzedni dzień">‹</button>
-          <div class="date-center"><div class="eyebrow" id="dateLabel">Dzisiaj</div><button id="datePickerTrigger" class="date-title" type="button"><span id="dateText">—</span><span class="small-chevron">⌄</span></button><input type="date" id="dateInput" class="sr-only" aria-label="Wybierz dzień"></div>
-          <button class="chevron" id="nextDay" aria-label="Następny dzień">›</button>
+      <section id="page-journal" class="page active df-journal" aria-label="Dziennik kalorii">
+        <div class="date-bar df-date-bar" aria-label="Wybierz dzień dziennika">
+          <button class="chevron df-day-arrow" id="prevDay" type="button" aria-label="Poprzedni dzień">‹</button>
+          <div class="date-center"><span class="eyebrow" id="dateLabel">Dzisiaj</span><button id="datePickerTrigger" class="date-title" type="button"><span id="dateText">—</span><span class="small-chevron">⌄</span></button><input type="date" id="dateInput" class="sr-only" aria-label="Wybierz dzień"></div>
+          <button class="chevron df-day-arrow" id="nextDay" type="button" aria-label="Następny dzień">›</button>
         </div>
 
-        <section class="hero panel" aria-labelledby="kcalHeading">
-          <div class="hero-title"><span class="eyebrow" id="kcalHeading">DZIENNY BILANS</span><span class="target-label">Cel: <b id="goalInline">2300</b> kcal</span></div>
-          <div class="hero-main">
-            <div class="ring" id="calorieRing"><div class="ring-center"><span class="ring-number" id="caloriesUsed">0</span><span class="ring-unit">zjedzone kcal</span></div></div>
-            <div class="macro-grid" aria-label="Dzienny bilans makroskładników">
-              <div class="macro">
-                <div class="macro-head"><span>Białko</span><b id="proteinValue">0 g</b></div>
-                <div id="proteinTrack" class="track macro-track" role="img" aria-label="Białko: 0 z 160 g"><div id="proteinBar" class="fill protein"></div><div id="proteinOver" class="macro-over protein-over"></div></div>
-                <div class="macro-footer"><small id="proteinGoalLabel">cel 160 g</small><small id="proteinExcess" class="macro-excess-note"></small></div>
+        <section class="hero panel df-hero" aria-labelledby="kcalHeading">
+          <div class="df-hero-heading"><span class="df-label" id="kcalHeading">DZIENNY BILANS</span><span class="df-hero-live"><span class="df-signal-dot" aria-hidden="true"></span> Na bieżąco</span></div>
+          <div class="hero-main df-hero-main">
+            <div class="ring df-ring" id="calorieRing"><div class="ring-center"><span class="ring-number" id="caloriesUsed">0</span><span class="ring-unit">kcal</span></div></div>
+            <div class="df-hero-right">
+              <div class="df-goals">
+                <div class="df-goal-line"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v4M22 12h-4"/></svg><span>Cel: <strong id="goalInline">2300</strong> kcal</span></div>
+                <div class="df-goal-line"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22c4.3 0 7-3 7-7.2 0-3.1-1.3-5.1-3-7.2-.1 3-2 4-2 4C14 7.5 12 4.4 9 2c.3 4.7-3 6.8-3 12.8C6 19 8 22 12 22z"/></svg><span>Pozostało: <strong id="remainingCalories" class="df-remaining">2300</strong> kcal</span></div>
               </div>
-              <div class="macro">
-                <div class="macro-head"><span>Węglowodany</span><b id="carbValue">0 g</b></div>
-                <div id="carbTrack" class="track macro-track" role="img" aria-label="Węglowodany: 0 z 240 g"><div id="carbBar" class="fill carbs"></div><div id="carbOver" class="macro-over carbs-over"></div></div>
-                <div class="macro-footer"><small id="carbGoalLabel">cel 240 g</small><small id="carbExcess" class="macro-excess-note"></small></div>
-              </div>
-              <div class="macro">
-                <div class="macro-head"><span>Tłuszcze</span><b id="fatValue">0 g</b></div>
-                <div id="fatTrack" class="track macro-track" role="img" aria-label="Tłuszcze: 0 z 75 g"><div id="fatBar" class="fill fats"></div><div id="fatOver" class="macro-over fats-over"></div></div>
-                <div class="macro-footer"><small id="fatGoalLabel">cel 75 g</small><small id="fatExcess" class="macro-excess-note"></small></div>
+              <div class="macro-grid df-macros" aria-label="Dzienny bilans makroskładników">
+                <div class="macro df-macro">
+                  <div class="macro-head"><span>Białko</span><b id="proteinValue">0 g</b></div>
+                  <div id="proteinTrack" class="track macro-track" role="img" aria-label="Białko: 0 z 160 g"><div id="proteinBar" class="fill protein"></div><div id="proteinOver" class="macro-over protein-over"></div></div>
+                  <div class="macro-footer"><small id="proteinGoalLabel">cel 160 g</small><small id="proteinExcess" class="macro-excess-note"></small></div>
+                </div>
+                <div class="macro df-macro">
+                  <div class="macro-head"><span>Tłuszcze</span><b id="fatValue">0 g</b></div>
+                  <div id="fatTrack" class="track macro-track" role="img" aria-label="Tłuszcze: 0 z 75 g"><div id="fatBar" class="fill fats"></div><div id="fatOver" class="macro-over fats-over"></div></div>
+                  <div class="macro-footer"><small id="fatGoalLabel">cel 75 g</small><small id="fatExcess" class="macro-excess-note"></small></div>
+                </div>
+                <div class="macro df-macro">
+                  <div class="macro-head"><span>Węglowodany</span><b id="carbValue">0 g</b></div>
+                  <div id="carbTrack" class="track macro-track" role="img" aria-label="Węglowodany: 0 z 240 g"><div id="carbBar" class="fill carbs"></div><div id="carbOver" class="macro-over carbs-over"></div></div>
+                  <div class="macro-footer"><small id="carbGoalLabel">cel 240 g</small><small id="carbExcess" class="macro-excess-note"></small></div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="hero-stats"><div><span class="stat-caption">Pozostało</span><strong class="stat-big" id="remainingCalories">2300</strong><span class="stat-caption">kcal do celu</span></div><div><span class="stat-caption">Dzienny cel</span><strong class="stat-target" id="dailyGoal">2300 <small>kcal</small></strong></div></div>
+          <div class="df-hero-actions">
+            <button id="npQuickAdd" type="button" class="df-action-main"><span class="df-action-icon" aria-hidden="true">＋</span> Dodaj produkt</button>
+            <button id="npQuickRecent" type="button" class="df-action-quick"><span class="df-flash" aria-hidden="true">ϟ</span> Szybkie dodanie</button>
+          </div>
+          <button id="npQuickEan" type="button" class="df-ean-link"><span aria-hidden="true">▥</span> Zeskanuj lub wpisz kod EAN</button>
           <p id="macroWarning" class="macro-warning hidden">≥ oznacza, że niektóre produkty nie mają pełnego makro. Suma może być wyższa.</p>
         </section>
 
-        <section class="panel water-panel" aria-labelledby="waterHeading">
-          <div class="water-top"><div><div class="eyebrow">NAWODNIENIE</div><h2 id="waterHeading">Woda <span aria-hidden="true">💧</span></h2></div><div class="water-value"><strong id="waterTotal">0 ml</strong><small>z <span id="waterGoalText">2500</span> ml</small></div></div>
+        <div class="section-title df-meals-heading"><div><h2>Dzisiejsze posiłki</h2><p>Dotknij posiłku, aby zobaczyć i edytować produkty</p></div><button class="text-button" id="addFast" type="button">+ Dodaj</button></div>
+        <div id="mealsContainer" class="meals df-meals"></div>
+
+        <section class="panel water-panel df-water" aria-labelledby="waterHeading">
+          <div class="water-top">
+            <div class="df-water-title"><span class="df-water-icon" aria-hidden="true"><svg viewBox="0 0 28 32" width="29" height="32" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 2C10.7 8 4 15.4 4 21.2A10 10 0 0 0 24 21.2C24 15.4 17.3 8 14 2Z"/><path d="M9 22a5 5 0 0 0 5 5" opacity=".65"/></svg></span><div><h2 id="waterHeading">Woda</h2><div class="df-water-numbers"><strong id="waterTotal">0 ml</strong><span> / <span id="waterGoalText">2500</span> ml</span></div></div></div>
+            <div class="water-actions"><button class="secondary-button" type="button" data-water="250">+250 ml</button><button class="secondary-button" type="button" data-water="500">+500 ml</button></div>
+          </div>
           <div class="track water-track"><div class="fill water-fill" id="waterBar"></div></div>
-          <div class="water-actions"><button class="secondary-button" type="button" data-water="250">+ 250 ml</button><button class="secondary-button" type="button" data-water="500">+ 500 ml</button><form id="waterForm" class="water-form"><label for="waterAmount" class="sr-only">Inna ilość wody w mililitrach</label><input id="waterAmount" type="number" min="1" max="5000" step="1" inputmode="numeric" placeholder="Inne ml" required /><button type="submit" class="secondary-button">Dodaj</button></form></div>
-          <div class="water-bottom"><span id="waterCount">0 zapisów</span><button id="undoWater" type="button" class="flat-button">Cofnij ostatni wpis</button></div>
+          <div class="df-water-more"><form id="waterForm" class="water-form"><label for="waterAmount" class="sr-only">Inna ilość wody w mililitrach</label><input id="waterAmount" type="number" min="1" max="5000" step="1" inputmode="numeric" placeholder="Inne ml" required /><button type="submit" class="secondary-button">Dodaj</button></form><span id="waterCount">0 zapisów</span><button id="undoWater" type="button" class="flat-button">Cofnij ostatni wpis</button></div>
         </section>
         <section class="favorite-quick" id="favoriteQuickSection"><div class="mini-heading"><span>⭐ Ulubione posiłki</span><button id="favoritesLink" type="button" class="text-button">Zobacz wszystkie</button></div><div id="favoriteQuick" class="fav-chips"></div></section>
-        <div class="section-title"><div><div class="eyebrow">TWÓJ DZIENNIK</div><h2>Posiłki</h2></div><button class="text-button" id="addFast" type="button">+ Dodaj produkt</button></div>
-        <p class="journal-entry-hint">Dotknij produktu, aby zobaczyć szczegóły, edytować porcję i makro lub usunąć pojedynczy wpis.</p>
-        <div id="mealsContainer" class="meals"></div>
-        <div class="bottom-hint">Dane zapisują się tylko na tym urządzeniu. <button id="openSettingsHint" type="button">Zrób kopię zapasową</button></div>
+        <section class="np-day-snapshot df-diary-facts" aria-label="Podsumowanie zapisów w wybranym dniu">
+          <div class="np-snapshot-item"><span>Posiłki</span><strong id="npMealCount">—</strong></div>
+          <div class="np-snapshot-item"><span>Produkty</span><strong id="npFoodCount">—</strong></div>
+          <div class="np-snapshot-item np-snapshot-budget"><span>Bilans celu</span><strong id="npBudgetStatus">—</strong></div>
+        </section>
+        <div id="np21SaveInline" class="np21-inline-save df-save-state" role="status" aria-live="polite">Sprawdzam zapis dziennika…</div>
+        <div class="bottom-hint">Dane zapisują się tylko na tym urządzeniu. <button id="openSettingsHint" type="button">Kopia zapasowa</button></div>
       </section>
 
       <section id="page-products" class="page" aria-label="Produkty">
@@ -80,13 +105,14 @@
       </section>
 
       <section id="page-history" class="page" aria-label="Historia">
-        <div class="page-heading"><div class="eyebrow">TWOJE POSTĘPY</div><h1>Historia</h1><p>Sprawdź średnie spożycie kalorii i makroskładników. Dotknij dnia, aby otworzyć dziennik.</p></div>
+        <div class="page-heading"><div class="eyebrow">TWOJE POSTĘPY</div><h1>Historia</h1><p>Twój plan w liczbach: kalorie, makro i porównanie dni. Dotknij dnia, aby otworzyć dziennik.</p></div>
         <section class="panel history-range" aria-labelledby="historyRangeTitle">
           <div class="history-range-title"><h2 id="historyRangeTitle">Średnie dzienne</h2><span>Wybierz okres</span></div>
           <div class="history-periods" role="group" aria-label="Zakres historii">
             <button type="button" data-history-period="7d" aria-pressed="false">7 dni</button>
             <button type="button" data-history-period="14d" aria-pressed="true" class="active">14 dni</button>
-            <button type="button" data-history-period="1m" aria-pressed="false">1 miesiąc</button>
+            <button type="button" data-history-period="30d" aria-pressed="false">30 dni</button>
+            <button type="button" data-history-period="1m" aria-pressed="false">1 mies.</button>
             <button type="button" data-history-period="6m" aria-pressed="false">6 miesięcy</button>
             <button type="button" data-history-period="1y" aria-pressed="false">1 rok</button>
             <button type="button" data-history-period="custom" aria-pressed="false">Własny zakres</button>
@@ -106,6 +132,28 @@
           </div>
           <div class="history-coverage"><span>Dni z wpisami: <strong id="historyDays">0</strong></span><p id="historyCoverage"></p></div>
         </section>
+        <section class="panel np-analytics" aria-labelledby="npAnalyticsTitle">
+          <div class="np-analytics-header"><div><span class="np-eyebrow">HISTORIA 2.4 / CENTRUM ANALIZ</span><h2 id="npAnalyticsTitle">Realizacja planu kalorycznego</h2></div><span class="np-analytics-tag">Przedział celu ±10%</span></div>
+          <div class="np-kpi-grid">
+            <div class="np-kpi"><span>Średnia vs cel</span><strong id="npGoalDifference">—</strong><small>Różnica względem aktualnego celu</small></div>
+            <div class="np-kpi"><span>Dni w przedziale celu</span><strong id="npGoalWindow">—</strong><small>90–110% celu kalorycznego</small></div>
+            <div class="np-kpi"><span>Dni powyżej przedziału</span><strong id="npGoalOver">—</strong><small>Powyżej 110% celu</small></div>
+            <div class="np-kpi"><span>Dni z wpisami</span><strong id="npCoverage">—</strong><small>Pokrycie okresu w dzienniku</small></div>
+          </div>
+          <div id="npGoalBandMeter" class="np-goal-band" role="img" aria-label="Rozkład dni względem celu kalorycznego"></div>
+          <p id="npGoalBandLegend" class="np-goal-band-legend"></p>
+          <p id="npGoalInsight" class="np-analytics-insight" aria-live="polite"></p>
+        </section>
+        <section class="panel np-trend-panel" aria-labelledby="npTrendTitle">
+          <div class="np-trend-heading"><div><span class="np-eyebrow">DANE Z DZIENNIKA</span><h2 id="npTrendTitle">Trend kalorii</h2></div><span class="np-trend-unit">kcal / dzień z wpisami</span></div>
+          <div id="npHistoryChart" class="np-history-chart" aria-live="polite"><p class="empty-chart">Dodaj posiłek, aby zobaczyć trend.</p></div>
+          <p class="np-trend-footnote">Puste lub kreskowane okresy oznaczają brak wpisów, a nie zero kalorii. Przy długich zakresach słupki pokazują średnią z zapisanych dni danego przedziału.</p>
+        </section>
+        <section class="panel np-compare-panel" aria-labelledby="npCompareTitle">
+          <span class="np-eyebrow">DZIEŃ PO DNIU</span><h2 id="npCompareTitle">Porównanie ostatnich 7 dni</h2>
+          <p>Wpisy z wybranego okresu. Różnica względem celu; brak wpisów nie oznacza zera. Wybierz dzień, aby przejść do dziennika.</p>
+          <div id="npDailyCompare" class="np-daily-compare"></div>
+        </section>
         <div class="history-list-heading"><h2>Historia dni</h2><span id="historyListScope"></span></div>
         <div id="historyList" class="history-list"></div>
         <button type="button" id="historyShowMore" class="secondary-button wide history-show-more hidden">Pokaż kolejne dni</button>
@@ -113,12 +161,25 @@
 
       <section id="page-weight" class="page" aria-label="Waga i obwody ciała">
         <div class="page-heading"><div class="eyebrow">POSTĘPY REDUKCJI</div><h1>Pomiary ciała</h1><p>Obserwuj wagę, brzuch, talię, klatkę piersiową i biceps — ze zmianami na wykresach.</p></div>
-        <div class="weight-overview"><div class="panel weight-stat"><span>Ostatni pomiar</span><strong id="weightLatest">—</strong><small id="weightLatestDate">Brak danych</small></div><div class="panel weight-stat"><span>Zmiana od początku</span><strong id="weightChange">—</strong><small id="weightChangeHint">Pierwszy pomiar</small></div><div class="panel weight-stat"><span>Cel masy ciała</span><strong id="weightGoalDisplay">90 kg</strong><small id="weightToGoal">Ustaw cel poniżej</small></div></div>
+        <div class="weight-overview"><div class="panel weight-stat"><span>Ostatni pomiar</span><strong id="weightLatest">—</strong><small id="weightLatestDate">Brak danych</small></div><div class="panel weight-stat"><span>Zmiana od początku</span><strong id="weightChange">—</strong><small id="weightChangeHint">Pierwszy pomiar</small></div><div class="panel weight-stat"><span>Cel masy ciała</span><strong id="weightGoalDisplay">90 kg</strong><small id="weightToGoal">Ustaw cel poniżej</small></div><div class="panel weight-stat"><span>Od poprzedniego ważenia</span><strong id="npWeightRecent">—</strong><small id="npWeightRecentDate">Co najmniej dwa pomiary</small></div></div>
+        <section class="panel np-body-progress" aria-labelledby="npBodyTitle">
+          <div class="np-body-head">
+            <div><span class="np-eyebrow">POMIARY 2.5 / BODY PROGRESS</span><h2 id="npBodyTitle">Twoja droga do celu</h2><p>Pomiar, wygładzony trend i rzeczywisty postęp.</p></div>
+            <span class="np-body-tag">Bez fikcyjnych pomiarów</span>
+          </div>
+          <div class="np-body-kpis">
+            <div class="np-body-kpi"><span>Postęp od pierwszego pomiaru</span><strong id="npBodyProgressPercent">—</strong><small>Względem obecnego celu masy ciała</small></div>
+            <div class="np-body-kpi"><span>Trend wygładzony</span><strong id="npBodySmoothed">—</strong><small id="npBodyTrendHint">Trend pojawi się po drugim ważeniu.</small></div>
+            <div class="np-body-kpi"><span>Pozostało do celu</span><strong id="npBodyTargetLeft">—</strong><small id="npBodyStatus">Brak pomiarów</small></div>
+          </div>
+          <div class="np-body-progress-meter"><div id="npBodyProgressBar" class="np-body-progress-fill" role="progressbar" aria-label="Postęp drogi do celu masy ciała" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div>
+          <p id="npBodyProgressDescription" class="np-body-progress-desc">Dodaj pierwszy pomiar, aby zobaczyć postęp.</p>
+        </section>
         <form id="weightEntryForm" class="panel compact-form"><h3>Zapisz pomiar</h3><div class="field-row"><label class="field-label">Data<input id="weightDate" type="date" required/></label><label class="field-label">Masa ciała (kg)<input id="weightKg" type="number" min="20" max="400" step="0.1" inputmode="decimal" placeholder="np. 102,5" required/></label></div><button type="submit" class="primary-button wide">Zapisz wagę</button><p class="help">Ponowny zapis w tym samym dniu zastąpi poprzedni pomiar.</p></form>
         <div class="panel weight-chart-panel"><div class="section-title weight-section-title"><div><div class="eyebrow">TWOJA HISTORIA</div><h2>Wykres masy ciała</h2></div></div><div id="weightChart" class="weight-chart"><p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p></div><div id="weightChartCaption" class="chart-caption"></div></div>
         <div class="panel compact-form"><form id="weightGoalForm"><h3>Twój cel</h3><label class="field-label">Docelowa masa ciała (kg)<input id="goalWeight" type="number" min="20" max="400" step="0.1" inputmode="decimal" required /></label><button class="secondary-button wide" type="submit">Zapisz cel wagi</button></form></div>
         <h3 class="subheading">Historia wagi</h3><div id="weightList" class="compact-list"></div>
-        <div class="body-divider"><span class="eyebrow">NOWOŚĆ W WERSJI 0.3</span><h2>Obwody ciała</h2><p class="help">Mierz zawsze w podobnych warunkach. Każdy obwód możesz zapisać oddzielnie, bez konieczności wpisywania pozostałych.</p></div>
+        <div class="body-divider"><span class="eyebrow">NOWOŚĆ W WERSJI 0.3</span><h2>Obwody ciała — porównania</h2><p class="help">Mierz zawsze w podobnych warunkach. Każdy obwód możesz zapisać oddzielnie, bez konieczności wpisywania pozostałych.</p></div>
         <div class="measure-overview" id="measurementOverview" aria-label="Ostatnie obwody ciała"></div>
         <form id="measurementForm" class="panel compact-form" autocomplete="off">
           <h3>Dodaj pomiar obwodów</h3>
@@ -138,7 +199,7 @@
             <select id="measurementChartType"><option value="abdomen">Brzuch</option><option value="waist">Talia</option><option value="chest">Klatka piersiowa</option><option value="biceps">Biceps</option></select>
           </label>
           <div id="measurementChart" class="weight-chart"><p class="empty-chart">Dodaj pomiary, aby zobaczyć wykres.</p></div>
-          <div id="measurementChartCaption" class="chart-caption"></div>
+          <div id="measurementChartCaption" class="chart-caption"></div><p id="npMeasureRecent" class="np-measure-recent" aria-live="polite"></p>
         </div>
         <h3 class="subheading">Historia obwodów</h3><div id="measurementList" class="compact-list"></div>
       </section>
@@ -146,6 +207,85 @@
       <section id="page-settings" class="page" aria-label="Ustawienia">
         <div class="page-heading"><div class="eyebrow">DOPASUJ DO SIEBIE</div><h1>Ustawienia</h1><p>Twoje cele, dane i prywatność.</p></div>
         <form id="goalsForm" class="panel settings-form"><h3>Cele dzienne</h3><label>Kalorie <span>kcal</span><input id="goalKcal" type="number" min="1" max="10000" inputmode="numeric" required /></label><label>Białko <span>g</span><input id="goalProtein" type="number" min="1" max="1000" inputmode="numeric" required /></label><label>Węglowodany <span>g</span><input id="goalCarbs" type="number" min="1" max="1000" inputmode="numeric" required /></label><label>Tłuszcze <span>g</span><input id="goalFats" type="number" min="1" max="1000" inputmode="numeric" required /></label><label>Woda <span>ml</span><input id="goalWater" type="number" min="100" max="10000" step="50" inputmode="numeric" required /></label><button class="primary-button" type="submit">Zapisz cele</button></form>
+        <section class="panel gp-panel" aria-labelledby="gpTitle">
+          <div class="gp-header">
+            <div><span class="np-eyebrow">ODŻYWIANIE / KALKULATOR CELÓW</span><h3 id="gpTitle">Wylicz kalorie i makro</h3>
+              <p>Wylicz propozycję z wieku, wzrostu, masy ciała i aktywności. Obecne cele pozostaną bez zmian, dopóki ich nie zapiszesz.</p></div>
+            <span class="gp-tag">Opcjonalnie</span>
+          </div>
+          <form id="gpForm" novalidate>
+            <div class="gp-fields">
+              <label>Wiek (lata)<input id="gpAge" type="number" min="18" max="100" step="1" inputmode="numeric" placeholder="np. 47" required></label>
+              <label>Wzrost (cm)<input id="gpHeight" type="number" min="120" max="230" step="1" inputmode="numeric" placeholder="np. 179" required></label>
+              <label>Masa ciała (kg)<input id="gpWeight" type="number" min="30" max="350" step="0.1" inputmode="decimal" placeholder="np. 99,5" required><span id="gpWeightSource" class="gp-field-hint">Ostatnia waga z Pomiarów lub wpisana ręcznie.</span></label>
+              <label>Wariant równania
+                <select id="gpEquation" required><option value="">Wybierz wariant</option><option value="male">Równanie dla mężczyzn</option><option value="female">Równanie dla kobiet</option></select>
+              </label>
+              <label>Aktywność — średnio w tygodniu
+                <select id="gpActivity" aria-describedby="gpActivityHint gpActivityGuide" required>
+                  <option value="">Wybierz na podstawie swojego tygodnia</option>
+                  <option value="sedentary">Mała — głównie siedzenie, mało kroków</option>
+                  <option value="light">Lekka — spacery, 1–2 treningi tygodniowo</option>
+                  <option value="moderate">Umiarkowana — ruch i 3–4 treningi tygodniowo</option>
+                  <option value="high">Wysoka — praca w ruchu i częste treningi</option>
+                </select>
+                <span id="gpActivityHint" class="gp-field-hint gp-activity-hint" aria-live="polite">Wybierz poziom, aby zobaczyć przykłady kroków i treningów.</span>
+                <span id="gpActivityGuide" class="gp-field-hint">Kroki i treningi to orientacyjne przykłady, nie ścisłe progi. Uwzględnij też pracę, spacery i intensywność ćwiczeń.</span>
+              </label>
+              <label>Cel
+                <select id="gpGoal" required>
+                  <option value="">Wybierz cel</option>
+                  <option value="maintain">Utrzymanie masy</option>
+                  <option value="recomposition">Rekompozycja — mniej tłuszczu, więcej mięśni</option>
+                  <option value="reduce10">Redukcja łagodna (−10%)</option>
+                  <option value="reduce15">Redukcja umiarkowana (−15%)</option>
+                  <option value="reduce20">Redukcja większa (−20%)</option>
+                  <option value="gain5">Przyrost mały (+5%)</option>
+                  <option value="gain10">Przyrost (+10%)</option>
+                </select>
+              </label>
+              <label>Podział makroskładników
+                <select id="gpMacroPreset" required>
+                  <option value="balanced">Zbilansowany: B25 / T30 / W45%</option>
+                  <option value="higherProtein">Więcej białka: B30 / T25 / W45%</option>
+                  <option value="higherCarbs">Więcej węgli: B20 / T25 / W55%</option>
+                </select>
+                <span id="gpRecompositionHint" class="gp-field-hint gp-recomposition-hint hidden" role="status">Przy rekompozycji proporcje są ustalane automatycznie: białko około 1,8 g/kg masy ciała (maksymalnie 35% kalorii), tłuszcze około 30%, węglowodany — pozostała energia. Wybrany wcześniej podział makro nie jest używany.</span>
+              </label>
+            </div>
+            <p class="gp-note">Przykład: przy pracy siedzącej, ok. 6 tys. kroków dziennie i 3 treningach siłowych tygodniowo możesz być między poziomem lekkim a umiarkowanym. Wybierz ostrożnie i koryguj według trendu masy ciała. Nie doliczaj treningów ponownie — już uwzględnia je aktywność. Równanie daje przybliżenie, a nie pomiar metabolizmu.</p>
+            <div class="gp-actions"><button class="gp-primary" type="submit" id="gpCalculate">Wylicz propozycję</button></div>
+          </form>
+          <p id="gpStatus" class="gp-status" role="status" aria-live="polite">Wartości zapisane w aplikacji pozostają bez zmian.</p>
+          <div id="gpResult" class="gp-result hidden" aria-labelledby="gpResultTitle">
+            <h4 id="gpResultTitle">Proponowane cele dzienne</h4>
+            <div class="gp-result-cards">
+              <div class="gp-result-card"><span>BMR — spoczynkowe kcal</span><strong id="gpBmr">—</strong></div>
+              <div class="gp-result-card"><span>TDEE — utrzymanie</span><strong id="gpTdee">—</strong></div>
+              <div class="gp-result-card gp-highlight"><span>Cel kalorii</span><strong id="gpCalories">—</strong></div>
+            </div>
+            <div class="gp-macros">
+              <div class="gp-macro"><span>Białko</span><strong id="gpProtein">—</strong><small id="gpProteinRatio">—</small></div>
+              <div class="gp-macro"><span>Tłuszcze</span><strong id="gpFat">—</strong><small id="gpFatRatio">—</small></div>
+              <div class="gp-macro"><span>Węglowodany</span><strong id="gpCarbs">—</strong><small id="gpCarbsRatio">—</small></div>
+            </div>
+            <p id="gpComparison" class="gp-result-meta"></p>
+            <p class="gp-disclaimer">To punkt wyjścia, nie obietnica tempa utraty masy ani przyrostu mięśni. Zweryfikuj go trendem wagi, obwodami, wynikami siłowymi i samopoczuciem. Przy szczególnych potrzebach zdrowotnych uzgodnij cele ze specjalistą.</p>
+            <div class="gp-actions"><button id="gpApply" class="gp-primary" type="button" disabled>Przenieś do pól celów</button></div>
+          </div>
+        </section>
+        <section class="panel np21-health" aria-labelledby="np21StatusTitle">
+          <h3 id="np21StatusTitle">Bezpieczeństwo danych · 2.1</h3>
+          <p id="np21SaveStatus" role="status" aria-live="polite">Sprawdzam pamięć aplikacji…</p>
+          <p id="np21BackupHealth" role="status" aria-live="polite">Sprawdzam lokalne punkty przywracania…</p>
+          <p id="np21UpdateStatus" role="status" aria-live="polite">Sprawdzam obsługę aktualizacji PWA…</p>
+          <div class="np21-health-actions">
+            <button id="np21VerifyBackup" type="button" class="secondary-button">Sprawdź integralność ostatniej kopii</button>
+            <button id="np21CheckUpdate" type="button" class="secondary-button">Sprawdź aktualizację</button>
+            <button id="np21ReloadUpdate" type="button" class="secondary-button hidden">Odśwież aplikację</button>
+          </div>
+          <p class="help">Kontrola kopii nie przywraca ani nie zmienia danych. Lokalna kopia pozostaje w przeglądarce, a pobranie osobnego pliku JSON trzeba potwierdzić w folderze Pobrane.</p>
+        </section>
         <div class="panel data-panel">
           <h3>📥 Pobierz kopię zapasową na telefon</h3>
           <p>Dane wpisujesz i zapisujesz w aplikacji lokalnie. Kliknij poniżej, aby otrzymać osobny plik JSON na telefon. Zazwyczaj znajdziesz go w folderze <strong>Pobrane / Downloads</strong>. Z tego miejsca możesz go ręcznie przesłać na Dysk Google.</p>
@@ -170,11 +310,11 @@
           <p class="help"><strong>Ważne:</strong> punkty przywracania w przeglądarce mogą zniknąć po wyczyszczeniu danych witryny, zmianie telefonu lub przeglądarki. Tylko pobrany plik JSON jest oddzielną kopią, którą możesz przenieść do Google Drive. Kopie w aplikacji nie są tworzone, gdy jest zamknięta.</p>
           <p class="help"><a href="https://drive.google.com/drive/my-drive" target="_blank" rel="noopener">📁 Otwórz swój Dysk Google</a> — pliki dodajesz tam ręcznie.</p>
         </div>
-        <div class="panel about-panel"><h3>Źródło informacji</h3><p>Wyszukiwanie produktów: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> — otwarta baza, licencja ODbL. Dane mogą być niekompletne lub błędne; weryfikuj z etykietą. Produkty podstawowe i owoce/warzywa: orientacyjne wartości referencyjne z opracowania na podstawie USDA FoodData Central (CC0), <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener">opis źródła</a>; węglowodany są przybliżeniem bez błonnika.</p><p>Wersja 0.8 BETA • Wspólna wyszukiwarka, orientacyjne owoce i warzywa offline, pomiary, lokalne kopie JSON bez logowania. Zapisane dzienniki pozostają zgodne z wcześniejszymi wersjami.</p></div>
+        <div class="panel about-panel"><h3>Źródło informacji</h3><p>Wyszukiwanie produktów: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> — otwarta baza, licencja ODbL. Dane mogą być niekompletne lub błędne; weryfikuj z etykietą. Produkty podstawowe i owoce/warzywa: orientacyjne wartości referencyjne z opracowania na podstawie USDA FoodData Central (CC0), <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener">opis źródła</a>; węglowodany są przybliżeniem bez błonnika.</p><p>Nutrition Performance v2.1 • Status zapisu, kontrola integralności lokalnych kopii oraz świadome aktualizacje PWA. Twoje dane pozostają na tym urządzeniu.</p></div>
       </section>
     </main>
 
-    <nav class="bottom-nav" aria-label="Nawigacja"><button class="nav-item selected" type="button" data-page="journal"><span class="nav-symbol">◫</span><span>Dziennik</span></button><button class="nav-item" type="button" data-page="products"><span class="nav-symbol">▤</span><span>Produkty</span></button><button class="nav-item" type="button" data-page="history"><span class="nav-symbol">▥</span><span>Historia</span></button><button class="nav-item" type="button" data-page="weight"><span class="nav-symbol">⚖</span><span>Pomiary</span></button><button class="nav-item" type="button" data-page="settings"><span class="nav-symbol">⚙</span><span>Ustawienia</span></button></nav>
+    <nav class="bottom-nav df-bottom-nav" aria-label="Nawigacja"><button class="nav-item selected" type="button" data-page="journal"><svg class="df-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3v3M15 3v3M8 11h8M8 15h5"/></svg><span>Dziennik</span></button><button class="nav-item" type="button" data-page="products"><svg class="df-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h16l-2 12H6L4 8zM9 9l3-6 3 6"/></svg><span>Produkty</span></button><button class="nav-item" type="button" data-page="history"><svg class="df-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20v-7M9 20V9M14 20V5M19 20V2"/></svg><span>Historia</span></button><button class="nav-item" type="button" data-page="weight"><svg class="df-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18 18 3l3 3L6 21l-3-3zM14 7l3 3M10 11l2 2M7 14l2 2"/></svg><span>Pomiary</span></button><button class="nav-item" type="button" data-page="settings"><svg class="df-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m10 2-.5 2.1-1.8.7-1.8-1.2L3.3 6.2l1.3 1.9-.7 1.8L2 10.4v3.2l2 .5.7 1.8-1.3 1.9 2.6 2.6 1.8-1.2 1.8.7L10 22h4l.5-2.1 1.8-.7 1.8 1.2 2.6-2.6-1.3-1.9.7-1.8 2-.5v-3.2l-2-.5-.7-1.8 1.3-1.9-2.6-2.6-1.8 1.2-1.8-.7L14 2h-4z"/></svg><span>Ustawienia</span></button></nav>
   </div>
 
   <div id="entryBackdrop" class="modal-backdrop hidden" aria-hidden="true"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="entryTitle">
@@ -201,9 +341,9 @@
     <form id="entryTransferForm" class="product-form hidden"><p id="entryTransferText" class="help"></p><label class="field-label">Do dnia<input type="date" id="entryTargetDate" required/></label><label class="field-label">Do posiłku<select id="entryTargetMeal"><option value="breakfast">Śniadanie</option><option value="lunch">Obiad</option><option value="dinner">Kolacja</option><option value="snack">Przekąski</option></select></label><button type="submit" id="entryTransferSubmit" class="primary-button wide">Kopiuj produkt</button><button id="entryCancelTransfer" type="button" class="flat-button">Anuluj</button></form>
   </section></div>
   <div id="copyBackdrop" class="modal-backdrop hidden" aria-hidden="true"><section class="modal compact-dialog" role="dialog" aria-modal="true" aria-labelledby="copyTitle"><div class="modal-handle"></div><div class="modal-top"><h2 id="copyTitle">Kopiuj posiłek</h2><button id="closeCopy" type="button" class="modal-close" aria-label="Zamknij">×</button></div><form id="copyForm" class="product-form"><label class="field-label">Z dnia<input id="copySourceDate" type="date" required/></label><label class="field-label">Posiłek źródłowy<select id="copySourceMeal"><option value="breakfast">Śniadanie</option><option value="lunch">Obiad</option><option value="dinner">Kolacja</option><option value="snack">Przekąski</option></select></label><div id="copyPreview" class="copy-preview">—</div><div class="help" id="copyTargetText"></div><label class="field-label">Docelowy posiłek<select id="copyTargetMeal"><option value="breakfast">Śniadanie</option><option value="lunch">Obiad</option><option value="dinner">Kolacja</option><option value="snack">Przekąski</option></select></label><button class="primary-button wide" type="submit" id="copySubmit">Kopiuj produkty</button></form></section></div>
-  <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-handle"></div><div class="modal-top"><h2 id="modalTitle">Dodaj produkt</h2><button id="modalClose" type="button" class="modal-close" aria-label="Zamknij">×</button></div>
-    <div id="lookupArea"><div class="mode-tabs"><button class="mode-tab active" data-mode="search" type="button">Szukaj</button><button class="mode-tab" data-mode="recent" type="button">Ostatnie</button><button class="mode-tab" data-mode="ean" type="button">Kod EAN</button><button class="mode-tab" data-mode="manual" type="button">Własny</button></div>
-      <div id="mode-search" class="mode-pane"><form id="searchForm" class="search-row"><input type="search" id="searchName" placeholder="np. bigos, pierogi, mięso, sos" aria-label="Nazwa produktu" required minlength="2" autocomplete="off" /><button type="submit" class="primary-button">Szukaj</button></form><p class="help">Wyszukiwanie odbywa się po kliknięciu przycisku, aby oszczędzać limity API.</p><section class="food-catalog-panel" aria-label="Wspólna baza produktów offline"><div class="food-catalog-head"><strong>📦 Produkty zapisane offline</strong><small>Wspólny katalog · Open Food Facts</small></div><p class="help">Produkty z różnych sklepów trafiają na jedną listę. Zapis do 100 popularnych produktów z Polski działa ręcznie; dane nie są automatycznie potwierdzane z etykietą.</p><button id="foodCatalogImport" type="button" class="secondary-button wide">Pobierz / odśwież produkty offline</button><p id="foodCatalogStatus" class="help" role="status" aria-live="polite">Katalog nie został jeszcze pobrany.</p><label class="food-filter-label" for="foodStoreFilter">Sklep (opcjonalnie)</label><select id="foodStoreFilter" class="food-filter-select"><option value="all">Wszystkie sklepy</option><option value="biedronka">Biedronka</option><option value="lidl">Lidl</option><option value="kaufland">Kaufland</option><option value="carrefour">Carrefour</option><option value="auchan">Auchan</option><option value="zabka">Żabka</option></select><p class="help">Filtr działa tylko dla produktów z rozpoznanym oznaczeniem sklepu w danych źródłowych.</p></section><p id="foodSearchStatus" class="help" role="status" aria-live="polite">Szukaj produktów lub dań: bigos, rosół, pierogi, pierś kurczaka, sos pieczeniowy. Nowe produkty i dania domowe działają offline; ich wartości są orientacyjne.</p><div id="searchResults" class="result-list"></div></div>
+  <div id="modalBackdrop" class="modal-backdrop pfs-backdrop hidden" aria-hidden="true"><section class="modal pfs-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="pfsMealContext"><div class="modal-handle"></div><div class="modal-top pfs-modal-top"><div class="pfs-modal-heading"><span class="pfs-heading-icon" aria-hidden="true">＋</span><span><h2 id="modalTitle">Dodaj produkt</h2><small id="pfsMealContext">Do posiłku: Śniadanie</small></span></div><button id="modalClose" type="button" class="modal-close" aria-label="Zamknij">×</button></div>
+    <div id="lookupArea"><div class="mode-tabs pfs-tabs" role="group" aria-label="Sposób dodawania produktu"><button class="mode-tab" data-mode="recent" type="button">◷ Ostatnie</button><button class="mode-tab active" data-mode="search" type="button">⌕ Szukaj</button><button class="mode-tab" data-mode="favorites" type="button">☆ Ulubione</button><button class="mode-tab" data-mode="ean" type="button">▥ EAN</button><button class="mode-tab" data-mode="manual" type="button">＋ Własny</button></div>
+      <div id="mode-search" class="mode-pane"><form id="searchForm" class="search-row pfs-search-row"><label class="pfs-search-input"><span class="pfs-search-icon" aria-hidden="true">⌕</span><input type="search" id="searchName" placeholder="Szukaj produktu lub dania…" aria-label="Nazwa produktu" aria-describedby="npSearchHelp foodSearchStatus" required minlength="2" autocomplete="off" /></label><button type="submit" class="primary-button pfs-online-search">Szukaj online</button></form><p class="help pfs-search-help" id="npSearchHelp">Wyniki lokalne pojawiają się od razu. Wyszukiwanie Open Food Facts uruchomisz przyciskiem.</p><p id="foodSearchStatus" class="help pfs-search-status" role="status" aria-live="polite">Szukaj produktów lub dań: bigos, rosół, pierogi, pierś kurczaka, sos pieczeniowy. Nowe produkty i dania domowe działają offline; ich wartości są orientacyjne.</p><div id="searchResults" class="result-list pfs-result-list"></div><details class="pfs-advanced"><summary>Ustawienia katalogu i filtr sklepów</summary><section class="food-catalog-panel" aria-label="Wspólna baza produktów offline"><div class="food-catalog-head"><strong>📦 Produkty zapisane offline</strong><small>Wspólny katalog · Open Food Facts</small></div><p class="help">Produkty z różnych sklepów trafiają na jedną listę. Zapis do 100 popularnych produktów z Polski działa ręcznie; dane nie są automatycznie potwierdzane z etykietą.</p><button id="foodCatalogImport" type="button" class="secondary-button wide">Pobierz / odśwież produkty offline</button><p id="foodCatalogStatus" class="help" role="status" aria-live="polite">Katalog nie został jeszcze pobrany.</p><label class="food-filter-label" for="foodStoreFilter">Sklep (opcjonalnie)</label><select id="foodStoreFilter" class="food-filter-select"><option value="all">Wszystkie sklepy</option><option value="biedronka">Biedronka</option><option value="lidl">Lidl</option><option value="kaufland">Kaufland</option><option value="carrefour">Carrefour</option><option value="auchan">Auchan</option><option value="zabka">Żabka</option></select><p class="help">Filtr działa tylko dla produktów z rozpoznanym oznaczeniem sklepu w danych źródłowych.</p></section></details></div>
       <div id="mode-recent" class="mode-pane hidden" aria-label="Ostatnie produkty i posiłki">
         <p class="help">Produkty i posiłki zapisane w dzienniku dzisiaj i w poprzednich 4 dniach. Najnowsze na górze.</p>
         <p id="recentRange" class="recent-range" aria-live="polite"></p>
@@ -220,18 +360,29 @@
         <div class="recent-section-heading"><h3>Ostatnie posiłki</h3><small>Dodaj cały zapisany zestaw</small></div>
         <div id="recentMealList" class="recent-meal-list"></div>
       </div>
-      <div id="mode-ean" class="mode-pane hidden"><form id="eanForm" class="search-row"><input id="eanInput" type="text" inputmode="numeric" pattern="[0-9]{8,14}" placeholder="Kod kreskowy (8–14 cyfr)" required aria-label="Kod kreskowy"/><button class="primary-button" type="submit">Sprawdź</button></form><button id="scanButton" type="button" class="secondary-button wide"><span aria-hidden="true">▣</span> Zeskanuj aparatem</button><div id="cameraWrap" class="camera-wrap hidden"><video id="cameraVideo" playsinline muted autoplay></video><div class="scan-indicator"></div><button id="stopScan" type="button" class="secondary-button">Zatrzymaj aparat</button></div><p class="help">Skaner wymaga obsługiwanej przeglądarki oraz zgody na aparat. Kod można wpisać ręcznie.</p><div id="eanResults" class="result-list"></div></div>
+      <div id="mode-favorites" class="mode-pane hidden" aria-label="Ulubione posiłki"><div class="pfs-list-heading"><h3>Ulubione zestawy</h3><p>Wybierz zapisany posiłek, aby dodać cały zestaw do wybranego dnia.</p></div><div id="pfsFavoriteList" class="pfs-favorite-list"></div></div><div id="mode-ean" class="mode-pane hidden"><form id="eanForm" class="search-row"><input id="eanInput" type="text" inputmode="numeric" pattern="[0-9]{8,14}" placeholder="Kod kreskowy (8–14 cyfr)" required aria-label="Kod kreskowy"/><button class="primary-button" type="submit">Sprawdź</button></form><button id="scanButton" type="button" class="secondary-button wide"><span aria-hidden="true">▣</span> Zeskanuj aparatem</button><div id="cameraWrap" class="camera-wrap hidden"><video id="cameraVideo" playsinline muted autoplay></video><div class="scan-indicator"></div><button id="stopScan" type="button" class="secondary-button">Zatrzymaj aparat</button></div><p class="help">Skaner wymaga obsługiwanej przeglądarki oraz zgody na aparat. Kod można wpisać ręcznie.</p><div id="eanResults" class="result-list"></div></div>
       <div id="mode-manual" class="mode-pane hidden"><p class="help">Dodaj produkt na podstawie etykiety, a następnie wskaż jego porcję.</p></div>
     </div>
-    <form id="productForm" class="product-form hidden"><div class="selected-tag" id="productSource">Produkt</div><label class="field-label">Nazwa produktu<input id="productName" required maxlength="100" placeholder="Np. gotowana pierś z kurczaka" /></label>
-      <div class="field-row"><label class="field-label">Ilość <span>g / ml</span><input type="number" id="productGrams" min="0.1" max="100000" step="0.1" value="100" required inputmode="decimal" /></label><label class="field-label">Posiłek<select id="productMeal"><option value="breakfast">Śniadanie</option><option value="lunch">Obiad</option><option value="dinner">Kolacja</option><option value="snack">Przekąski</option></select></label></div>
+    <form id="productForm" class="product-form hidden"><div class="pfs-product-top"><span class="selected-tag" id="productSource">Produkt</span><span class="pfs-verification" id="pfsVerification">Sprawdź wartości na etykiecie</span></div><label class="field-label">Nazwa produktu<input id="productName" required maxlength="100" placeholder="Np. gotowana pierś z kurczaka" /></label>
+      <div class="field-row pfs-portions-row"><label class="field-label">Ilość <span>g / ml</span><input type="number" id="productGrams" min="0.1" max="100000" step="0.1" value="100" required inputmode="decimal" /></label><label class="field-label">Do posiłku<select id="productMeal"><option value="breakfast">Śniadanie</option><option value="lunch">Obiad</option><option value="dinner">Kolacja</option><option value="snack">Przekąski</option></select></label></div>
+      <div class="pfs-portion-heading"><strong>Szybki wybór porcji</strong><small id="pfsPortionHint">Możesz wpisać dowolną gramaturę.</small></div><div class="np-portion-preset pfs-portion-presets" role="group" aria-label="Szybkie ustawienie gramatury">
+        <span>Porcja:</span><button type="button" data-np-grams="50">50 g</button><button type="button" data-np-grams="100">100 g</button><button type="button" data-np-grams="150">150 g</button><button type="button" data-np-grams="200">200 g</button>
+      </div><p class="np-portion-note">Podawaj masę w g lub ml. Nie przeliczamy na sztuki bez potwierdzonej masy pojedynczej sztuki.</p>
       <p class="field-caption" id="productBasisHelp">Wartości poniżej dotyczą <strong>wybranej porcji</strong> i przeliczają się przy zmianie ilości. Dla 100 g/ml odpowiadają danym z etykiety. Możesz je ręcznie poprawić.</p><div class="nutrient-fields"><label>kcal<input type="number" id="productKcal" min="0" step="any" inputmode="decimal" placeholder="—" required /></label><label>Białko (g)<input type="number" id="productProtein" min="0" step="any" inputmode="decimal" placeholder="—" /></label><label>Węgle (g)<input type="number" id="productCarbs" min="0" step="any" inputmode="decimal" placeholder="—" /></label><label>Tłuszcz (g)<input type="number" id="productFat" min="0" step="any" inputmode="decimal" placeholder="—" /></label></div>
-      <div class="estimate" id="portionPreview" role="status" aria-live="polite">Porcja: —</div><label class="save-custom-check"><input type="checkbox" id="saveOwnProduct"/> Zachowaj w „Moich produktach”</label><button type="submit" class="primary-button wide">Dodaj do dziennika</button><button type="button" id="backToLookup" class="flat-button">← Wróć do wyszukiwania</button></form>
+      <div class="pfs-macro-preview" aria-label="Podsumowanie wartości na wybraną porcję"><div><span>Kalorie</span><strong id="pfsLiveKcal">—</strong></div><div><span>Białko</span><strong id="pfsLiveProtein">—</strong></div><div><span>Tłuszcz</span><strong id="pfsLiveFat">—</strong></div><div><span>Węgle</span><strong id="pfsLiveCarbs">—</strong></div></div><div class="estimate pfs-portions-preview" id="portionPreview" role="status" aria-live="polite">Porcja: —</div><label class="save-custom-check"><input type="checkbox" id="saveOwnProduct"/> Zachowaj w „Moich produktach”</label><button type="submit" id="pfsSubmit" class="primary-button wide pfs-submit">+ Dodaj do dziennika</button><button type="button" id="backToLookup" class="flat-button">← Wróć do wyszukiwania</button></form>
     <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
   </section></div>
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-  <script src="./historia-statystyki.js" defer></script>
-  <script src="./ostatnie-dziennik.js" defer></script>
-  <script src="./app.js" defer></script>
+  <script src="../historia-statystyki.js?v=2.5.0" defer></script>
+  <script src="../ostatnie-dziennik.js?v=np2.1.0" defer></script>
+  <script src="../np-trends.js?v=2.5.0" defer></script>
+  <script src="../np-history-24.js?v=2.5.0" defer></script>
+  <script src="../np-body-25.js?v=2.5.0" defer></script>
+  <script src="../goal-calculator.js?v=2.6.2" defer></script>
+  <script src="../goal-calculator-ui.js?v=2.6.2" defer></script>
+  <script src="./app.js?v=2.7.0-staging" defer></script>
+  <script type="module" src="./recipe-builder.mjs?v=2.7.0-staging"></script>
+  <script src="../np-ui.js?v=np2.1.0" defer></script>
+
 </body>
 </html>
