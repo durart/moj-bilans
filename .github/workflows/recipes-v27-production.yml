@@ -44,7 +44,7 @@ jobs:
           assert.ok(recipes.includes('id="recipeOpen"'));
           assert.ok(recipes.includes('id="recipeEditor"'));
           assert.ok(recipes.includes('favorite'));
-          assert.ok(sw.includes('moj-bilans-cache-recipes-v2.7.0'));
+          assert.ok(sw.includes('moj-bilans-cache-recipes-v270'));
           assert.ok(sw.includes('./recipe-builder.mjs?v=2.7.0'));
           const assets=[...html.matchAll(/(?:src|href)="(\.\/[^"?]+)/g)];
           for(const match of assets) assert.ok(existsSync(match[1].slice(2)), 'Missing '+match[1]);
