@@ -78,3 +78,10 @@ This feature is available on branch `feature/np-v2-calorie-macro-calculator` onl
 References: Mifflin MD et al., *Am J Clin Nutr* 1990;51:241–247 (PMID 2305711); adult acceptable macronutrient distribution ranges (National Academies / Health Canada).
 
 Tests: `node np-v2/test_goal_calculator.mjs`, `node np-v2/test_goal_calculator_ui.mjs`, plus layout parity, history/body regressions and browser acceptance (where Chromium is available).
+
+## Activity selector examples (test revision 2.6.1)
+- Replace opaque numerical activity labels with understandable weekly activity descriptions.
+- Four existing factor values and calculation logic stay unchanged; select option IDs remain stable.
+- A selection-dependent, accessible hint shows illustrative daily steps, workout frequency and physical-work context. Step counts are **not** hard thresholds or inputs to the equation.
+- A mixed-activity example (desk work, approximately 6,000 steps per day and three strength sessions per week) explains why light versus moderate activity requires judgement and later checking the weight trend.
+- Update the test-only Service Worker cache and versioned assets without modifying production or persistent data.
