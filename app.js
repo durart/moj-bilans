@@ -4,8 +4,8 @@
   const KEY = 'moj-bilans-v1';
   const IS_PREVIEW = location.pathname.includes('/preview/');
   const STORAGE_KEY = IS_PREVIEW ? 'moj-bilans-preview-v27' : KEY;
-  const COPIES_DB = IS_PREVIEW ? 'moj-bilans-preview-copies-v27' : LOCAL_COPIES_DB;
   const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1';
+  const COPIES_DB = IS_PREVIEW ? 'moj-bilans-preview-copies-v27' : LOCAL_COPIES_DB;
   const LOCAL_COPIES_STORE = 'copies';
   const DEFAULT_GOALS = { kcal: 2300, protein: 160, carbs: 240, fat: 75, water: 2500 };
   const MEASURES = [{ key: 'abdomen', label: 'Brzuch', id: 'Abdomen' }, { key: 'waist', label: 'Talia', id: 'Waist' }, { key: 'chest', label: 'Klatka piersiowa', id: 'Chest' }, { key: 'biceps', label: 'Biceps', id: 'Biceps' }];
@@ -399,7 +399,7 @@
       for (const key of ['kcal','protein','fat','carbs']) {
         const total = recipe.ingredients.reduce((sum, item) =>
           sum + Number(item.grams) * Number(item[key]) / 100, 0);
-        nutrients[key] = total * portion / Number(recipe.yieldGrams);
+        nutrients[key] = total * 100 / Number(recipe.yieldGrams);
       }
       const entry = { id: productId(), name: recipe.name, grams: portion,
         nutrients, meal, date, source: 'recipe', recipeId };
