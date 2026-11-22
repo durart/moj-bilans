@@ -39,14 +39,22 @@
 - build-staging.mjs copies assets based on sw.js references and rewrites preview HTML/manifest.
 - No architectural refactor branch existed before this task.
 
-## Verification status
-- Refactor modules extracted: domain/nutrition.js, domain/diary-format.js, domain/storage.js, domain/values.js, domain/products.js, domain/recipes.js and ui/dom.js, plus ui/navigation.js.
-- Automated and browser regression: both passed on commit a591cf89 (GitHub Actions run #45). Subsequent checks remain commit-specific; never assume later commits passed.
-- New regression suites cover nutrition, diary serialization, guarded persistence, DOM escaping, date/number conversions, product provenance and recipe rules.
-- Production storage key and JSON backup schema remain unchanged; no data migration.
-- Existing preview builder is exercised in CI, but 2.8.0 has not been published to a publicly reachable staging URL.
-- Service-worker cache revision and public staging verification remain release blockers.
+## Verification status (updated 2026-11-22)
+- Extracted domain modules: nutrition, diary-format, storage, values, products, recipes, diary-state, measurements, water.
+- Extracted UI modules: dom, navigation, water, settings. Existing large renderers remain in app.js and are explicitly deferred technical debt.
+- Added isolated regression suites for the extracted modules and registered them in npm test.
+- Last fully verified candidate before this documentation update: commit 74e57f319c968e9728e2c9c487e92e9e4800ae12, GitHub Actions #115: verify, browser, publish-preview, live-preview all passed.
+- Later hydration module commit ce6751bbe1cf2370a68823a2e48766bb91f360d2: verify passed; browser and publication must be checked separately. Never extrapolate CI status to newer commits.
+- Public isolated preview: https://durart.github.io/moj-bilans/preview/ (GitHub Actions #115 confirmed live-preview).
+- Production key `moj-bilans-v1`, preview key `moj-bilans-preview-v27`, and schema v6 remain unchanged.
+- Service-worker revision `v280-rc1` and isolated preview cache scope are covered by CI browser tests.
+- Actual-device acceptance (Android installation, offline refresh, SW update, backup restore) remains open; CI cannot substitute for a physical device.
 - Production merge and deployment: NOT AUTHORIZED.
+
+## Outstanding technical debt
+- app.js retains the larger journal, history, weight and measurement UI renderers, plus orchestration and mutation code.
+- Further extraction should be scoped to a separate iteration if it risks expanding the regression surface of this release.
+- Do not claim full modularization of app.js; this is an incremental architecture release.
 
 ## Release gate
 1. Obtain a green unit and browser CI run on the final candidate commit.
