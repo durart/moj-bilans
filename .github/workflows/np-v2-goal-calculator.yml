@@ -5,6 +5,7 @@ on:
     branches:
       - feature/np-v2-calorie-macro-calculator
       - feature/np-v2-activity-examples
+      - feature/np-v2-body-recomposition
     paths:
       - 'np-v2/**'
       - '.github/workflows/np-v2-goal-calculator.yml'
