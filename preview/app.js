@@ -48,6 +48,7 @@
     custom: Array.isArray(saved.custom) ? saved.custom : [],
     recent: Array.isArray(saved.recent) ? saved.recent : [],
     favorites: Array.isArray(saved.favorites) ? saved.favorites : [],
+    productFavorites: Array.isArray(saved.productFavorites) ? saved.productFavorites : [],
     recipes: Array.isArray(saved.recipes) ? saved.recipes : [],
     portions: saved.portions && typeof saved.portions === 'object' && !Array.isArray(saved.portions) ? saved.portions : {},
     weights: Array.isArray(saved.weights) ? saved.weights : [],
@@ -79,7 +80,7 @@
   let historyVisible = 40;
   let historyCustomFrom = '';
   let historyCustomTo = '';
-  const snapshot = () => ({ app: 'MojBilans', version: 6, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
+  const snapshot = () => ({ app: 'MojBilans', version: 6, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, productFavorites: state.productFavorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
   const saveStatus = (message, isError=false) => {
     for (const id of ['np21SaveStatus','np21SaveInline']) {
       const el = $('#'+id);
@@ -93,7 +94,7 @@
       return false;
     }
     try {
-      const json = JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
+      const json = JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, productFavorites: state.productFavorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
       localStorage.setItem(STORAGE_KEY, json);
       if (localStorage.getItem(STORAGE_KEY) !== json) throw Error('Odczyt po zapisie nie zgadza się z zapisaną treścią.');
       saveStatus('Dziennik zapisany w tym urządzeniu o ' + new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
@@ -244,21 +245,35 @@
     $$('[data-favmeal]').forEach(b => b.addEventListener('click', () => saveFavoriteMeal(b.dataset.favmeal)));
     $$('[data-copymeal]').forEach(b => b.addEventListener('click', () => openCopyDialog(b.dataset.copymeal)));
   }
+  const favoriteProductKey = p => productKey(p);
+  function toggleProductFavorite(product) {
+    const key = favoriteProductKey(product);
+    if (commitMutation(draft => {
+      draft.productFavorites = draft.productFavorites.includes(key)
+        ? draft.productFavorites.filter(item => item !== key)
+        : [...draft.productFavorites, key];
+    })) renderProducts();
+  }
   function renderProducts() {
-    const custom = state.custom.filter(p => p && p.name);
-    const recent = state.recent.filter(p => p && p.name);
+    const custom = state.custom.filter(p => p && p.name).sort((a,b) => Number(state.productFavorites.includes(favoriteProductKey(b))) - Number(state.productFavorites.includes(favoriteProductKey(a))));
+    const recent = state.recent.filter(p => p && p.name).sort((a,b) => Number(state.productFavorites.includes(favoriteProductKey(b))) - Number(state.productFavorites.includes(favoriteProductKey(a))));
     $('#customProductsList').innerHTML = custom.length ? custom.map((p, i) => productRow(p, 'custom', i)).join('') : '<div class="empty-list">Tu pojawią się produkty dodane ręcznie.</div>';
     $('#recentProductsList').innerHTML = recent.length ? recent.map((p, i) => productRow(p, 'recent', i)).join('') : '<div class="empty-list">Ostatnio dodawane produkty zobaczysz tutaj.</div>';
     $('#favoriteMealsList').innerHTML = state.favorites.length ? state.favorites.map(f => `<div class="compact-item favorite-item"><div><strong>⭐ ${safeText(f.name)}</strong><small>${Array.isArray(f.items) ? f.items.length : 0} produktów · ${nf.format(Math.round(totalFor(f.items || []).kcal))} kcal · ${safeText(mealName(f.meal))}</small></div><div class="favorite-actions"><button type="button" data-addfavorite="${safeText(f.id)}">+ Dodaj</button><button type="button" class="danger-quiet" data-removefavorite="${safeText(f.id)}" aria-label="Usuń ${safeText(f.name)}">Usuń</button></div></div>`).join('') : '<div class="empty-list">Zapisz ulubiony zestaw z dziennika, wybierając ☆ Ulubiony pod posiłkiem.</div>';
     $$('[data-addfavorite]').forEach(b => b.addEventListener('click', () => addFavorite(b.dataset.addfavorite)));
     $$('[data-removefavorite]').forEach(b => b.addEventListener('click', () => removeFavorite(b.dataset.removefavorite)));
-    $$('[data-product-group]').forEach(b => b.addEventListener('click', () => {
+    $('[data-product-favorite]').forEach(button => button.addEventListener('click', () => {
+      const products = button.dataset.productGroup === 'custom' ? state.custom : state.recent;
+      const product = products[Number(button.dataset.index)];
+      if (product) toggleProductFavorite(product);
+    }));
+    $('[data-product-group]:not([data-product-favorite])').forEach(b => b.addEventListener('click', () => {
       const products = b.dataset.productGroup === 'custom' ? state.custom : state.recent;
       if ($('#modalBackdrop').classList.contains('hidden')) openModal('breakfast');
       selectProduct(products[Number(b.dataset.index)]);
     }));
   }
-  function productRow(p, group, i) { return `<div class="compact-item"><div><strong>${safeText(p.name)}</strong><small>${nf1.format(p.nutrients?.kcal ?? 0)} kcal / 100 g${p.brand ? ` · ${safeText(p.brand)}` : ''}</small></div><button type="button" data-product-group="${group}" data-index="${i}">+ Dodaj</button></div>`; }
+  function productRow(p, group, i) { const favorite = state.productFavorites.includes(favoriteProductKey(p)); return `<div class="compact-item"><div><strong>${safeText(p.name)}</strong><small>${nf1.format(p.nutrients?.kcal ?? 0)} kcal / 100 g${p.brand ? ` · ${safeText(p.brand)}` : ''}</small></div><div class="favorite-actions"><button type="button" data-product-favorite data-product-group="${group}" data-index="${i}" aria-pressed="${favorite}" aria-label="${favorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}: ${safeText(p.name)}">${favorite ? '★' : '☆'}</button><button type="button" data-product-group="${group}" data-index="${i}">+ Dodaj</button></div></div>`; }
   function renderHistory() {
     const stats = window.MojBilansHistory;
     const today = todayKey();
@@ -841,7 +856,7 @@
       if (payload.portions && typeof payload.portions === 'object' && !Array.isArray(payload.portions)) for (const [k, v] of Object.entries(payload.portions).slice(0, 5000)) { if (k.length <= 240 && isNumber(v) && number(v) > 0 && number(v) <= 100000 && !['__proto__','constructor','prototype'].includes(k)) Object.defineProperty(portions, k, { value: Number(v), enumerable: true, writable: true, configurable: true }); }
       const target = number(payload.weightGoal);
       const previous = state;
-      state = { ...state, goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, recipes: validateRecipes(payload.recipes), weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
+      state = { ...state, goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, recipes: validateRecipes(payload.recipes), productFavorites: Array.isArray(payload.productFavorites) ? payload.productFavorites.filter(x => typeof x === 'string' && x.length <= 220).slice(0, 500) : [], weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
       if (!save()) { state = previous; return false; }
       renderAll(); toast(`Przywrócono ${entries.length} wpisów`);
       return true;
