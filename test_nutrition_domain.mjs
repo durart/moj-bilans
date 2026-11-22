@@ -21,7 +21,7 @@ assert.deepEqual(macroProgress(20, 0), { filled: 0, extra: 0, excessGrams: 0, ex
 const html = readFileSync('index.html', 'utf8');
 const worker = readFileSync('sw.js', 'utf8');
 const app = readFileSync('app.js', 'utf8');
-assert.ok(html.indexOf('domain/nutrition.js') < html.indexOf('app.js?v=2.7.1'), 'Domain must load before app');
+assert.ok(html.indexOf('domain/nutrition.js') < html.indexOf('app.js?v=2.8.1'), 'Domain must load before app');
 assert.match(worker, /domain\/nutrition\.js\?v=2\.8\.0/);
 assert.match(app, /globalThis\.MojBilansNutrition/);
 console.log('Nutrition domain calculations and integration references verified.');
