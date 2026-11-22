@@ -127,20 +127,8 @@
   }
   const toast = text => { const el = $('#toast'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2800); };
   const feedback = text => { $('#feedback').textContent = text || ''; };
-  const pct = (value, target) => Math.max(0, Math.min(100, target > 0 ? value / target * 100 : 0));
-  // Paski mają tę samą szerokość. Przy nadwyżce ciemna część obrazuje
-  // udział nadwyżki w rzeczywistym spożyciu; procent pod paskiem względem celu.
-  const macroProgress = (value, goal) => {
-    const eaten = Number.isFinite(value) ? Math.max(0, value) : 0;
-    const target = Number.isFinite(goal) ? goal : 0;
-    if (target <= 0) return { filled: 0, extra: 0, excessGrams: 0, excessPercent: 0 };
-    const excessGrams = Math.max(0, eaten - target);
-    if (excessGrams === 0) return { filled: Math.min(100, eaten / target * 100), extra: 0, excessGrams: 0, excessPercent: 0 };
-    return { filled: target / eaten * 100, extra: excessGrams / eaten * 100,
-      excessGrams, excessPercent: excessGrams / target * 100 };
-  };
-  const sum = (entries, key) => entries.reduce((acc, entry) => acc + ((Number(entry.nutrients?.[key]) || 0) * (Number(entry.grams) || 0) / 100), 0);
-  const totalFor = entries => ({ kcal: sum(entries, 'kcal'), protein: sum(entries, 'protein'), carbs: sum(entries, 'carbs'), fat: sum(entries, 'fat') });
+  // Shared, side-effect-free calculations; load domain/nutrition.js before app.js.
+  const { percentage: pct, macroProgress, totalFor } = globalThis.MojBilansNutrition;
   const currentEntries = () => state.entries.filter(entry => entry.date === state.selectedDate);
   const plainNutrients = n => ({ kcal: number(n?.kcal), protein: number(n?.protein), carbs: number(n?.carbs), fat: number(n?.fat) });
   // Starsze wpisy zachowują swoją strukturę. Nowe mogą przenosić informację
