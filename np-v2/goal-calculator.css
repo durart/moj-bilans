@@ -66,3 +66,21 @@
   font-weight: 500;
   line-height: 1.55;
 }
+
+/* Recomposition uses weight-based protein rather than the ordinary macro presets. */
+.gp-fields .gp-recomposition-hint {
+  display: block;
+  padding: 11px 12px;
+  border: 1px solid #3c816a;
+  border-radius: 10px;
+  background: rgba(39, 106, 80, .22);
+  color: #d4f4e7;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.gp-fields .gp-recomposition-hint.hidden { display: none; }
+.gp-fields select:disabled {
+  opacity: .54;
+  cursor: not-allowed;
+}
