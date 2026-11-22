@@ -1,8 +1,11 @@
 /* Mój Bilans v0.7.1 — dodawanie: gramatura przelicza widoczne kcal i makro */
 (() => {
   'use strict';
-  const KEY = 'moj-bilans-preview-v1';
-  const LOCAL_COPIES_DB = 'moj-bilans-preview-kopie-lokalne-v1';
+  const KEY = 'moj-bilans-v1';
+  const IS_PREVIEW = location.pathname.includes('/preview/');
+  const STORAGE_KEY = IS_PREVIEW ? 'moj-bilans-preview-v27' : KEY;
+  const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1';
+  const COPIES_DB = IS_PREVIEW ? 'moj-bilans-preview-copies-v27' : LOCAL_COPIES_DB;
   const LOCAL_COPIES_STORE = 'copies';
   const DEFAULT_GOALS = { kcal: 2300, protein: 160, carbs: 240, fat: 75, water: 2500 };
   const MEASURES = [{ key: 'abdomen', label: 'Brzuch', id: 'Abdomen' }, { key: 'waist', label: 'Talia', id: 'Waist' }, { key: 'chest', label: 'Klatka piersiowa', id: 'Chest' }, { key: 'biceps', label: 'Biceps', id: 'Biceps' }];
@@ -23,7 +26,21 @@
   const isNumber = x => x !== null && x !== '' && Number.isFinite(Number(x));
   const number = x => isNumber(x) ? Number(x) : null;
   const mealValid = x => MEALS.some(meal => meal.id === x);
-  const dataFromStorage = () => { try { const v = JSON.parse(localStorage.getItem(KEY)); return v && typeof v === 'object' ? v : {}; } catch { return {}; } };
+  let storageFault = '';
+  const dataFromStorage = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw === null) return {};
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.entries)) {
+        throw Error('Niepoprawny format dziennika');
+      }
+      return parsed;
+    } catch (err) {
+      storageFault = 'Błąd odczytu: ' + (err?.message || 'pamięć niedostępna') + '. Zapis zablokowano, aby nie nadpisać wcześniejszych danych.';
+      return {};
+    }
+  };
   let saved = dataFromStorage();
   let state = {
     goals: { ...DEFAULT_GOALS, ...(saved.goals || {}) },
@@ -31,6 +48,7 @@
     custom: Array.isArray(saved.custom) ? saved.custom : [],
     recent: Array.isArray(saved.recent) ? saved.recent : [],
     favorites: Array.isArray(saved.favorites) ? saved.favorites : [],
+    recipes: Array.isArray(saved.recipes) ? saved.recipes : [],
     portions: saved.portions && typeof saved.portions === 'object' && !Array.isArray(saved.portions) ? saved.portions : {},
     weights: Array.isArray(saved.weights) ? saved.weights : [],
     measurements: Array.isArray(saved.measurements) ? saved.measurements : [],
@@ -39,6 +57,9 @@
     selectedDate: todayKey()
   };
   let currentMeal = 'breakfast';
+  // Ephemeral accordion state; never part of diary, localStorage or exported backups.
+  let expandedMeals = new Set();
+  let expandedMealsDate = '';
   let activeProduct = null;
   let draftPer100 = null; // robocze wartości /100 g; formularz pokazuje wartości porcji
   let activeMode = 'search';
@@ -58,8 +79,51 @@
   let historyVisible = 40;
   let historyCustomFrom = '';
   let historyCustomTo = '';
-  const snapshot = () => ({ app: 'MojBilans', version: 5, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements })); queueAutomaticLocalCopy(); return true; } catch { toast('Nie udało się zapisać. Sprawdź pamięć urządzenia.'); return false; } };
+  const snapshot = () => ({ app: 'MojBilans', version: 6, exportedAt: new Date().toISOString(), goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
+  const saveStatus = (message, isError=false) => {
+    for (const id of ['np21SaveStatus','np21SaveInline']) {
+      const el = $('#'+id);
+      if (el) { el.textContent=message; el.classList.toggle('np21-error',isError); }
+    }
+  };
+  const save = () => {
+    if (storageFault) {
+      saveStatus(storageFault, true);
+      toast('Zapis zablokowany. Nie usuwaj danych aplikacji.');
+      return false;
+    }
+    try {
+      const json = JSON.stringify({ goals: state.goals, entries: state.entries, custom: state.custom, recent: state.recent, favorites: state.favorites, recipes: state.recipes, portions: state.portions, weights: state.weights, weightGoal: state.weightGoal, water: state.water, measurements: state.measurements });
+      localStorage.setItem(STORAGE_KEY, json);
+      if (localStorage.getItem(STORAGE_KEY) !== json) throw Error('Odczyt po zapisie nie zgadza się z zapisaną treścią.');
+      saveStatus('Dziennik zapisany w tym urządzeniu o ' + new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+      queueAutomaticLocalCopy();
+      return true;
+    } catch (err) {
+      saveStatus('Nie udało się zapisać: '+(err?.message||'błąd pamięci')+'. Lokalna kopia może być nieaktualna.',true);
+      toast('Nie udało się zapisać. Sprawdź pamięć urządzenia.');
+      return false;
+    }
+  };
+  // Zmiany są przygotowane na kopii stanu, zanim nastąpi zapis.
+  // Nieudany zapis nie może udawać sukcesu ani zmieniać danych w pamięci aplikacji.
+  function commitMutation(change) {
+    if (storageFault) return save();
+    const previous = state;
+    let draft;
+    try {
+      draft = JSON.parse(JSON.stringify(previous));
+      change(draft);
+    } catch (err) {
+      saveStatus('Nie można przygotować zmiany: ' + (err?.message || 'błąd danych'), true);
+      toast('Nie udało się przygotować zapisu.');
+      return false;
+    }
+    state = draft;
+    if (save()) return true;
+    state = previous;
+    return false;
+  }
   const toast = text => { const el = $('#toast'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2800); };
   const feedback = text => { $('#feedback').textContent = text || ''; };
   const pct = (value, target) => Math.max(0, Math.min(100, target > 0 ? value / target * 100 : 0));
@@ -78,27 +142,48 @@
   const totalFor = entries => ({ kcal: sum(entries, 'kcal'), protein: sum(entries, 'protein'), carbs: sum(entries, 'carbs'), fat: sum(entries, 'fat') });
   const currentEntries = () => state.entries.filter(entry => entry.date === state.selectedDate);
   const plainNutrients = n => ({ kcal: number(n?.kcal), protein: number(n?.protein), carbs: number(n?.carbs), fat: number(n?.fat) });
+  // Starsze wpisy zachowują swoją strukturę. Nowe mogą przenosić informację
+  // o wiarygodności makro razem z wpisem, ulubionymi i kopią JSON.
+  const productProvenance = p => {
+    const result = {};
+    if (typeof p?.isEstimate === 'boolean') result.isEstimate = p.isEstimate;
+    if (typeof p?.verification === 'string' && p.verification) result.verification = p.verification.slice(0, 80);
+    if (typeof p?.sourceName === 'string' && p.sourceName) result.sourceName = p.sourceName.slice(0, 200);
+    if (typeof p?.sourceUrl === 'string' && /^https:\/\//i.test(p.sourceUrl)) result.sourceUrl = p.sourceUrl.slice(0, 600);
+    return result;
+  };
   const niceDate = date => date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
   const productKey = p => p.ean && /^\d{8,14}$/.test(p.ean) ? `ean:${p.ean}` : `name:${String(p.name || '').trim().toLocaleLowerCase('pl')}|${String(p.brand || '').trim().toLocaleLowerCase('pl')}`;
   const normalizedDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') && dateKey(toDate(d)) === d;
   const mealName = id => MEALS.find(m => m.id === id)?.name || 'Posiłek';
   const goalField = key => `#goal${key === 'fat' ? 'Fats' : key[0].toUpperCase() + key.slice(1)}`;
-  const cloneProductEntry = e => ({ name: e.name, grams: e.grams, nutrients: plainNutrients(e.nutrients), source: e.source || 'Zapisany', brand: e.brand || '', ean: e.ean || '' });
+  const cloneProductEntry = e => ({ name: e.name, grams: e.grams, nutrients: plainNutrients(e.nutrients), source: e.source || 'Zapisany', brand: e.brand || '', ean: e.ean || '', ...productProvenance(e) });
   const entriesFor = (date, meal) => state.entries.filter(e => e.date === date && e.meal === meal);
 
   function renderJournal() {
     const d = toDate(state.selectedDate), current = currentEntries(), totals = totalFor(current);
     $('#dateText').textContent = niceDate(d);
-    $('#dateLabel').textContent = state.selectedDate === todayKey() ? 'Dzisiaj' : d.toLocaleDateString('pl-PL', { weekday: 'long' });
+    const isToday = state.selectedDate === todayKey();
+    $('#dateLabel').textContent = isToday ? 'Dzisiaj' : d.toLocaleDateString('pl-PL', { weekday: 'long' });
+    $('#dfTopDate').textContent = (isToday ? 'Dzisiaj · ' : '') + d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' });
+    if (expandedMealsDate !== state.selectedDate) {
+      expandedMeals = new Set();
+      expandedMealsDate = state.selectedDate;
+    }
     $('#dateInput').value = state.selectedDate;
     const eaten = Math.round(totals.kcal), remaining = Math.round(state.goals.kcal - totals.kcal);
     $('#caloriesUsed').textContent = nf.format(eaten);
     $('#remainingCalories').textContent = (remaining < 0 ? '−' : '') + nf.format(Math.abs(remaining));
     $('#remainingCalories').style.color = remaining < 0 ? 'var(--red)' : 'var(--accent)';
     $('#goalInline').textContent = nf.format(state.goals.kcal);
-    $('#dailyGoal').innerHTML = `${nf.format(state.goals.kcal)} <small>kcal</small>`;
     const deg = pct(totals.kcal, state.goals.kcal) * 3.6;
     $('#calorieRing').style.setProperty('--progress', `${deg}deg`);
+    $('#npMealCount').textContent = `${new Set(current.map(e => e.meal).filter(mealValid)).size} / ${MEALS.length}`;
+    $('#npFoodCount').textContent = nf.format(current.length);
+    $('#npBudgetStatus').textContent = remaining < 0
+      ? `${nf.format(Math.abs(remaining))} kcal ponad cel`
+      : `${nf.format(remaining)} kcal do celu`;
+    $('#npBudgetStatus').classList.toggle('np-over-goal', remaining < 0);
     for (const m of [{ key: 'protein', id: 'protein', goal: 'protein' }, { key: 'carbs', id: 'carb', goal: 'carbs' }, { key: 'fat', id: 'fat', goal: 'fat' }]) {
       const partial = current.some(entry => !isNumber(entry.nutrients?.[m.key]));
       $(`#${m.id}Value`).textContent = `${partial ? '≥ ' : ''}${nf1.format(totals[m.key])} g`;
@@ -115,12 +200,45 @@
     $('#macroWarning').classList.toggle('hidden', !current.some(entry => ['protein', 'carbs', 'fat'].some(k => !isNumber(entry.nutrients?.[k]))));
     renderWater();
     renderFavoriteQuick();
+    const mealThumbs = { breakfast:'🥣', lunch:'🍗', dinner:'🥗', snack:'🥜' };
     $('#mealsContainer').innerHTML = MEALS.map(meal => {
       const entries = current.filter(e => e.meal === meal.id);
-      return `<article class="meal-card"><div class="meal-top"><div class="meal-name"><span class="meal-emoji">${meal.icon}</span>${meal.name}</div><div class="meal-kcal">${nf.format(Math.round(sum(entries, 'kcal')))} <small>kcal</small></div></div>` +
-        (entries.length ? `<div class="meal-items">${entries.map(entry => `<div class="meal-entry"><button class="meal-entry-open meal-entry-full" type="button" data-viewentry="${safeText(entry.id)}" aria-label="Szczegóły, edycja lub usunięcie: ${safeText(entry.name)}"><span class="meal-entry-text"><strong>${safeText(entry.name)}</strong><small>${nf1.format(entry.grams)} g/ml · B ${isNumber(entry.nutrients?.protein) ? nf1.format(entry.nutrients.protein * entry.grams / 100) : '?'} g</small></span><span class="meal-entry-kcal">${nf.format(Math.round((entry.nutrients?.kcal || 0) * entry.grams / 100))} kcal</span><span class="meal-entry-chevron" aria-hidden="true">›</span></button></div>`).join('')}</div>` : `<div class="meal-empty">Jeszcze nic tu nie ma. Dodaj pierwszy produkt.</div>`) +
-        `<div class="meal-utilities">${entries.length ? `<button type="button" data-favmeal="${meal.id}" title="Zapisz ten zestaw jako ulubiony">☆ Ulubiony</button>` : ''}<button type="button" data-copymeal="${meal.id}" title="Skopiuj produkty z innego dnia">⇄ Kopiuj</button></div><button class="meal-add" type="button" data-addmeal="${meal.id}">+ Dodaj do ${meal.name.toLowerCase()}</button></article>`;
+      const expanded = expandedMeals.has(meal.id);
+      const safeId = meal.id;
+      const count = entries.length;
+      const detail = count
+        ? '<div class="meal-items">' + entries.map(entry => `<div class="meal-entry"><button class="meal-entry-open meal-entry-full" type="button" data-viewentry="${safeText(entry.id)}" aria-label="Szczegóły, edycja lub usunięcie: ${safeText(entry.name)}"><span class="meal-entry-text"><strong>${safeText(entry.name)}</strong><small>${nf1.format(entry.grams)} g/ml · B ${isNumber(entry.nutrients?.protein) ? nf1.format(entry.nutrients.protein * entry.grams / 100) : '?'} g</small></span><span class="meal-entry-kcal">${nf.format(Math.round((entry.nutrients?.kcal || 0) * entry.grams / 100))} kcal</span><span class="meal-entry-chevron" aria-hidden="true">›</span></button></div>`).join('') + '</div>'
+        : '<div class="meal-empty">Jeszcze nic tu nie ma. Dodaj pierwszy produkt.</div>';
+      const caption = count === 0 ? 'Dodaj pierwszy produkt' : `${count} ${count===1?'produkt':count>=2&&count<=4?'produkty':'produktów'}`;
+      const kcal = nf.format(Math.round(sum(entries,'kcal')));
+      return `<article class="meal-card df-meal-card" data-meal-card="${safeId}">
+        <div class="df-meal-row">
+          <button class="df-meal-toggle" type="button" data-togglemeal="${safeId}" aria-expanded="${expanded}" aria-controls="df-meal-details-${safeId}" aria-label="${meal.name}: ${caption}, ${kcal} kcal. ${expanded ? 'Zwiń' : 'Rozwiń'} posiłek">
+            <span class="df-meal-art df-art-${safeId}" aria-hidden="true"><img class="df-meal-photo" src="../assets/df-${safeId}.svg" alt="" loading="lazy" decoding="async"></span>
+            <span class="df-meal-info"><strong>${meal.name}</strong><small>${caption}</small></span>
+            <span class="df-meal-energy">${kcal} <small>kcal</small><span class="df-meal-chevron" aria-hidden="true">›</span></span>
+          </button>
+          <button class="df-meal-plus" type="button" data-addmeal="${safeId}" aria-label="Dodaj produkt: ${meal.name}" title="Dodaj do ${meal.name.toLowerCase()}">+</button>
+        </div>
+        <div class="df-meal-details" id="df-meal-details-${safeId}" ${expanded?'':'hidden'}>
+          ${detail}
+          <div class="meal-utilities">${count ? `<button type="button" data-favmeal="${safeId}" title="Zapisz ten zestaw jako ulubiony">☆ Ulubiony</button>` : ''}
+          <button type="button" data-copymeal="${safeId}" title="Skopiuj produkty z innego dnia">⇄ Kopiuj</button></div>
+          <button class="meal-add" type="button" data-addmeal="${safeId}">+ Dodaj do ${meal.name.toLowerCase()}</button>
+        </div>
+      </article>`;
     }).join('');
+    $$('[data-togglemeal]').forEach(button => button.addEventListener('click', () => {
+      const meal = button.dataset.togglemeal;
+      const expanded = button.getAttribute('aria-expanded') !== 'true';
+      if (expanded) expandedMeals.add(meal); else expandedMeals.delete(meal);
+      button.setAttribute('aria-expanded',String(expanded));
+      const info = MEALS.find(m=>m.id===meal);
+      const count = current.filter(e => e.meal === meal).length;
+      const caption = count === 0 ? 'Dodaj pierwszy produkt' : `${count} ${count===1?'produkt':count>=2&&count<=4?'produkty':'produktów'}`;
+      button.setAttribute('aria-label',`${info.name}: ${caption}. ${expanded ? 'Zwiń' : 'Rozwiń'} posiłek`);
+      document.getElementById('df-meal-details-'+meal).hidden = !expanded;
+    }));
     $$('[data-addmeal]').forEach(b => b.addEventListener('click', () => openModal(b.dataset.addmeal)));
     $$('[data-viewentry]').forEach(b => b.addEventListener('click', () => openEntryDialog(b.dataset.viewentry)));
     $$('[data-favmeal]').forEach(b => b.addEventListener('click', () => saveFavoriteMeal(b.dataset.favmeal)));
@@ -172,23 +290,30 @@
       $('#historyListScope').textContent = '';
       $('#historyList').innerHTML = '';
       $('#historyShowMore').classList.add('hidden');
+      $('#npHistoryChart').innerHTML = '<p class="empty-chart">Wybierz poprawny zakres dat.</p>';
+      window.NPHistory24?.clear();
       return;
     }
 
     const average = summary.averages;
-    $('#historyAverage').textContent = average ? nf.format(Math.round(average.kcal)) : '—';
-    $('#historyProtein').textContent = average ? nf1.format(average.protein) : '—';
-    $('#historyFat').textContent = average ? nf1.format(average.fat) : '—';
-    $('#historyCarbs').textContent = average ? nf1.format(average.carbs) : '—';
+    $('#historyAverage').textContent = Number.isFinite(average?.kcal) ? nf.format(Math.round(average.kcal)) : '—';
+    $('#historyProtein').textContent = Number.isFinite(average?.protein) ? nf1.format(average.protein) : '—';
+    $('#historyFat').textContent = Number.isFinite(average?.fat) ? nf1.format(average.fat) : '—';
+    $('#historyCarbs').textContent = Number.isFinite(average?.carbs) ? nf1.format(average.carbs) : '—';
     $('#historyDays').textContent = `${summary.loggedDays} / ${summary.rangeDays}`;
     if (!summary.loggedDays) {
       $('#historyCoverage').textContent = 'Brak posiłków zapisanych w wybranym okresie. Dni bez wpisów nie są traktowane jak 0 kcal.';
     } else {
       $('#historyCoverage').textContent =
         'Średnie obliczono tylko z dni, w których są zapisane posiłki. Dni bez wpisów są pominięte. Dzisiejszy dzień może być jeszcze niepełny.' +
-        (summary.incompleteEntries ? ` Uwaga: ${summary.incompleteEntries} wpisów nie ma kompletnych wartości odżywczych; część średnich może być zaniżona.` : '');
+        (summary.incompleteEntries ? ` Uwaga: ${summary.incompleteEntries} wpisów nie ma kompletnych wartości odżywczych; niekompletne dni pominięto w średniej danego składnika.` : '');
     }
 
+    window.NPTrends?.render(summary, state.goals.kcal, $('#npHistoryChart'));
+    window.NPHistory24?.render(summary, state.goals.kcal, date => {
+      state.selectedDate = date;
+      showPage('journal');
+    });
     // Krótkie okresy zachowują widok wszystkich dni, również pustych.
     // Dłuższe okresy pokazują tylko dni z wpisami, aby uniknąć setek pustych pozycji.
     const detailed = summary.rangeDays <= 35;
@@ -226,7 +351,63 @@
     for (const key of ['kcal', 'protein', 'carbs', 'fat', 'water']) {
       $(goalField(key)).value = state.goals[key];
     }
+    // The optional calculator only reads the latest recorded weight and current goals.
+    const latestWeight = [...state.weights]
+      .filter(item => item && normalizedDate(item.date) && isNumber(item.kg))
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .at(-1);
+    window.NPGoalCalculatorUI?.setContext({
+      latestWeight: latestWeight || null,
+      goals: state.goals
+    });
   }
+  function validateRecipes(input) {
+    if (!Array.isArray(input)) return [];
+    return input.slice(0, 500).filter(recipe =>
+      recipe && typeof recipe.id === 'string' && typeof recipe.name === 'string' &&
+      recipe.name.length > 0 && recipe.name.length <= 100 &&
+      Number.isFinite(Number(recipe.yieldGrams)) && Number(recipe.yieldGrams) > 0 &&
+      Number(recipe.yieldGrams) <= 100000 && Array.isArray(recipe.ingredients) &&
+      recipe.ingredients.length > 0 && recipe.ingredients.length <= 100 &&
+      recipe.ingredients.every(item => item && typeof item.name === 'string' &&
+        item.name.length > 0 && item.name.length <= 100 &&
+        ['grams','kcal','protein','fat','carbs'].every(key =>
+          Number.isFinite(Number(item[key])) && Number(item[key]) >= 0 &&
+          Number(item[key]) <= 100000))
+    );
+  }
+  window.MojBilansRecipes = {
+    getRecipes: () => structuredClone(state.recipes),
+    getDate: () => state.selectedDate,
+    saveRecipe: recipe => {
+      if (!validateRecipes([recipe]).length) return false;
+      return commitMutation(draft => {
+        const index = draft.recipes.findIndex(item => item.id === recipe.id);
+        if (index >= 0) draft.recipes[index] = structuredClone(recipe);
+        else draft.recipes.push(structuredClone(recipe));
+      });
+    },
+    removeRecipe: id => commitMutation(draft => {
+      draft.recipes = draft.recipes.filter(recipe => recipe.id !== id);
+    }),
+    addPortion: ({ recipeId, grams, meal, date }) => {
+      const recipe = state.recipes.find(item => item.id === recipeId);
+      const portion = Number(grams);
+      if (!recipe || !mealValid(meal) || !normalizedDate(date) ||
+          !Number.isFinite(portion) || portion <= 0 || portion > 100000) return false;
+      const nutrients = {};
+      for (const key of ['kcal','protein','fat','carbs']) {
+        const total = recipe.ingredients.reduce((sum, item) =>
+          sum + Number(item.grams) * Number(item[key]) / 100, 0);
+        nutrients[key] = total * 100 / Number(recipe.yieldGrams);
+      }
+      const entry = { id: productId(), name: recipe.name, grams: portion,
+        nutrients, meal, date, source: 'recipe', recipeId };
+      if (!commitMutation(draft => draft.entries.push(entry))) return false;
+      renderAll();
+      return true;
+    }
+  };
   function renderAll() { renderJournal(); renderProducts(); renderHistory(); renderWeight(); renderMeasurements(); renderSettings(); }
   function showPage(page) {
     $$('.page').forEach(el => el.classList.toggle('active', el.id === `page-${page}`));
@@ -275,14 +456,51 @@
     if (sourceDate === state.selectedDate && sourceMeal === targetMeal &&
         !confirm('Dodajesz ponownie cały posiłek do tego samego dnia i kategorii. Kontynuować?')) return;
     const rows = products.map(p => ({ ...p, id: productId(), date: state.selectedDate, meal: targetMeal }));
-    const previousEntries = state.entries, previousPortions = state.portions;
-    state.entries = [...state.entries, ...rows];
-    state.portions = { ...state.portions };
-    rows.forEach(entry => { state.portions[productKey(entry)] = entry.grams; });
-    if (!save()) { state.entries = previousEntries; state.portions = previousPortions; return; }
+    if (!commitMutation(draft => {
+      draft.entries.push(...rows);
+      rows.forEach(entry => { draft.portions[productKey(entry)] = entry.grams; });
+    })) return;
     closeModal();
     showPage('journal');
     toast(`Dodano cały posiłek (${rows.length} produktów)`);
+  }
+  // Premium Food Search: displayed context is derived from current UI state.
+  // This layer never writes a separate diary or modifies backup namespaces.
+  function updatePfsContext() {
+    const meal = $('#productForm').classList.contains('hidden') ? currentMeal : $('#productMeal').value;
+    const label = mealName(mealValid(meal) ? meal : currentMeal);
+    $('#pfsMealContext').textContent = 'Do posiłku: ' + label;
+    const save = $('#pfsSubmit');
+    const destination = { breakfast:'śniadania', lunch:'obiadu', dinner:'kolacji', snack:'przekąsek' }[meal] || label.toLocaleLowerCase('pl');
+    if (save) save.textContent = '+ Dodaj do ' + destination;
+  }
+  function updatePfsPortionControls() {
+    const grams = number($('#productGrams').value);
+    $$('[data-np-grams]').forEach(button => {
+      const selected = grams !== null && grams === Number(button.dataset.npGrams);
+      button.classList.toggle('selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+  }
+  function renderPfsFavorites() {
+    const favoriteMeals = state.favorites;
+    const own = state.custom;
+    const mealHtml = favoriteMeals.map((f,i) => {
+      const energy = Math.round(totalFor(f.items || []).kcal);
+      return `<article class="pfs-fav-card"><span class="pfs-fav-glyph" aria-hidden="true">☆</span><div class="pfs-fav-info"><strong>${safeText(f.name)}</strong><small>${f.items?.length || 0} produktów · ${nf.format(energy)} kcal</small></div><button type="button" data-pfs-favmeal="${i}" aria-label="Dodaj zestaw ${safeText(f.name)} do ${safeText(mealName(currentMeal))}">+ Dodaj</button></article>`;
+    }).join('');
+    const ownHtml = own.slice(0,25).map((p,i) => `<article class="pfs-fav-card"><span class="pfs-fav-glyph" aria-hidden="true">◈</span><div class="pfs-fav-info"><strong>${safeText(p.name)}</strong><small>${nf1.format(p.nutrients?.kcal ?? 0)} kcal / 100 g</small></div><button type="button" data-pfs-own="${i}" aria-label="Wybierz produkt ${safeText(p.name)}">+ Wybierz</button></article>`).join('');
+    $('#pfsFavoriteList').innerHTML =
+      `<h4>Ulubione posiłki</h4>${mealHtml || '<p class="pfs-empty">Brak ulubionych zestawów. Zapisz zestaw w dzienniku przy wybranym posiłku.</p>'}` +
+      `<h4>Moje produkty</h4>${ownHtml || '<p class="pfs-empty">Brak zapisanych własnych produktów.</p>'}`;
+    $$('[data-pfs-favmeal]').forEach(button => button.addEventListener('click', () => {
+      const fav = state.favorites[Number(button.dataset.pfsFavmeal)];
+      if (fav && addFavorite(fav.id, currentMeal)) closeModal();
+    }));
+    $$('[data-pfs-own]').forEach(button => button.addEventListener('click', () => {
+      const p = state.custom[Number(button.dataset.pfsOwn)];
+      if (p) selectProduct(p);
+    }));
   }
   function openModal(meal = 'breakfast', mode = 'search') {
     currentMeal = mealValid(meal) ? meal : 'breakfast';
@@ -292,8 +510,10 @@
     $('#productForm').classList.add('hidden');
     $('#searchResults').innerHTML = ''; $('#eanResults').innerHTML = '';
     $('#recentTargetMeal').value = currentMeal;
+    $('#productMeal').value = currentMeal;
     feedback(''); switchMode(mode);
     $('#modalTitle').textContent = 'Dodaj produkt';
+    updatePfsContext();
     $('#modalBackdrop').classList.remove('hidden'); $('#modalBackdrop').setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
     if (mode === 'manual') selectProduct({ name: '', nutrients: { kcal: null, protein: null, carbs: null, fat: null }, source: 'Własny' }, { manually: true });
@@ -308,6 +528,7 @@
     $$('.mode-pane').forEach(el => el.classList.toggle('hidden', el.id !== `mode-${mode}`));
     feedback('');
     if (mode === 'recent') renderRecentDiary();
+    if (mode === 'favorites') renderPfsFavorites();
     if (mode === 'manual') selectProduct({ name: '', nutrients: { kcal: null, protein: null, carbs: null, fat: null }, source: 'Własny' }, { manually: true });
   }
   // W formularzu wyświetlamy kcal i makro dla aktualnej ilości, lecz wpisy oraz
@@ -326,6 +547,7 @@
       $('#product' + suffix).value = per100 === null ? '' : formattedPortion(per100 * grams / 100);
     }
     updatePreview();
+    updatePfsPortionControls();
   }
   function productNutrientChanged(key, suffix) {
     const grams = number($('#productGrams').value);
@@ -345,20 +567,36 @@
     $('#modalTitle').textContent = opts.manually ? 'Własny produkt' : 'Dodaj porcję';
     $('#productSource').textContent = opts.manually ? 'Produkt własny' : (product.source || 'Open Food Facts');
     $('#productName').value = activeProduct.name || '';
-    // Zwykłe wyszukiwanie zaczyna od 100 g/ml. Jedynie świadomie wybrany
-    // produkt z zakładki Ostatnie dziedziczy gramaturę faktycznie zjedzonej porcji.
+    // Najpierw gramatura z konkretnego ostatniego wpisu, następnie ostatnia
+    // zapisana porcja tego produktu. Nowy produkt rozpoczyna od 100 g.
     const initialGrams = Number(opts.initialGrams);
-    $('#productGrams').value = Number.isFinite(initialGrams) && initialGrams > 0 && initialGrams <= 100000
-      ? String(initialGrams) : '100';
+    const lastGrams = Number(state.portions[productKey(activeProduct)]);
+    const remembered = !opts.manually && Number.isFinite(lastGrams) && lastGrams > 0 && lastGrams <= 100000;
+    const chosen = Number.isFinite(initialGrams) && initialGrams > 0 && initialGrams <= 100000
+      ? initialGrams : remembered ? lastGrams : 100;
+    $('#productGrams').value = String(chosen);
+    $('#pfsPortionHint').textContent = Number.isFinite(initialGrams) && initialGrams > 0
+      ? 'Porcja z ostatniego wpisu' : remembered ? 'Twoja ostatnio używana porcja' : 'Możesz wpisać dowolną gramaturę.';
+    const verification = activeProduct.verification;
+    const quality = verification === 'label-photo'
+      ? '✓ Dane odczytane z etykiety'
+      : activeProduct.isEstimate || verification === 'ean-photo-macro-estimate' || verification === 'estimated-generic'
+      ? '⚠ Wartości orientacyjne'
+      : activeProduct.source === 'Open Food Facts'
+      ? 'Dane społecznościowe OFF'
+      : 'Sprawdź wartości na etykiecie';
+    $('#pfsVerification').textContent = quality;
+    $('#pfsVerification').classList.toggle('pfs-estimated', quality.includes('orientacyjne'));
     $('#productMeal').value = mealValid(opts.meal) ? opts.meal : currentMeal;
     $('#saveOwnProduct').checked = Boolean(opts.manually);
-    syncProductPortionFields(); feedback('');
-    setTimeout(() => $('#productGrams').focus(), 70);
+    updatePfsContext(); syncProductPortionFields(); feedback('');
+    // Na telefonie nie otwieramy klawiatury bez prośby użytkownika.
   }
   function backToLookup() {
     $('#productForm').classList.add('hidden'); $('#lookupArea').classList.remove('hidden');
     draftPer100 = null;
     $('#modalTitle').textContent = 'Dodaj produkt';
+    updatePfsContext();
     if (activeMode === 'manual') switchMode('search');
   }
   // v0.8: ostrzeżenie w formularzach, gdy energia wyraźnie przeczy wartościom B/T/W.
@@ -375,6 +613,12 @@
   function updatePreview() {
     const grams = number($('#productGrams').value);
     const kcal = number($('#productKcal').value);
+    const values = {kcal,protein:number($('#productProtein').value),fat:number($('#productFat').value),carbs:number($('#productCarbs').value)};
+    for (const [id,key,unit] of [['pfsLiveKcal','kcal','kcal'],['pfsLiveProtein','protein','g'],['pfsLiveFat','fat','g'],['pfsLiveCarbs','carbs','g']]) {
+      const value = values[key];
+      $('#'+id).textContent = value === null || value < 0 ? '—' : nf1.format(value) + ' ' + unit;
+    }
+    updatePfsPortionControls();
     if (grams === null || grams <= 0 || grams > 100000 || kcal === null || kcal < 0) {
       $('#portionPreview').textContent = 'Uzupełnij poprawną ilość i kalorie, aby zobaczyć podsumowanie porcji.';
       return;
@@ -413,14 +657,19 @@
     }
     const warning=nutritionWarning(nutrients);
     if(warning && !confirm(`⚠️ Podejrzane dane żywieniowe: ${warning}\n\nCzy mimo to zapisać produkt?`)) return;
-    const p = { name, nutrients, source: activeProduct?.source || 'Własny', brand: activeProduct?.brand || '', ean: activeProduct?.ean || '' };
-    state.entries.push({ ...p, id: productId(), date: state.selectedDate, meal: $('#productMeal').value, grams });
-    state.portions[productKey(p)] = grams;
-    state.recent = [p, ...state.recent.filter(item => (p.ean && item.ean ? item.ean !== p.ean : item.name.toLocaleLowerCase('pl') !== p.name.toLocaleLowerCase('pl')))].slice(0, 25);
-    if ($('#saveOwnProduct').checked) {
-      state.custom = [p, ...state.custom.filter(item => item.name.toLocaleLowerCase('pl') !== p.name.toLocaleLowerCase('pl'))].slice(0, 100);
+    const p = { name, nutrients, source: activeProduct?.source || 'Własny', brand: activeProduct?.brand || '', ean: activeProduct?.ean || '', ...productProvenance(activeProduct) };
+    if (!commitMutation(draft => {
+      draft.entries.push({ ...p, id: productId(), date: draft.selectedDate, meal: $('#productMeal').value, grams });
+      draft.portions[productKey(p)] = grams;
+      draft.recent = [p, ...draft.recent.filter(item => (p.ean && item.ean ? item.ean !== p.ean : item.name.toLocaleLowerCase('pl') !== p.name.toLocaleLowerCase('pl')))].slice(0, 25);
+      if ($('#saveOwnProduct').checked) {
+        draft.custom = [p, ...draft.custom.filter(item => item.name.toLocaleLowerCase('pl') !== p.name.toLocaleLowerCase('pl'))].slice(0, 100);
+      }
+    })) {
+      feedback('Nie udało się zapisać. Produkt nie został dodany; sprawdź pamięć urządzenia i spróbuj ponownie.');
+      return;
     }
-    save(); closeModal(); renderAll(); showPage('journal'); toast(`${name} dodano do dziennika`);
+    closeModal(); showPage('journal'); toast(`${name} dodano do dziennika`);
   }
   function offToProduct(p) {
     const n = p.nutriments || {};
@@ -465,14 +714,15 @@
     try {
       // Najpierw lokalne, zweryfikowane etykiety. Skaner EAN musi działać
       // również offline, bez zastępowania konkretnej receptury inną z OFF.
-      const { searchBasicFoods, normalizeOffProduct } = await import('./wyszukiwarka.mjs');
+      const { searchBasicFoods, normalizeOffProduct } = await import('../wyszukiwarka.mjs');
       const local = searchBasicFoods(ean, 5).find(p => p.code === ean);
       if (local) {
         $('#eanResults').innerHTML = '';
         selectProduct({
           name: local.name, brand: local.brand, ean: local.code,
-          source: 'Etykieta opakowania (baza lokalna)',
-          nutrients: {kcal: local.kcal, protein: local.protein, carbs: local.carbs, fat: local.fat}
+          source: local.verification === 'label-photo' ? 'Etykieta opakowania (baza lokalna)' : 'Baza podstawowa',
+          nutrients: {kcal: local.kcal, protein: local.protein, carbs: local.carbs, fat: local.fat},
+          ...productProvenance(local)
         });
         return;
       }
@@ -489,7 +739,8 @@
       }
       productResults([data.product], $('#eanResults'));
       selectProduct({name:checked.name,brand:checked.brand,ean:checked.code,source:checked.source,
-        nutrients:{kcal:checked.kcal,protein:checked.protein,carbs:checked.carbs,fat:checked.fat}});
+        nutrients:{kcal:checked.kcal,protein:checked.protein,carbs:checked.carbs,fat:checked.fat},
+        ...productProvenance(checked)});
     } catch { $('#eanResults').innerHTML = ''; feedback('Nie udało się pobrać produktu. Sprawdź połączenie lub spróbuj później.'); }
   }
   async function startCamera() {
@@ -533,7 +784,7 @@
       const value = number($(goalField(key)).value);
       if (value === null || value < (key === 'water' ? 100 : 1) || value > (key === 'kcal' || key === 'water' ? 10000 : 1000)) { toast('Sprawdź cele dzienne'); return; } next[key] = Math.round(value);
     }
-    state.goals = next; save(); renderAll(); toast('Cele zaktualizowane');
+    if (commitMutation(draft => { draft.goals = next; })) { renderAll(); toast('Cele zaktualizowane'); }
   }
   function downloadJson(data, name) {
     const blob = new Blob([data], { type: 'application/json;charset=utf-8' });
@@ -548,6 +799,10 @@
     return blob.size;
   }
   function exportData() {
+    if (storageFault) {
+      setDownloadStatus('Błąd odczytu dziennika — nie eksportowano pustego zastępczego stanu. Zabezpiecz oryginalną pamięć i punkty przywracania.', true);
+      return;
+    }
     try {
       const stamp = new Date();
       const time = [stamp.getHours(), stamp.getMinutes(), stamp.getSeconds()].map(v => String(v).padStart(2, '0')).join('-');
@@ -560,11 +815,12 @@
     }
   }
   function restorePayload(payload) {
+       if (storageFault) throw Error('Dziennik jest nieczytelny. Przywracanie zablokowane, aby nie nadpisać oryginalnej pamięci.');
       if (payload.app !== 'MojBilans' || !Array.isArray(payload.entries) || !Array.isArray(payload.custom) || !Array.isArray(payload.recent)) throw Error('To nie jest prawidłowy plik Mój Bilans.');
       if (payload.entries.length > 20000 || payload.custom.length > 5000 || payload.recent.length > 5000) throw Error('Zbyt duży zestaw danych.');
       const validProduct = p => p && typeof p.name === 'string' && p.name.length <= 100 && p.nutrients && isNumber(p.nutrients.kcal) && number(p.nutrients.kcal) >= 0 && Number(p.nutrients.kcal) <= 10000;
-      const entries = payload.entries.filter(e => validProduct(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000).map(e => ({ id: productId(), name: e.name, date: e.date, meal: e.meal, grams: number(e.grams), nutrients: plainNutrients(e.nutrients), source: String(e.source || 'Import').slice(0, 50), brand: String(e.brand || '').slice(0, 100), ean: String(e.ean || '').slice(0, 14) }));
-      const products = arr => arr.filter(validProduct).map(p => ({ name: p.name, brand: String(p.brand || '').slice(0, 100), source: String(p.source || 'Import').slice(0, 50), ean: String(p.ean || '').slice(0, 14), nutrients: plainNutrients(p.nutrients) }));
+      const entries = payload.entries.filter(e => validProduct(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams) > 0 && number(e.grams) <= 100000).map(e => ({ id: productId(), name: e.name, date: e.date, meal: e.meal, grams: number(e.grams), nutrients: plainNutrients(e.nutrients), source: String(e.source || 'Import').slice(0, 50), brand: String(e.brand || '').slice(0, 100), ean: String(e.ean || '').slice(0, 14), ...productProvenance(e) }));
+      const products = arr => arr.filter(validProduct).map(p => ({ name: p.name, brand: String(p.brand || '').slice(0, 100), source: String(p.source || 'Import').slice(0, 50), ean: String(p.ean || '').slice(0, 14), nutrients: plainNutrients(p.nutrients), ...productProvenance(p) }));
       if (!confirm('Przywrócenie zastąpi bieżące dane na telefonie. Przedtem zalecamy eksport lokalnej kopii JSON. Kontynuować?')) return false;
       const goals = {};
       for (const key of ['kcal', 'protein', 'carbs', 'fat', 'water']) { const val = number(payload.goals?.[key]); goals[key] = val !== null && val >= (key === 'water' ? 100 : 1) && val <= (key === 'kcal' || key === 'water' ? 10000 : 1000) ? Math.round(val) : DEFAULT_GOALS[key]; }
@@ -584,8 +840,9 @@
       const portions = {};
       if (payload.portions && typeof payload.portions === 'object' && !Array.isArray(payload.portions)) for (const [k, v] of Object.entries(payload.portions).slice(0, 5000)) { if (k.length <= 240 && isNumber(v) && number(v) > 0 && number(v) <= 100000 && !['__proto__','constructor','prototype'].includes(k)) Object.defineProperty(portions, k, { value: Number(v), enumerable: true, writable: true, configurable: true }); }
       const target = number(payload.weightGoal);
-      state = { ...state, goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
-      save();
+      const previous = state;
+      state = { ...state, goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, recipes: validateRecipes(payload.recipes), weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
+      if (!save()) { state = previous; return false; }
       renderAll(); toast(`Przywrócono ${entries.length} wpisów`);
       return true;
   }
@@ -608,23 +865,32 @@
     if (!name) { toast('Podaj nazwę ulubionego posiłku'); return; }
     const duplicate = state.favorites.find(f => f.name.toLocaleLowerCase('pl') === name.toLocaleLowerCase('pl'));
     if (duplicate && !confirm('Taka nazwa już istnieje. Zastąpić zapisany zestaw?')) return;
-    state.favorites = [{ id: duplicate?.id || productId(), name, meal, items: products }, ...state.favorites.filter(f => f.id !== duplicate?.id)];
-    if (save()) { renderAll(); toast('Zapisano ulubiony posiłek'); }
+    if (commitMutation(draft => {
+      draft.favorites = [{ id: duplicate?.id || productId(), name, meal, items: products }, ...draft.favorites.filter(f => f.id !== duplicate?.id)];
+    })) { renderAll(); toast('Zapisano ulubiony posiłek'); }
   }
-  function addFavorite(id) {
+  function addFavorite(id, targetMeal = null) {
     const fav = state.favorites.find(f => f.id === id);
-    if (!fav || !Array.isArray(fav.items) || !fav.items.length || !mealValid(fav.meal)) return;
-    // Zestaw można dodać wielokrotnie świadomie, jak każdy inny posiłek.
-    const rows = fav.items.map(e => ({ ...cloneProductEntry(e), id: productId(), date: state.selectedDate, meal: fav.meal }));
-    state.entries.push(...rows);
-    rows.forEach(e => { state.portions[productKey(e)] = e.grams; });
-    if (save()) { showPage('journal'); toast(`Dodano „${fav.name}” (${rows.length} produktów)`); }
+    if (!fav || !Array.isArray(fav.items) || !fav.items.length || !mealValid(fav.meal)) return false;
+    // Zestaw dodany z modalu trafia do posiłku, który użytkownik wybrał.
+    // Pozostałe wywołania zachowują oryginalną kategorię zestawu.
+    const meal = mealValid(targetMeal) ? targetMeal : fav.meal;
+    const rows = fav.items.map(e => ({ ...cloneProductEntry(e), id: productId(), date: state.selectedDate, meal }));
+    if (commitMutation(draft => {
+      draft.entries.push(...rows);
+      rows.forEach(e => { draft.portions[productKey(e)] = e.grams; });
+    })) {
+      showPage('journal'); toast(`Dodano „${fav.name}” (${rows.length} produktów)`);
+      return true;
+    }
+    return false;
   }
   function removeFavorite(id) {
     const fav = state.favorites.find(f => f.id === id);
     if (!fav || !confirm(`Usunąć ulubiony posiłek „${fav.name}”? Zapisane w dzienniku produkty pozostaną.`)) return;
-    state.favorites = state.favorites.filter(f => f.id !== id);
-    save(); renderAll(); toast('Usunięto ulubiony posiłek');
+    if (commitMutation(draft => { draft.favorites = draft.favorites.filter(f => f.id !== id); })) {
+      renderAll(); toast('Usunięto ulubiony posiłek');
+    }
   }
   function renderFavoriteQuick() {
     const section = $('#favoriteQuickSection');
@@ -663,9 +929,10 @@
     if (!products.length) { toast('Brak produktów do skopiowania'); return; }
     if (date === state.selectedDate && meal === targetMeal && !confirm('Kopiujesz posiłek do tego samego miejsca. Dodać drugi raz?')) return;
     const rows = products.map(p => ({ ...p, id: productId(), date: state.selectedDate, meal: targetMeal }));
-    state.entries.push(...rows);
-    rows.forEach(row => { state.portions[productKey(row)] = row.grams; });
-    if (save()) { closeCopyDialog(); renderAll(); toast(`Skopiowano ${rows.length} produktów`); }
+    if (commitMutation(draft => {
+      draft.entries.push(...rows);
+      rows.forEach(row => { draft.portions[productKey(row)] = row.grams; });
+    })) { closeCopyDialog(); renderAll(); toast(`Skopiowano ${rows.length} produktów`); }
   }
   // v0.2: ręczny dziennik wody, dzienna suma i cofnięcie ostatniego wpisu.
   function renderWater() {
@@ -678,13 +945,14 @@
   }
   function addWater(ml) {
     if (!Number.isFinite(ml) || ml < 1 || ml > 5000) return;
-    state.water.push({ id: productId(), date: state.selectedDate, ml });
-    if (save()) { renderAll(); toast(`Dodano ${nf.format(ml)} ml wody`); }
+    if (commitMutation(draft => { draft.water.push({ id: productId(), date: draft.selectedDate, ml }); })) {
+      renderAll(); toast(`Dodano ${nf.format(ml)} ml wody`);
+    }
   }
   function undoWater() {
     const i = state.water.map((w, index) => w.date === state.selectedDate ? index : -1).filter(x => x >= 0).pop();
     if (i === undefined) return;
-    state.water.splice(i, 1); save(); renderAll(); toast('Cofnięto ostatni wpis wody');
+    if (commitMutation(draft => { draft.water.splice(i, 1); })) { renderAll(); toast('Cofnięto ostatni wpis wody'); }
   }
   // v0.2: masa ciała, datowany dziennik, proporcjonalna oś czasu i cel.
   function renderWeight() {
@@ -696,14 +964,21 @@
     $('#weightChangeHint').textContent = first ? `od ${niceDate(toDate(first.date))}` : 'Dodaj pierwszy pomiar';
     $('#weightGoalDisplay').textContent = `${nf1.format(state.weightGoal)} kg`;
     $('#weightToGoal').textContent = last ? `${nf1.format(Math.abs(last.kg - state.weightGoal))} kg ${last.kg > state.weightGoal ? 'do celu' : last.kg < state.weightGoal ? 'poniżej celu' : '— cel osiągnięty'}` : 'Ustawiony cel';
+    const previousWeight = sorted.at(-2);
+    const recentDelta = previousWeight && last ? Number(last.kg) - Number(previousWeight.kg) : null;
+    $('#npWeightRecent').textContent = recentDelta === null ? '—' : `${recentDelta > 0 ? '+' : ''}${nf1.format(Math.round(recentDelta * 10) / 10)} kg`;
+    $('#npWeightRecentDate').textContent = previousWeight && last ? `${previousWeight.date} → ${last.date}` : 'Co najmniej dwa pomiary';
     $('#goalWeight').value = state.weightGoal;
     const recent = sorted.slice(-60);
-    $('#weightChartCaption').textContent = recent.length ? `Ostatnie ${recent.length} ${recent.length === 1 ? 'ważenie' : 'pomiary'}${sorted.length > 60 ? ' (maks. 60 na wykresie)' : ''}. Wartości w kg. Linie pomiędzy pomiarami nie oznaczają pomiaru codziennego.` : '';
-    $('#weightChart').innerHTML = recent.length ? buildWeightChart(recent) : '<p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p>';
+    $('#weightChartCaption').textContent = recent.length ? `Ostatnie ${recent.length} ${recent.length === 1 ? 'ważenie' : 'pomiary'}${sorted.length > 60 ? ' (maks. 60 na wykresie)' : ''}. Wartości w kg. Miętowy: pomiary, fioletowy: wygładzony trend EMA (półokres 7 dni), pomarańczowy: cel. Łączymy tylko rzeczywiste pomiary.` : '';
+    $('#weightChart').innerHTML = recent.length ? (window.NPBody25?.weightChart(recent, state.weightGoal) || buildWeightChart(recent)) : '<p class="empty-chart">Dodaj pomiar, aby zobaczyć wykres.</p>';
+    window.NPBody25?.render(sorted, state.weightGoal);
     $('#weightList').innerHTML = sorted.length ? [...sorted].reverse().map(w => `<div class="compact-item"><div><strong>${nf1.format(w.kg)} kg</strong><small>${safeText(niceDate(toDate(w.date)))}</small></div><button type="button" class="danger-quiet" data-removeweight="${safeText(w.date)}">Usuń</button></div>`).join('') : '<div class="empty-list">Nie ma jeszcze pomiarów.</div>';
     $$('[data-removeweight]').forEach(b => b.addEventListener('click', () => {
       if (!confirm(`Usunąć pomiar z dnia ${b.dataset.removeweight}?`)) return;
-      state.weights = state.weights.filter(w => w.date !== b.dataset.removeweight); save(); renderAll(); toast('Pomiar usunięty');
+      if (commitMutation(draft => { draft.weights = draft.weights.filter(w => w.date !== b.dataset.removeweight); })) {
+        renderAll(); toast('Pomiar usunięty');
+      }
     }));
   }
   function buildWeightChart(rows) {
@@ -725,13 +1000,14 @@
   function saveWeight(e) {
     e.preventDefault(); const date = $('#weightDate').value, kg = number($('#weightKg').value);
     if (!normalizedDate(date) || kg === null || kg < 20 || kg > 400) { toast('Sprawdź datę i wagę (20–400 kg)'); return; }
-    state.weights = [...state.weights.filter(w => w.date !== date), { date, kg }].sort((a,b) => a.date.localeCompare(b.date));
-    if (save()) { $('#weightKg').value = ''; renderAll(); toast('Waga zapisana'); }
+    if (commitMutation(draft => {
+      draft.weights = [...draft.weights.filter(w => w.date !== date), { date, kg }].sort((a,b) => a.date.localeCompare(b.date));
+    })) { $('#weightKg').value = ''; renderAll(); toast('Waga zapisana'); }
   }
   function saveWeightGoal(e) {
     e.preventDefault(); const value = number($('#goalWeight').value);
     if (value === null || value < 20 || value > 400) { toast('Cel wagi musi wynosić 20–400 kg'); return; }
-    state.weightGoal = value; save(); renderAll(); toast('Cel wagi zapisany');
+    if (commitMutation(draft => { draft.weightGoal = value; })) { renderAll(); toast('Cel wagi zapisany'); }
   }
 
 
@@ -753,12 +1029,17 @@
       const diffText = delta === null ? (last ? 'Pierwszy pomiar' : 'Brak pomiarów') : `${delta > 0 ? '+' : ''}${nf1.format(Math.round(delta * 10) / 10)} cm od początku`;
       return `<div class="panel measure-stat"><span>${safeText(m.label)}</span><strong>${last ? nf1.format(last[m.key]) + ' cm' : '—'}</strong><small>${safeText(diffText)}</small></div>`;
     }).join('');
+    window.NPBody25?.renderMeasures(sorted, $('#measurementOverview'));
     const type = $('#measurementChartType').value;
     const metric = MEASURES.find(m => m.key === type) || MEASURES[0];
     const series = sorted.filter(m => measureValue(m[metric.key]) !== null);
     const recent = series.slice(-60);
     $('#measurementChart').innerHTML = recent.length ? buildMeasureChart(recent, metric) : `<p class="empty-chart">Brak danych dla: ${safeText(metric.label.toLowerCase())}. Dodaj pomiar.</p>`;
     $('#measurementChartCaption').textContent = recent.length ? `${metric.label}: ${recent.length} ${recent.length === 1 ? 'pomiar' : 'pomiarów'} na wykresie (maks. 60), w cm. Linie łączą zapisane daty, nie oznaczają codziennych pomiarów.` : '';
+    const lastMeasure = series.at(-1), previousMeasure = series.at(-2);
+    const measureDelta = lastMeasure && previousMeasure ? Number(lastMeasure[metric.key]) - Number(previousMeasure[metric.key]) : null;
+    $('#npMeasureRecent').textContent = measureDelta === null ? 'Trend obwodu pojawi się po drugim pomiarze.'
+      : `${metric.label}: ${measureDelta > 0 ? '+' : ''}${nf1.format(Math.round(measureDelta * 10) / 10)} cm między ${previousMeasure.date} i ${lastMeasure.date}.`;
     $('#measurementList').innerHTML = sorted.length ? [...sorted].reverse().map(m => {
       const values = MEASURES.filter(t => measureValue(m[t.key]) !== null).map(t => `${t.label}: ${nf1.format(m[t.key])} cm`).join(' · ');
       return `<div class="compact-item measurement-item"><div><strong>${safeText(niceDate(toDate(m.date)))}</strong><small>${safeText(values)}</small></div><div class="measurement-actions"><button type="button" data-editmeasure="${safeText(m.date)}">Edytuj</button><button type="button" class="danger-quiet" data-removemeasure="${safeText(m.date)}">Usuń</button></div></div>`;
@@ -771,8 +1052,9 @@
     }));
     $$('[data-removemeasure]').forEach(b => b.addEventListener('click', () => {
       if (!confirm(`Usunąć wszystkie obwody z dnia ${b.dataset.removemeasure}?`)) return;
-      state.measurements = state.measurements.filter(m => m.date !== b.dataset.removemeasure);
-      if (save()) { readMeasurementsAtDate(); renderAll(); toast('Pomiar usunięty'); }
+      if (commitMutation(draft => {
+        draft.measurements = draft.measurements.filter(m => m.date !== b.dataset.removemeasure);
+      })) { readMeasurementsAtDate(); renderAll(); toast('Pomiar usunięty'); }
     }));
   }
   function buildMeasureChart(rows, metric) {
@@ -805,8 +1087,9 @@
       row[m.key] = Math.round(value * 10) / 10;
     }
     if (!MEASURES.some(m => row[m.key] !== undefined)) { toast('Podaj co najmniej jeden obwód'); return; }
-    state.measurements = [...state.measurements.filter(m => m.date !== date), row].sort((a, b) => a.date.localeCompare(b.date));
-    if (save()) { renderAll(); toast('Obwody zapisane'); }
+    if (commitMutation(draft => {
+      draft.measurements = [...draft.measurements.filter(m => m.date !== date), row].sort((a, b) => a.date.localeCompare(b.date));
+    })) { renderAll(); toast('Obwody zapisane'); }
   }
 
   // v0.7: edycja dotyczy pojedynczego wpisu. W eksporcie nadal zapisujemy
@@ -828,6 +1111,11 @@
     $('#entryActions').classList.remove('hidden'); $('#entrySummary').classList.remove('hidden');
     const portion = key => entryTotal(row, key) === null ? 'brak' : `${nf1.format(entryTotal(row, key))} g`;
     const per100 = key => isNumber(row.nutrients?.[key]) ? `${nf1.format(row.nutrients[key])}${key === 'kcal' ? ' kcal' : ' g'}` : 'brak';
+    const provenanceInfo = row.isEstimate || row.verification === 'ean-photo-macro-estimate'
+      ? '⚠️ Wartości orientacyjne — nie są potwierdzonym odczytem etykiety.'
+      : row.verification === 'label-photo' ? 'Wartości odczytane z etykiety konkretnego produktu.'
+      : row.source === 'Open Food Facts' ? 'Dane społecznościowe OFF — sprawdź etykietę.'
+      : '';
     $('#entrySummary').innerHTML = `<strong>${safeText(row.name)}</strong>
       <p>${safeText(niceDate(toDate(row.date)))} · ${safeText(mealName(row.meal))} · ${nf1.format(row.grams)} g/ml ${row.brand ? '· ' + safeText(row.brand) : ''}</p>
       <div class="entry-value-label">Wartości dla całej porcji</div>
@@ -838,7 +1126,8 @@
         <span><b>${portion('fat')}</b>Tłuszcze</span>
       </div>
       <div class="entry-per100">Na 100 g/ml: ${per100('kcal')} · B ${per100('protein')} · W ${per100('carbs')} · T ${per100('fat')}</div>
-      <p>${safeText(row.source || '')}${row.ean ? ' · EAN ' + safeText(row.ean) : ''}</p>`;
+      <p>${safeText(row.source || '')}${row.ean ? ' · EAN ' + safeText(row.ean) : ''}</p>
+      ${provenanceInfo ? '<p class="entry-provenance">' + safeText(provenanceInfo) + '</p>' : ''}`;
     $('#entryTitle').textContent = 'Szczegóły wpisu';
     $('#entryBackdrop').classList.remove('hidden'); $('#entryBackdrop').setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
@@ -941,18 +1230,12 @@
     }
     const warning=nutritionWarning(nutrients);
     if(warning && !confirm(`⚠️ Podejrzane dane w edytowanym wpisie: ${warning}\n\nCzy mimo to zapisać zmiany?`)) return;
-    const original = { name:e.name, grams:e.grams, date:e.date, meal:e.meal, nutrients:e.nutrients };
-    const pKey = productKey(e);
-    const oldPortion = Object.prototype.hasOwnProperty.call(state.portions, pKey) ? state.portions[pKey] : undefined;
-    Object.assign(e, { name, grams, date, meal, nutrients });
-    const newKey = productKey(e);
-    state.portions[newKey] = grams;
-    if (!save()) {
-      Object.assign(e, original);
-      if (oldPortion === undefined) delete state.portions[pKey]; else state.portions[pKey] = oldPortion;
-      if (newKey !== pKey) delete state.portions[newKey];
-      return;
-    }
+    if (!commitMutation(draft => {
+      const item = draft.entries.find(row => row.id === e.id);
+      if (!item) throw Error('Nie znaleziono edytowanego wpisu.');
+      Object.assign(item, { name, grams, date, meal, nutrients });
+      draft.portions[productKey(item)] = grams;
+    })) return;
     state.selectedDate = date;
     closeEntryDialog(); renderAll();
     toast('Zapisano zmiany tego produktu');
@@ -970,18 +1253,23 @@
     ev.preventDefault(); const e = chosenEntry(); if (!e) return;
     const targetDate = $('#entryTargetDate').value, targetMeal = $('#entryTargetMeal').value;
     if (!normalizedDate(targetDate) || !mealValid(targetMeal)) {toast('Wybierz poprawny dzień i posiłek');return;}
-    if (transferMode === 'copy') {
-      if (targetDate === e.date && targetMeal === e.meal && !confirm('Dodać drugi taki sam wpis do tego samego posiłku?')) return;
-      state.entries.push({...cloneProductEntry(e), id:productId(), date:targetDate, meal:targetMeal});
-    } else {e.date=targetDate; e.meal=targetMeal;}
-    if (save()) {closeEntryDialog(); renderAll(); toast(transferMode === 'copy' ? 'Skopiowano produkt' : 'Przeniesiono produkt');}
+    if (transferMode === 'copy' && targetDate === e.date && targetMeal === e.meal &&
+        !confirm('Dodać drugi taki sam wpis do tego samego posiłku?')) return;
+    if (commitMutation(draft => {
+      if (transferMode === 'copy') {
+        draft.entries.push({...cloneProductEntry(e), id:productId(), date:targetDate, meal:targetMeal});
+      } else {
+        const item = draft.entries.find(row=>row.id===e.id);
+        if (!item) throw Error('Nie znaleziono wpisu do przeniesienia.');
+        item.date = targetDate; item.meal = targetMeal;
+      }
+    })) {closeEntryDialog(); renderAll(); toast(transferMode === 'copy' ? 'Skopiowano produkt' : 'Przeniesiono produkt');}
   }
   function deleteSelectedEntry() {
     const e=chosenEntry(); if (!e || !confirm(`Usunąć produkt „${e.name}”?`))return;
-    const previous = state.entries;
-    state.entries = state.entries.filter(x => x.id !== e.id);
-    if (save()) { closeEntryDialog(); renderAll(); toast('Usunięto tylko wybrany wpis'); }
-    else state.entries = previous;
+    if (commitMutation(draft => { draft.entries = draft.entries.filter(x => x.id !== e.id); })) {
+      closeEntryDialog(); renderAll(); toast('Usunięto tylko wybrany wpis');
+    }
   }
   function cancelEntryAction() {
     const id = openEntryId;
@@ -991,6 +1279,10 @@
   // Lokalny punkt przywracania jest przechowywany w IndexedDB (jeden plik na dzień,
   // aktualizowany przy zmianach). To nie jest niezależna kopia w systemowym folderze
   // Pobrane: taki plik powstaje dopiero po świadomym kliknięciu Pobierz kopię.
+  function backupHealth(message, isError=false) {
+    const el=$('#np21BackupHealth');
+    if(el){el.textContent=message;el.classList.toggle('np21-error',isError);}
+  }
   function localBackupStatus(message, isError = false) {
     const el = $('#localBackupStatus');
     el.textContent = message;
@@ -1012,7 +1304,7 @@
   function openLocalBackupDb() {
     return new Promise((resolve, reject) => {
       if (!('indexedDB' in window)) { reject(Error('Przeglądarka nie udostępnia pamięci kopii (IndexedDB).')); return; }
-      const req = indexedDB.open(LOCAL_COPIES_DB, 1);
+      const req = indexedDB.open(COPIES_DB, 1);
       req.onupgradeneeded = () => {
         if (!req.result.objectStoreNames.contains(LOCAL_COPIES_STORE)) {
           req.result.createObjectStore(LOCAL_COPIES_STORE, { keyPath: 'id' });
@@ -1064,6 +1356,10 @@
       const db = await openLocalBackupDb();
       try {
         await dbOperation(db, 'readwrite', store => store.put(record));
+        const readback = await dbOperation(db, 'readonly', store => store.get(record.id));
+        if (!readback || readback.json !== record.json || readback.bytes !== record.bytes) {
+          throw Error('Brak potwierdzenia zapisu kopii w pamięci urządzenia.');
+        }
         // Zachowaj maksymalnie 30 ostatnich dni; nie usuwamy innych danych aplikacji.
         const rows = (await dbOperation(db, 'readonly', store => store.getAll()))
           .sort((a,b) => String(b.savedAt).localeCompare(String(a.savedAt)));
@@ -1071,9 +1367,11 @@
         for (const row of old) await dbOperation(db, 'readwrite', store => store.delete(row.id));
       } finally { db.close(); }
       localBackupStatus(`Automatyczny punkt przywracania na tym urządzeniu zapisany: ${formatTime(record.savedAt)} (${sizeLabel(record.bytes)}). Jest w pamięci przeglądarki, nie w folderze Pobrane.`);
+      backupHealth('Kopia lokalna potwierdzona: '+formatTime(record.savedAt)+' • '+sizeLabel(record.bytes)+'.');
       if ($('#page-settings').classList.contains('active')) await listLocalCopies(true);
     } catch (err) {
       localBackupStatus(`Nie zapisano automatycznego punktu przywracania: ${err.message}. Nadal możesz kliknąć „Pobierz kopię na telefon”.`, true);
+      backupHealth('Nie udało się zapisać kopii: '+err.message,true);
     }
   }
   function validateBackupPreview(data) {
@@ -1087,6 +1385,7 @@
     if (!quiet) el.innerHTML = '<div class="empty-list">Wczytuję kopie z pamięci tego telefonu…</div>';
     try {
       const files = await readAllLocalCopies();
+      backupHealth(files.length ? 'Ostatnia kopia lokalna: '+formatTime(files[0].savedAt)+' • '+files.length+' dni dostępnych.' : 'Nie ma jeszcze lokalnej kopii na tym urządzeniu.');
       el.innerHTML = files.length ? files.map(f => `<div class="compact-item drive-files-item"><div><strong>${safeText(f.name)}</strong><small>${safeText(formatTime(f.savedAt))} · ${safeText(sizeLabel(f.bytes))} · punkt lokalny</small></div><div class="file-actions"><button type="button" data-local-preview="${safeText(f.id)}">Podgląd</button><button type="button" data-local-download="${safeText(f.id)}">Pobierz</button><button type="button" data-local-restore="${safeText(f.id)}">Przywróć</button></div></div>`).join('') : '<div class="empty-list">Brak lokalnych punktów przywracania. Zostaną utworzone po zapisaniu danych w aplikacji.</div>';
       $$('[data-local-preview]').forEach(b => b.addEventListener('click', () => previewLocalCopy(b.dataset.localPreview)));
       $$('[data-local-download]').forEach(b => b.addEventListener('click', () => downloadSavedLocalCopy(b.dataset.localDownload)));
@@ -1095,7 +1394,32 @@
     } catch (err) {
       el.innerHTML = `<div class="empty-list">Nie można wyświetlić kopii: ${safeText(err.message)}</div>`;
       if (!quiet) localBackupStatus(`Nie można wyświetlić kopii: ${err.message}`, true);
+      backupHealth('Nie udało się odczytać kopii lokalnych: '+err.message,true);
     }
+  }
+  // Bezpieczny test integralności: parsowanie i walidacja BEZ zapisu do dziennika.
+  async function verifyLatestBackup() {
+    const button=$('#np21VerifyBackup');
+    button.disabled=true;
+    try {
+      const copies=await readAllLocalCopies();
+      if(!copies.length) throw Error('Brak kopii do sprawdzenia. Dodaj przykładowy posiłek testowy.');
+      const latest=await getLocalCopy(copies[0].id);
+      if(!latest || typeof latest.json!=='string') throw Error('Nie można odczytać treści kopii.');
+      if(new Blob([latest.json]).size!==latest.bytes) throw Error('Rozmiar zapisanej kopii jest niezgodny.');
+      const data=JSON.parse(latest.json);
+      validateBackupPreview(data);
+      const validEntry=e=> e && typeof e.name==='string' && e.nutrients && isNumber(e.nutrients.kcal)
+        && normalizedDate(e.date) && mealValid(e.meal) && isNumber(e.grams) && number(e.grams)>0;
+      if(!data.entries.every(validEntry)) throw Error('Znaleziono niepoprawny wpis posiłku.');
+      for(const key of ['custom','recent','weights','water','measurements']) {
+        if(data[key]!==undefined && !Array.isArray(data[key]))throw Error('Nieprawidłowe pole '+key+'.');
+      }
+      backupHealth('Sprawdzono kopię z '+formatTime(latest.savedAt)+': odczyt, rozmiar i struktura '+data.entries.length+' wpisów poprawne. Nie przywracano danych.');
+      localBackupStatus('Kontrola zakończona. Dziennik pozostał bez zmian.');
+    } catch(err) {
+      backupHealth('Test integralności nieudany: '+(err?.message||'błąd odczytu'),true);
+    } finally {button.disabled=false;}
   }
   async function previewLocalCopy(id) {
     try {
@@ -1190,7 +1514,7 @@
     // v0.6: podłącz zintegrowaną wyszukiwarkę (ziemniaki/produkty podstawowe + OFF).
     // Jeśli moduł się nie załaduje, zachowaj starą wyszukiwarkę, aby nie blokować dziennika.
     $('#searchForm').addEventListener('submit', searchName);
-    import('./interfejs-wyszukiwarki.mjs').then(({ mountFoodSearch }) => {
+    import('../interfejs-wyszukiwarki.mjs?v=np2.1.1').then(({ mountFoodSearch }) => {
       $('#searchForm').removeEventListener('submit', searchName);
       mountFoodSearch({
         form: $('#searchForm'), input: $('#searchName'), results: $('#searchResults'),
@@ -1199,7 +1523,8 @@
           name: product.name, brand: product.brand || '', ean: product.code || '',
           source: product.source || 'Baza podstawowa',
           nutrients: { kcal: product.kcal, protein: product.protein,
-                       carbs: product.carbs, fat: product.fat }
+                       carbs: product.carbs, fat: product.fat },
+          ...productProvenance(product)
         })
       });
     }).catch(() => {
@@ -1211,6 +1536,11 @@
     $('#productForm').addEventListener('submit', onAddProduct);
     $('#backToLookup').addEventListener('click', backToLookup);
     $('#productGrams').addEventListener('input', syncProductPortionFields);
+    $('#productMeal').addEventListener('change', updatePfsContext);
+    $$('[data-np-grams]').forEach(button => button.addEventListener('click', () => {
+      $('#productGrams').value = button.dataset.npGrams;
+      syncProductPortionFields();
+    }));
     PRODUCT_KEYS.forEach(([key, suffix]) => $('#product' + suffix).addEventListener('input', () => productNutrientChanged(key, suffix)));
     $('#goalsForm').addEventListener('submit', onSaveGoals);
     $('#favoritesLink').addEventListener('click', () => showPage('products'));
@@ -1232,12 +1562,14 @@
     $('#exportData').addEventListener('click', exportData);
     $('#importData').addEventListener('change', importData);
     $('#localBackupRefresh').addEventListener('click', () => listLocalCopies());
+    $('#np21VerifyBackup').addEventListener('click', verifyLatestBackup);
     $('#backupInspect').addEventListener('change', inspectBackupFile);
     listLocalCopies(true);
     // Rozpocznij lokalną historię dla istniejących danych bez wykonywania pobierania pliku.
-    if (localStorage.getItem(KEY)) queueAutomaticLocalCopy();
+    if (!storageFault && localStorage.getItem(STORAGE_KEY)) queueAutomaticLocalCopy();
   }
   function changeDay(days) { const d = toDate(state.selectedDate); d.setDate(d.getDate() + days); state.selectedDate = dateKey(d); renderAll(); }
   bind(); renderAll();
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  saveStatus(storageFault || (saved?.entries ? 'Wczytano zapisany dziennik z tego urządzenia.' : 'Dziennik jest pusty — nowe dane będą zapisywane na tym urządzeniu.'), !!storageFault);
+  // Rejestracja Service Workera i aktualizacje: pwa-updater.js (bez automatycznego przeładowania).
 })();
