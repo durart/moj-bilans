@@ -37,8 +37,8 @@ jobs:
           assert.match(html, /src="\.\/recipe-builder\.mjs\?v=2\.7\.0-staging"/);
           assert.doesNotMatch(html, /src="\.\.\/pwa-updater\.js/);
           assert.match(app, /moj-bilans-preview-v27/);
-          assert.match(html, /href="\\.\\/manifest\\.webmanifest/);
-          assert.match(html, /serviceWorker\\.register\\("\\.\\/sw\\.js"/);
+          assert.ok(html.includes('href="./manifest.webmanifest'));
+          assert.ok(html.includes('serviceWorker.register("./sw.js"'));
           const sw = readFileSync('preview/sw.js', 'utf8');
           assert.match(sw, /moj-bilans-preview-recipes-v27-cache/);
           assert.match(app, /moj-bilans-preview-copies-v27/);
