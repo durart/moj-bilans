@@ -66,7 +66,7 @@ jobs:
 
   publish-preview:
     needs: [verify, browser]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/fix/stabilizacja-2.7.1'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'fix/stabilizacja-2.7.1'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
