@@ -9,4 +9,7 @@ assert.match(html,/<p id="appVersion" aria-label="Wersja aplikacji">Wersja aplik
 assert.match(html,/app\.js\?v=2\.8\.1/);
 assert.match(sw,/app\.js\?v=2\.8\.1/);
 assert.match(sw,/v281/);
+
+const css=readFileSync('np-design.css','utf8');
+assert.match(css, /@media\(max-width:630px\)\{\.np21-health\{padding:14px\}\.np21-health-actions\{flex-direction:column\}\.np21-health-actions button\{[^}]*flex:0 0 auto;[^}]*\}\}/, 'Mobile diagnostic buttons must not inherit the 190px flex-basis as height');
 console.log('Release version and visible settings label verified.');
