@@ -209,7 +209,7 @@ test('expanded import preserves first page when a later OFF request fails', asyn
     maxPages: 3,
     fetchFn: async () => {
       calls++;
-      if (calls === 2) throw new Error('Open Food Facts HTTP 429');
+      if (calls >= 2) throw new Error('Open Food Facts HTTP 429');
       return { ok: true, json: async () => ({
         products: Array.from({ length: 100 }, (_, i) => ({
           code: String(5900000000000 + i)
