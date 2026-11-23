@@ -9,6 +9,10 @@ for (const file of files) {
   mkdirSync(dirname('preview/' + file), { recursive: true });
   copyFileSync(file, 'preview/' + file);
 }
+// Bump only the preview Service Worker cache; production assets remain unchanged.
+const previewWorker = readFileSync('preview/sw.js', 'utf8')
+  .replace("const CACHE = PREFIX + 'v290';", "const CACHE = PREFIX + 'v300-food-import-retry-2';");
+writeFileSync('preview/sw.js', previewWorker);
 const html = readFileSync('index.html', 'utf8')
   .replace('<title>Mój Bilans 3.0.0', '<title>TEST — Mój Bilans 3.0.0')
   .replace('<body', '<body')
