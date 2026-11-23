@@ -17,6 +17,8 @@ assert.match(app, /await writable\.abort\(\)/);
 assert.match(app, /Dane w aplikacji pozostały bez zmian/);
 assert.match(app, /restorePayload\(JSON\.parse\(await file\.text\(\)\)\)/);
 assert.match(html, /id="shareBackup"/);
+assert.match(html, /id="saveBackupPicker"/);
+assert.match(app, /saveBackupPicker'\)\.addEventListener\('click', saveBackupWithPicker\)/);
 assert.match(html, /id="importData"/);
 assert.match(html, /Dropbox/);
 console.log('PASS Android backup sharing and import wiring');
