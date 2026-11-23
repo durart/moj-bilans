@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateFoodProduct, migrateLegacyFoodCatalog, putFoodProducts } from '../food-database.mjs';
+import { validateFoodProduct, migrateLegacyFoodCatalog, migrateNormalizedFoodCatalog, putFoodProducts } from '../food-database.mjs';
 import { loadExpandedFoodCatalog, searchExpandedFoodCatalog, FOOD_CATALOG_KEY } from '../katalog-produktow.mjs';
 
 const valid = { id: 'off:5901234567890', code: '5901234567890', name: 'Jogurt', kcal: 75, protein: 4, fat: 3, carbs: 8 };
@@ -76,4 +76,19 @@ test('expanded search finds legacy products by EAN without IndexedDB', async () 
   const matches = await searchExpandedFoodCatalog(valid.code, { storage, openDatabase });
   assert.equal(matches.length, 1);
   assert.equal(matches[0].id, valid.id);
+});
+
+test('normalized migration rejects invalid records before beginning a transaction', async () => {
+  let writes = 0;
+  const db = { transaction() { writes++; throw new Error('Unexpected write'); } };
+  await assert.rejects(
+    migrateNormalizedFoodCatalog(db, { items: [valid, { ...valid, code: 'not-an-ean' }] }),
+    /Invalid normalized food item/
+  );
+  assert.equal(writes, 0);
+});
+
+test('normalized migration handles an empty catalog without opening a transaction', async () => {
+  const db = { transaction() { throw new Error('Unexpected transaction'); } };
+  assert.equal(await migrateNormalizedFoodCatalog(db, { items: [] }), 0);
 });
