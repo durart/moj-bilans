@@ -92,3 +92,63 @@ test('normalized migration handles an empty catalog without opening a transactio
   const db = { transaction() { throw new Error('Unexpected transaction'); } };
   assert.equal(await migrateNormalizedFoodCatalog(db, { items: [] }), 0);
 });
+
+test('expanded catalog retains IndexedDB-only products and closes the database', async () => {
+  const stored = { ...valid, id: 'off:5909876543210', code: '5909876543210', name: 'Kasza jaglana' };
+  let closed = 0;
+  const database = {
+    close() { closed++; },
+    transaction(_store, mode) {
+      assert.equal(mode, 'readonly');
+      const tx = { error: null };
+      tx.objectStore = () => ({
+        getAll() {
+          const request = {};
+          queueMicrotask(() => {
+            request.result = [stored];
+            request.onsuccess?.();
+            queueMicrotask(() => tx.oncomplete?.());
+          });
+          return request;
+        }
+      });
+      return tx;
+    }
+  };
+  const storage = { getItem() { return null; } };
+  const result = await loadExpandedFoodCatalog({
+    storage,
+    openDatabase: async () => database
+  });
+  assert.equal(result.persistence, 'indexeddb');
+  assert.deepEqual(result.items.map(item => item.code), [stored.code]);
+  assert.equal(closed, 1);
+});
+
+test('expanded search finds IndexedDB-only products by name', async () => {
+  const stored = { ...valid, id: 'off:5909876543210', code: '5909876543210', name: 'Kasza jaglana' };
+  const database = {
+    close() {},
+    transaction() {
+      const tx = {};
+      tx.objectStore = () => ({
+        getAll() {
+          const request = {};
+          queueMicrotask(() => {
+            request.result = [stored];
+            request.onsuccess?.();
+            queueMicrotask(() => tx.oncomplete?.());
+          });
+          return request;
+        }
+      });
+      return tx;
+    }
+  };
+  const results = await searchExpandedFoodCatalog('kasza jaglana', {
+    storage: { getItem() { return null; } },
+    openDatabase: async () => database
+  });
+  assert.equal(results.length, 1);
+  assert.equal(results[0].code, stored.code);
+});
