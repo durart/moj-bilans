@@ -22,7 +22,17 @@ try {
 
   await search.fill('riso classic');
   const result = page.locator('#searchResults .food-card').filter({ hasText: 'Müller Riso Classic' }).first();
-  await result.waitFor({ state: 'visible', timeout: 20_000 });
+  try {
+    await result.waitFor({ state: 'visible', timeout: 20_000 });
+  } catch (error) {
+    const diagnostic = {
+      searchStatus: await page.locator('#searchStatus').allTextContents(),
+      visibleResults: (await page.locator('#searchResults').allTextContents()).slice(0, 3),
+      pageErrors,
+      serviceWorker: await page.evaluate(() => navigator.serviceWorker?.controller?.scriptURL || null)
+    };
+    throw new Error(`Riso lookup failed: ${JSON.stringify(diagnostic)}`, { cause: error });
+  }
   assert.match(await result.innerText(), /101 kcal/);
   assert.match(await result.innerText(), /Dane producenta/);
   assert.equal(await result.getByRole('link', { name: 'Źródło danych producenta' }).count(), 1);
