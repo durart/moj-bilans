@@ -17,7 +17,7 @@ for (const file of cachedFiles) {
     assert.ok(cachedFiles.has(resolved), `Missing offline module dependency ${resolved} imported by ${file}`);
   }
 }
-assert.match(read('preview/index.html'), /TEST · Mój Bilans 2.8.2/);
+assert.match(read('preview/index.html'), /TEST · Mój Bilans 3.0.0/);
 assert.doesNotMatch(read('preview/index.html'), /(?:src|href)="\.\.\//);
 for (const file of ['index.html', 'app.js']) {
   for (const [, asset] of read(file).matchAll(/["'](\.\/[^"']+\.(?:js|mjs|css)(?:\?[^"']*)?)["']/g)) {
