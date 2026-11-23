@@ -215,6 +215,7 @@ export async function importExpandedFoodCatalog({
   const pages = Math.max(1, Math.min(20, Math.trunc(maxPages) || 12));
   const db = await openDatabase();
   let imported = 0, scanned = 0, completedPages = 0;
+  let interrupted = false, errorMessage = '';
   const seen = new Set();
   try {
     for (let page = 1; page <= pages && imported < desired; page++) {
@@ -223,19 +224,28 @@ export async function importExpandedFoodCatalog({
         countries_tags: 'en:poland', sort_by: 'unique_scans_n',
         page_size: '100', page: String(page), fields: OFF_FIELDS
       }).toString();
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
       let response;
       try {
-        const result = await fetchFn(url, {
-          headers: { Accept: 'application/json' }, signal: controller.signal
-        });
-        if (!result.ok) throw new Error(`Open Food Facts HTTP ${result.status}`);
-        response = await result.json();
-      } finally {
-        clearTimeout(timer);
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const result = await fetchFn(url.toString(), {
+            headers: { Accept: 'application/json' }, signal: controller.signal
+          });
+          if (!result.ok) throw new Error(`Open Food Facts HTTP ${result.status}`);
+          response = await result.json();
+          if (!Array.isArray(response?.products)) throw new Error('Invalid Open Food Facts response');
+        } finally {
+          clearTimeout(timer);
+        }
+      } catch (error) {
+        interrupted = true;
+        errorMessage = error?.name === 'AbortError'
+          ? 'Przekroczono czas oczekiwania na Open Food Facts'
+          : String(error?.message || 'Błąd połączenia z Open Food Facts');
+        onProgress({ page, count: imported, read: scanned, interrupted: true, errorMessage });
+        break;
       }
-      if (!Array.isArray(response?.products)) throw new Error('Invalid Open Food Facts response');
       scanned += response.products.length;
       const batch = [];
       for (const raw of response.products) {
@@ -255,7 +265,11 @@ export async function importExpandedFoodCatalog({
       onProgress({ page, count: imported, read: scanned });
       if (response.products.length < 100) break;
     }
-    return { imported, scanned, completedPages, persistence: 'indexeddb' };
+    if (interrupted && completedPages === 0) {
+      throw new Error(errorMessage);
+    }
+    return { imported, scanned, completedPages, persistence: 'indexeddb',
+      interrupted, errorMessage };
   } finally {
     db.close();
   }

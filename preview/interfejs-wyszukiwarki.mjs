@@ -193,7 +193,9 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
           updateCatalogStatus(`Partia ${page}: przejrzano ${read}, zapisano ${count} produktów…`)
       });
       const catalog = await loadExpandedFoodCatalog();
-      updateCatalogStatus(`Baza lokalna: ${catalog.items.length} produktów. Nowo pobrane w tej operacji: ${result.imported}. Dane OFF wymagają sprawdzenia z etykietą.`);
+      updateCatalogStatus(result.interrupted
+        ? `Pobieranie przerwane (${result.errorMessage}). Zachowano ${result.imported} produktów z tej operacji. Baza lokalna: ${catalog.items.length}. Możesz spróbować ponownie.`
+        : `Baza lokalna: ${catalog.items.length} produktów. Pobrane w tej operacji: ${result.imported}. Dane OFF wymagają sprawdzenia z etykietą.`);
       if (input.value.trim().length >= 2) void showLocalSuggestions();
     } catch (error) {
       updateCatalogStatus(`Import nie powiódł się: ${error?.message || 'brak połączenia'}. Dotychczasowe produkty pozostają zapisane.`);
