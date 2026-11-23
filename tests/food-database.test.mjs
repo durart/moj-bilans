@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateFoodProduct, migrateLegacyFoodCatalog, migrateNormalizedFoodCatalog, putFoodProducts } from '../food-database.mjs';
-import { loadExpandedFoodCatalog, searchExpandedFoodCatalog, FOOD_CATALOG_KEY } from '../katalog-produktow.mjs';
+import { loadExpandedFoodCatalog, searchExpandedFoodCatalog, importExpandedFoodCatalog, FOOD_CATALOG_KEY } from '../katalog-produktow.mjs';
 
 const valid = { id: 'off:5901234567890', code: '5901234567890', name: 'Jogurt', kcal: 75, protein: 4, fat: 3, carbs: 8 };
 
@@ -151,4 +151,38 @@ test('expanded search finds IndexedDB-only products by name', async () => {
   });
   assert.equal(results.length, 1);
   assert.equal(results[0].code, stored.code);
+});
+
+test('expanded import writes valid products to IndexedDB without changing localStorage', async () => {
+  const written = [];
+  let closed = 0;
+  const db = {
+    close() { closed++; },
+    transaction(_store, mode) {
+      assert.equal(mode, 'readwrite');
+      const tx = {};
+      tx.objectStore = () => ({
+        put(item) {
+          written.push(item);
+          queueMicrotask(() => tx.oncomplete?.());
+        }
+      });
+      return tx;
+    }
+  };
+  const result = await importExpandedFoodCatalog({
+    openDatabase: async () => db,
+    maxPages: 1,
+    desiredCount: 500,
+    fetchFn: async () => ({
+      ok: true,
+      json: async () => ({ products: [{ code: valid.code, stores: 'Lidl' }] })
+    }),
+    normalizeProduct: raw => ({ ...valid, code: raw.code })
+  });
+  assert.equal(result.imported, 1);
+  assert.equal(result.completedPages, 1);
+  assert.equal(written.length, 1);
+  assert.equal(written[0].id, valid.id);
+  assert.equal(closed, 1);
 });
