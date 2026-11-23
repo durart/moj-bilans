@@ -3,12 +3,12 @@ import { readFileSync } from 'node:fs';
 const html=readFileSync('index.html','utf8');
 const sw=readFileSync('sw.js','utf8');
 const pkg=JSON.parse(readFileSync('package.json','utf8'));
-assert.equal(pkg.version,'2.9.0');
-assert.match(html,/<title>Mój Bilans 2\.9\.0/);
-assert.match(html,/<p id="appVersion" aria-label="Wersja aplikacji">Wersja aplikacji: <strong>2\.9\.0<\/strong><\/p>/);
-assert.match(html,/app\.js\?v=2\.9\.0/);
-assert.match(sw,/app\.js\?v=2\.9\.0/);
-assert.match(sw,/v290/);
+assert.equal(pkg.version,'3.0.0');
+assert.match(html,/<title>Mój Bilans 3\.0\.0/);
+assert.match(html,/<p id="appVersion" aria-label="Wersja aplikacji">Wersja aplikacji: <strong>3\.0\.0<\/strong><\/p>/);
+assert.match(html,/app\.js\?v=3\.0\.0/);
+assert.match(sw,/app\.js\?v=3\.0\.0/);
+assert.match(sw,/v300/);
 
 const css=readFileSync('np-design.css','utf8');
 assert.match(css, /@media\(max-width:630px\)\{\.np21-health\{padding:14px\}\.np21-health-actions\{flex-direction:column\}\.np21-health-actions button\{[^}]*flex:0 0 auto;[^}]*\}\}/, 'Mobile diagnostic buttons must not inherit the 190px flex-basis as height');
