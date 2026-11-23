@@ -19,13 +19,13 @@
   <link rel="stylesheet" href="./np-history-24.css?v=2.5.0" />
   <link rel="stylesheet" href="./np-body-25.css?v=2.5.0" />
   <link rel="stylesheet" href="./goal-calculator.css?v=2.6.2" />
-  <title>TEST — Mój Bilans 2.8.2 — Kreator przepisów</title>
+  <title>TEST — Mój Bilans 2.9.0 — Kreator przepisów</title>
 <style>
 .recipe-builder{margin:22px 0 32px}.recipe-card{background:var(--card,#17283a);border:1px solid rgba(130,160,185,.3);border-radius:16px;padding:16px;margin:12px 0}.recipe-ingredient{border:1px solid rgba(130,160,185,.25);padding:12px;border-radius:12px;margin:12px 0}.recipe-ingredient-heading,.recipe-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between}.recipe-ingredient-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.recipe-ingredient-grid label{font-size:12px}.recipe-ingredient-grid input,.recipe-card input,.recipe-card select{display:block;width:100%;max-width:100%;min-width:0;padding:10px;margin:5px 0 10px;border-radius:9px;border:1px solid #607489;background:#102033;color:#fff}.recipe-search-results{display:grid;gap:5px}.recipe-search-option{padding:10px;text-align:left;border-radius:8px;background:#25415a;color:#fff;border:1px solid #526e86}.recipe-totals{padding:12px 0;line-height:1.8}.recipe-card>strong{display:block;margin-bottom:8px}
 </style>
 </head>
 <body>
-  <aside class="np-env-banner" role="status" style="padding:8px;text-align:center;background:#593900;color:#fff">TEST · Mój Bilans 2.8.2 · Osobne dane testowe</aside>
+  <aside class="np-env-banner" role="status" style="padding:8px;text-align:center;background:#593900;color:#fff">TEST · Mój Bilans 2.9.0 · Osobne dane testowe</aside>
   <div class="app-shell">
     <header class="topbar">
       <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" width="28" height="28"><path d="M7 23h26" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M9 25c0-8 4-14 11-14s11 6 11 14" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="20" cy="8" r="2" fill="currentColor"/></svg></div>
@@ -290,13 +290,14 @@
         </section>
         <div class="panel data-panel">
           <h3>📥 Pobierz kopię zapasową na telefon</h3>
-          <p>Dane wpisujesz i zapisujesz w aplikacji lokalnie. Kliknij poniżej, aby otrzymać osobny plik JSON na telefon. Zazwyczaj znajdziesz go w folderze <strong>Pobrane / Downloads</strong>. Z tego miejsca możesz go ręcznie przesłać na Dysk Google.</p>
+          <p>Dane wpisujesz i zapisujesz w aplikacji lokalnie. Kliknij poniżej, aby otrzymać osobny plik JSON na telefon. Zazwyczaj znajdziesz go w folderze <strong>Pobrane / Downloads</strong>. Możesz też użyć systemowego udostępniania Androida, aby wybrać Dysk Google lub Dropbox (jeśli są dostępne w systemie).</p>
           <button id="exportData" type="button" class="primary-button wide">↓ Pobierz kopię na telefon (JSON)</button>
+          <button id="shareBackup" type="button" class="secondary-button wide">↗ Udostępnij kopię (Dysk Google / Dropbox / telefon)</button>
           <p id="downloadStatus" class="drive-status" role="status" aria-live="polite">Nie rozpoczęto pobierania w tej sesji. Po pobraniu sprawdź folder Pobrane na telefonie.</p>
-          <label class="secondary-button wide file-label">↑ Przywróć dane z pliku JSON
+          <label class="secondary-button wide file-label">↑ Importuj kopię (telefon / Dysk Google / Dropbox)
             <input type="file" id="importData" accept=".json,application/json" hidden>
           </label>
-          <p class="help">Uwaga: przywracanie zastępuje aktualne dane aplikacji. Najpierw pobierz świeżą kopię. Pobrania pliku nie da się potwierdzić z poziomu strony — sprawdź, czy plik naprawdę znajduje się na telefonie.</p>
+          <p class="help">Import korzysta z systemowego wyboru pliku Androida: wybierz telefon, Dysk Google lub Dropbox, jeśli dostawca jest dostępny. Uwaga: przywracanie zastępuje aktualne dane aplikacji. Najpierw pobierz świeżą kopię. Pobrania pliku nie da się potwierdzić z poziomu strony — sprawdź, czy plik naprawdę znajduje się na telefonie.</p>
         </div>
         <div class="panel data-panel local-backup-panel" id="localBackupPanel">
           <h3>📱 Automatyczne punkty przywracania</h3>
@@ -396,7 +397,7 @@
   <script src="./ui/navigation.js?v=2.8.0" defer></script>
   <script src="./ui/water.js?v=2.8.0" defer></script>
   <script src="./ui/settings.js?v=2.8.0" defer></script>
-  <script src="./app.js?v=2.8.1" defer></script>
+  <script src="./app.js?v=2.9.0" defer></script>
   <script type="module" src="./recipe-builder.mjs?v=2.7.1"></script>
   <script src="./np-ui.js?v=np2.1.0" defer></script>
   <script src="./pwa-updater.js?v=2.7.1" defer></script>
