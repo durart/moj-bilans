@@ -745,53 +745,6 @@
       setDownloadStatus(`Nie udało się rozpocząć pobierania: ${err.message}`, true);
     }
   }
-  async function shareBackup() {
-    if (storageFault) {
-      setDownloadStatus('Nie można udostępnić kopii: błąd odczytu dziennika.', true);
-      return;
-    }
-    const stamp = new Date();
-    const time = [stamp.getHours(), stamp.getMinutes(), stamp.getSeconds()].map(value => String(value).padStart(2, '0')).join('-');
-    const name = `moj-bilans-${todayKey()}_${time}.json`;
-    let json;
-    try {
-      const payload = snapshot();
-      window.MojBilansBackup.validate(payload);
-      json = JSON.stringify(payload, null, 2);
-    } catch (error) {
-      setDownloadStatus(`Nie można przygotować poprawnej kopii: ${error?.message || 'błąd danych'}.`, true);
-      return;
-    }
-
-    // Keep native picker/share calls in the original user gesture. Do not await
-    // unrelated work before invoking either browser API.
-    const file = new File([json], name, { type: 'application/json' });
-    let shareError;
-    if (typeof navigator.share === 'function') {
-      try {
-        if (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'Kopia zapasowa Mój Bilans' });
-          setDownloadStatus('Przekazano plik JSON do systemowego menu Androida. Potwierdź zapis w wybranej aplikacji.');
-          return;
-        }
-        shareError = new Error('Przeglądarka nie obsługuje udostępniania plików JSON.');
-      } catch (error) {
-        if (error?.name === 'AbortError') {
-          setDownloadStatus('Udostępnianie anulowane. Dane w aplikacji pozostały bez zmian.');
-          return;
-        }
-        shareError = error;
-      }
-    }
-
-    try {
-      const bytes = downloadJson(json, name);
-      const reason = shareError?.message ? ` (${shareError.message})` : '';
-      setDownloadStatus(`Bezpośredni zapis na Dysku Google jest niedostępny${reason}. Rozpoczęto pobieranie ${name} (${sizeLabel(bytes)}). Otwórz plik z folderu Pobrane i użyj „Udostępnij” lub „Zapisz na Dysku”. Dane w aplikacji pozostały bez zmian.`);
-    } catch (error) {
-      setDownloadStatus(`Nie udało się pobrać kopii: ${error?.message || 'nieznany błąd'}.`, true);
-    }
-  }
   async function saveBackupWithPicker() {
     if (storageFault) {
       setDownloadStatus('Nie można zapisać kopii: błąd odczytu dziennika.', true);
@@ -1598,7 +1551,7 @@
     $('#closeCopy').addEventListener('click', closeCopyDialog);
     $('#copyBackdrop').addEventListener('click', e => { if (e.target === $('#copyBackdrop')) closeCopyDialog(); });
     $('#exportData').addEventListener('click', exportData);
-    $('#shareBackup').addEventListener('click', shareBackup);
+
   $('#saveBackupPicker').addEventListener('click', saveBackupWithPicker);
     $('#importData').addEventListener('change', importData);
     $('#localBackupRefresh').addEventListener('click', () => listLocalCopies());
