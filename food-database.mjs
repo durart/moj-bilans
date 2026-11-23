@@ -19,7 +19,10 @@ export function openFoodDatabase(indexedDBFactory = globalThis.indexedDB) {
         store.createIndex('name', 'name', { unique: false });
       }
     };
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () => {
+      request.result.onversionchange = () => request.result.close();
+      resolve(request.result);
+    };
     request.onerror = () => reject(request.error || new Error('Cannot open food database'));
     request.onblocked = () => reject(new Error('Food database upgrade blocked'));
   });
@@ -48,7 +51,13 @@ export async function putFoodProducts(db, items) {
   if (items.length === 0) return 0;
   const tx = db.transaction(STORE, 'readwrite');
   const done = transactionDone(tx);
-  for (const item of items) tx.objectStore(STORE).put(item);
+  try {
+    for (const item of items) tx.objectStore(STORE).put(item);
+  } catch (error) {
+    tx.abort();
+    await done.catch(() => {});
+    throw error;
+  }
   await done;
   return items.length;
 }
