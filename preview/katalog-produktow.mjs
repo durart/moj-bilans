@@ -225,24 +225,41 @@ export async function importExpandedFoodCatalog({
         page_size: '100', page: String(page), fields: OFF_FIELDS
       }).toString();
       let response;
-      try {
+      let requestError;
+      for (let attempt = 1; attempt <= 3; attempt++) {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), timeoutMs);
         try {
           const result = await fetchFn(url.toString(), {
             headers: { Accept: 'application/json' }, signal: controller.signal
           });
-          if (!result.ok) throw new Error(`Open Food Facts HTTP ${result.status}`);
+          if (!result.ok) {
+            const error = new Error(`Open Food Facts HTTP ${result.status}`);
+            error.status = result.status;
+            throw error;
+          }
           response = await result.json();
           if (!Array.isArray(response?.products)) throw new Error('Invalid Open Food Facts response');
+          requestError = null;
+          break;
+        } catch (error) {
+          requestError = error;
+          // Invalid responses and non-retryable HTTP errors cannot be fixed by retrying.
+          if (error?.message === 'Invalid Open Food Facts response' ||
+              (error?.status && error.status !== 429 && error.status < 500)) break;
+          if (attempt < 3) {
+            onProgress({ page, count: imported, read: scanned, retry: attempt });
+            await new Promise(resolve => setTimeout(resolve, 800 * attempt));
+          }
         } finally {
           clearTimeout(timer);
         }
-      } catch (error) {
+      }
+      if (requestError) {
         interrupted = true;
-        errorMessage = error?.name === 'AbortError'
+        errorMessage = requestError?.name === 'AbortError'
           ? 'Przekroczono czas oczekiwania na Open Food Facts'
-          : String(error?.message || 'Błąd połączenia z Open Food Facts');
+          : String(requestError?.message || 'Błąd połączenia z Open Food Facts');
         onProgress({ page, count: imported, read: scanned, interrupted: true, errorMessage });
         break;
       }

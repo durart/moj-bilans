@@ -189,8 +189,10 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
     try {
       const result = await importExpandedFoodCatalog({
         normalizeProduct: searcher.normalizeOffProduct,
-        onProgress: ({ page, count, read }) =>
-          updateCatalogStatus(`Partia ${page}: przejrzano ${read}, zapisano ${count} produktów…`)
+        onProgress: ({ page, count, read, retry }) =>
+          updateCatalogStatus(retry
+            ? `Problem z połączeniem z Open Food Facts. Ponawiam próbę ${retry}/2… Zachowano ${count} produktów.`
+            : `Partia ${page}: przejrzano ${read}, zapisano ${count} produktów…`)
       });
       const catalog = await loadExpandedFoodCatalog();
       updateCatalogStatus(result.interrupted
