@@ -8,7 +8,7 @@ for (const [, asset] of worker.matchAll(/'\.\/([^']+)'/g)) {
   assert.deepEqual(readFileSync('preview/' + file), readFileSync(file), file);
 }
 const previewWorker = read('preview/sw.js');
-assert.equal(previewWorker, worker.replace("PREFIX + 'v283'", "PREFIX + 'v291'").replace("'./app.js?v=2.8.1'", "'./app.js?v=2.9.0'"));
+assert.equal(previewWorker, worker.replace("PREFIX + 'v283'", "PREFIX + 'v292'").replace("'./app.js?v=2.8.1'", "'./app.js?v=2.9.0'"));
 assert.match(read('preview/index.html'), /TEST · Mój Bilans 2.9.0/);
 assert.doesNotMatch(read('preview/index.html'), /(?:src|href)="\.\.\//);
 for (const file of ['index.html', 'app.js']) {
