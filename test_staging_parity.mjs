@@ -7,8 +7,9 @@ for (const [, asset] of worker.matchAll(/'\.\/([^']+)'/g)) {
   if (!file || file.endsWith('/') || ['index.html', 'manifest.webmanifest'].includes(file)) continue;
   assert.deepEqual(readFileSync('preview/' + file), readFileSync(file), file);
 }
-assert.equal(read('preview/sw.js'), worker);
-assert.match(read('preview/index.html'), /TEST · Mój Bilans 2.8.2/);
+const previewWorker = read('preview/sw.js');
+assert.equal(previewWorker, worker.replace("PREFIX + 'v283'", "PREFIX + 'v290'").replace("'./app.js?v=2.8.1'", "'./app.js?v=2.9.0'"));
+assert.match(read('preview/index.html'), /TEST · Mój Bilans 2.9.0/);
 assert.doesNotMatch(read('preview/index.html'), /(?:src|href)="\.\.\//);
 for (const file of ['index.html', 'app.js']) {
   for (const [, asset] of read(file).matchAll(/["'](\.\/[^"']+\.(?:js|mjs|css)(?:\?[^"']*)?)["']/g)) {
