@@ -11,6 +11,7 @@ export const FOOD_CATALOG_KEY = (globalThis.location?.pathname.includes('/previe
 export const LEGACY_BIEDRONKA_KEY = (globalThis.location?.pathname.includes('/preview/') ? 'preview:moj-bilans:biedronka-off:v1' : 'moj-bilans:biedronka-off:v1');
 export const FOOD_CATALOG_MAX = 100;
 const OFF_SEARCH = 'https://world.openfoodfacts.org/api/v2/search';
+const IMPORT_CURSOR_KEY = FOOD_CATALOG_KEY + ':expanded-import-cursor:v1';
 const OFF_FIELDS = 'code,product_name,product_name_pl,product_name_en,brands,stores,stores_tags,nutriments,unique_scans_n';
 
 export const STORES = Object.freeze([
@@ -206,6 +207,7 @@ export async function importExpandedFoodCatalog({
   desiredCount = 500,
   maxPages = 12,
   timeoutMs = 15000,
+  storage = globalThis.localStorage,
   onProgress = () => {}
 } = {}) {
   if (typeof fetchFn !== 'function' || typeof normalizeProduct !== 'function') {
@@ -214,11 +216,21 @@ export async function importExpandedFoodCatalog({
   const desired = Math.max(1, Math.min(1000, Math.trunc(desiredCount) || 500));
   const pages = Math.max(1, Math.min(20, Math.trunc(maxPages) || 12));
   const db = await openDatabase();
+  // The cursor is only a checkpoint, never a source of food records.
+  // Corrupt or unavailable storage must not prevent an ordinary import.
+  let startPage = 1;
+  try {
+    const cursor = JSON.parse(storage?.getItem(IMPORT_CURSOR_KEY) || 'null');
+    if (cursor?.desired === desired && cursor?.pages === pages &&
+        Number.isInteger(cursor.nextPage) && cursor.nextPage > 1 && cursor.nextPage <= pages) {
+      startPage = cursor.nextPage;
+    }
+  } catch { /* Resume is optional; food records remain in IndexedDB. */ }
   let imported = 0, scanned = 0, completedPages = 0;
   let interrupted = false, errorMessage = '';
   const seen = new Set();
   try {
-    for (let page = 1; page <= pages && imported < desired; page++) {
+    for (let page = startPage; page <= pages && imported < desired; page++) {
       const url = new URL(OFF_SEARCH);
       url.search = new URLSearchParams({
         countries_tags: 'en:poland', sort_by: 'unique_scans_n',
@@ -279,8 +291,14 @@ export async function importExpandedFoodCatalog({
       if (batch.length) await putFoodProducts(db, batch);
       imported += batch.length;
       completedPages++;
+      // Commit the checkpoint only after IndexedDB has committed this page.
+      try { storage?.setItem(IMPORT_CURSOR_KEY, JSON.stringify({ desired, pages, nextPage: page + 1 })); }
+      catch { /* Storage quota/privacy settings do not invalidate saved products. */ }
       onProgress({ page, count: imported, read: scanned });
       if (response.products.length < 100) break;
+    }
+    if (!interrupted) {
+      try { storage?.removeItem(IMPORT_CURSOR_KEY); } catch { /* Optional checkpoint. */ }
     }
     if (interrupted && completedPages === 0) {
       throw new Error(errorMessage);
