@@ -2,7 +2,7 @@
  * Persistent offline product catalog. This module never changes diary storage.
  * Existing localStorage data remains intact until a separately verified cutover.
  */
-export const FOOD_DB_NAME = 'moj-bilans-food-v3';
+export const FOOD_DB_NAME = globalThis.location?.pathname.includes('/preview/')\n  ? 'moj-bilans-preview-food-v3' : 'moj-bilans-food-v3';
 export const FOOD_DB_VERSION = 1;
 const STORE = 'products';
 
@@ -47,7 +47,7 @@ export async function putFoodProducts(db, items) {
   if (items.length === 0) return 0;
   const tx = db.transaction(STORE, 'readwrite');
   const done = transactionDone(tx);
-  for (const item of items) tx.objectStore(STORE).put(structuredClone(item));
+  for (const item of items) tx.objectStore(STORE).put(item);
   await done;
   return items.length;
 }
