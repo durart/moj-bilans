@@ -127,7 +127,7 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
     const seen = new Set();
     return items.filter(item => {
       const key = item.code ? 'ean:' + item.code :
-        'name:' + String(item.name || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('pl') +
+        'name:' + String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pl') +
         '|' + String(item.brand || '').toLocaleLowerCase('pl');
       if (seen.has(key)) return false;
       seen.add(key);
