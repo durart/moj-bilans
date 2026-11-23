@@ -8,16 +8,15 @@ for (const [, asset] of worker.matchAll(/'\.\/([^']+)'/g)) {
   assert.deepEqual(readFileSync('preview/' + file), readFileSync(file), file);
 }
 assert.equal(read('preview/sw.js'), worker);
-const cachedFiles = new Set([...worker.matchAll(/'\\.\\/([^']+)'/g)].map(match => match[1].split('?')[0]));
+const cachedFiles = new Set([...worker.matchAll(/'\.\/([^']+)'/g)].map(match => match[1].split('?')[0]));
 for (const file of cachedFiles) {
-  if (!/\\.(?:mjs|js)$/.test(file)) continue;
-  for (const [, dependency] of read(file).matchAll(/(?:^|\\n)\\s*import\\s+(?:[^'"\\n]*?\\s+from\\s+)?['"]\\.\\/([^'"]+)['"]/g)) {
+  if (!/\.(?:mjs|js)$/.test(file)) continue;
+  for (const [, dependency] of read(file).matchAll(/(?:^|\n)\s*import\s+(?:[^'"\n]*?\s+from\s+)?['"]\.\/([^'"]+)['"]/g)) {
     const parent = file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : '';
     const resolved = parent + dependency.split('?')[0];
     assert.ok(cachedFiles.has(resolved), `Missing offline module dependency ${resolved} imported by ${file}`);
   }
 }
-
 assert.match(read('preview/index.html'), /TEST · Mój Bilans 2.8.2/);
 assert.doesNotMatch(read('preview/index.html'), /(?:src|href)="\.\.\//);
 for (const file of ['index.html', 'app.js']) {
