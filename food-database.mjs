@@ -2,7 +2,8 @@
  * Persistent offline product catalog. This module never changes diary storage.
  * Existing localStorage data remains intact until a separately verified cutover.
  */
-export const FOOD_DB_NAME = globalThis.location?.pathname.includes('/preview/')\n  ? 'moj-bilans-preview-food-v3' : 'moj-bilans-food-v3';
+export const FOOD_DB_NAME = globalThis.location?.pathname.includes('/preview/')
+  ? 'moj-bilans-preview-food-v3' : 'moj-bilans-food-v3';
 export const FOOD_DB_VERSION = 1;
 const STORE = 'products';
 
@@ -81,8 +82,11 @@ export async function migrateLegacyFoodCatalog(db, storage, legacyKeys) {
       throw new Error('Legacy food catalog has an invalid format');
     }
     for (const item of parsed.products) {
-      if (!validateFoodProduct(item)) throw new Error('Legacy food catalog contains invalid products');
-      if (!records.has(item.id)) records.set(item.id, item);
+      if (!validateFoodProduct(item) || !/^(\d{8}|\d{12,14})$/.test(String(item.code || ''))) {
+        throw new Error('Legacy food catalog contains invalid products');
+      }
+      const id = `off:${item.code}`;
+      if (!records.has(id)) records.set(id, { ...item, id });
     }
   }
   await putFoodProducts(db, [...records.values()]);
