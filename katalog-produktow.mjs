@@ -5,6 +5,7 @@
  * weryfikacji z etykietą: https://openfoodfacts.org/data
  */
 import { assessNutrition } from './walidacja-zywnosci.mjs';
+import { openFoodDatabase, getFoodProducts, migrateNormalizedFoodCatalog } from './food-database.mjs';
 
 export const FOOD_CATALOG_KEY = (globalThis.location?.pathname.includes('/preview/') ? 'preview:moj-bilans:off-food-catalog:v1' : 'moj-bilans:off-food-catalog:v1');
 export const LEGACY_BIEDRONKA_KEY = (globalThis.location?.pathname.includes('/preview/') ? 'preview:moj-bilans:biedronka-off:v1' : 'moj-bilans:biedronka-off:v1');
@@ -136,4 +137,59 @@ export async function importFoodCatalog({
   try {storage?.setItem(FOOD_CATALOG_KEY,JSON.stringify({version:1,fetchedAt:result.fetchedAt,totalSeen,products:items}));}
   catch {throw new Error('Nie udało się zapisać produktów na urządzeniu. Sprawdź pamięć przeglądarki.');}
   return result;
+}
+
+/**
+ * Opt-in asynchronous IndexedDB bridge. The existing synchronous catalog
+ * remains the fallback until the UI is migrated and browser-tested.
+ * Never deletes IndexedDB records that are absent from the legacy cache.
+ */
+export async function loadExpandedFoodCatalog({
+  storage = globalThis.localStorage,
+  openDatabase = openFoodDatabase
+} = {}) {
+  const legacy = loadFoodCatalog(storage);
+  let db;
+  try {
+    db = await openDatabase();
+    await migrateNormalizedFoodCatalog(db, legacy);
+    const persisted = await getFoodProducts(db);
+    const byCode = new Map();
+    for (const item of persisted) {
+      const normalized = normalizedItem(item);
+      if (normalized) byCode.set(normalized.code, normalized);
+    }
+    for (const item of legacy.items) byCode.set(item.code, item);
+    return { ...legacy, items: [...byCode.values()], persistence: 'indexeddb' };
+  } catch {
+    return { ...legacy, persistence: 'localstorage' };
+  } finally {
+    db?.close?.();
+  }
+}
+
+export async function searchExpandedFoodCatalog(query, options = {}) {
+  const { items } = await loadExpandedFoodCatalog(options);
+  const q = normalize(query);
+  if (q.length < 2) return [];
+  const raw = String(query).trim();
+  const ean = /^(\d{8}|\d{12,14})$/.test(raw);
+  const terms = q.split(/\s+/);
+  const store = options.store || 'all';
+  const limit = Math.max(0, options.limit ?? 35);
+  return filterFoodStore(items, store)
+    .map(item => {
+      const name = normalize(item.name);
+      const brand = normalize(item.brand);
+      const hay = `${name} ${brand}`;
+      const score = ean ? (item.code === raw ? 500 : 0)
+        : name === q ? 200 : name.startsWith(q) ? 160
+        : hay.includes(q) ? 120
+        : terms.every(term => hay.split(/\s+/).some(word => word.startsWith(term))) ? 60 : 0;
+      return { item, score };
+    })
+    .filter(result => result.score > 0)
+    .sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name, 'pl'))
+    .slice(0, limit)
+    .map(result => result.item);
 }
