@@ -92,3 +92,20 @@ export async function migrateLegacyFoodCatalog(db, storage, legacyKeys) {
   await putFoodProducts(db, [...records.values()]);
   return records.size;
 }
+
+/**
+ * Imports the already validated catalog returned by loadFoodCatalog().
+ * The caller retains ownership of localStorage and may safely retry.
+ */
+export async function migrateNormalizedFoodCatalog(db, catalog) {
+  if (!catalog || !Array.isArray(catalog.items)) throw new TypeError('Invalid normalized catalog');
+  const unique = new Map();
+  for (const item of catalog.items) {
+    if (!validateFoodProduct(item) || !/^(\\d{8}|\\d{12,14})$/.test(String(item.code || ''))) {
+      throw new TypeError('Invalid normalized food item');
+    }
+    unique.set(`off:${item.code}`, { ...item, id: `off:${item.code}` });
+  }
+  await putFoodProducts(db, [...unique.values()]);
+  return unique.size;
+}
