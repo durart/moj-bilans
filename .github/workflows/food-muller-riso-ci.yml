@@ -1,0 +1,45 @@
+name: Food catalog regression – Müller Riso
+on:
+  push:
+    branches:
+      - feature/muller-riso-classic-food-20261123
+  pull_request:
+    paths:
+      - 'muller-riso.mjs'
+      - 'produkty-podstawowe.mjs'
+      - 'interfejs-wyszukiwarki.mjs'
+      - 'sw.js'
+      - 'test_*.mjs'
+      - 'package.json'
+      - '.github/workflows/food-muller-riso-ci.yml'
+permissions:
+  contents: read
+jobs:
+  food-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Full Node regression suite
+        run: npm test
+      - name: Existing label and online/offline EAN regression
+        run: node test_sante_musli.mjs
+      - name: New manufacturer-sourced product regression
+        run: node test_muller_riso.mjs
+  staging-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependency
+        run: npm install --no-save --package-lock=false playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify staging product lookup on mobile
+        run: node test_muller_riso_browser.mjs
