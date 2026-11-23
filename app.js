@@ -745,6 +745,50 @@
       setDownloadStatus(`Nie udało się rozpocząć pobierania: ${err.message}`, true);
     }
   }
+  async function saveBackupWithPicker() {
+    if (storageFault) {
+      setDownloadStatus('Nie można zapisać kopii: błąd odczytu dziennika.', true);
+      return;
+    }
+    if (typeof window.showSaveFilePicker !== 'function') {
+      setDownloadStatus('Ta przeglądarka nie udostępnia systemowego wyboru miejsca zapisu. Użyj przycisku „Pobierz kopię na telefon (JSON)”.', true);
+      return;
+    }
+    const stamp = new Date();
+    const time = [stamp.getHours(), stamp.getMinutes(), stamp.getSeconds()].map(value => String(value).padStart(2, '0')).join('-');
+    const name = `moj-bilans-${todayKey()}_${time}.json`;
+    let json;
+    try {
+      const payload = snapshot();
+      window.MojBilansBackup.validate(payload);
+      json = JSON.stringify(payload, null, 2);
+    } catch (error) {
+      setDownloadStatus(`Nie można przygotować kopii: ${error?.message || 'błąd danych'}.`, true);
+      return;
+    }
+    try {
+      // Invoke the picker directly from this button's user gesture.
+      const handle = await window.showSaveFilePicker({
+        suggestedName: name,
+        types: [{ description: 'Kopia zapasowa JSON', accept: { 'application/json': ['.json'] } }]
+      });
+      const writable = await handle.createWritable();
+      try {
+        await writable.write(json);
+        await writable.close();
+      } catch (error) {
+        await writable.abort().catch(() => {});
+        throw error;
+      }
+      setDownloadStatus(`Zapisano kopię ${name} w wybranej lokalizacji. Dane w aplikacji pozostały bez zmian.`);
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        setDownloadStatus('Zapis anulowany. Dane w aplikacji pozostały bez zmian.');
+        return;
+      }
+      setDownloadStatus(`Nie udało się zapisać kopii przez systemowy wybór folderu: ${error?.message || 'nieznany błąd'}. Możesz pobrać JSON na telefon.`, true);
+    }
+  }
   function restorePayload(payload) {
        if (storageFault) throw Error('Dziennik jest nieczytelny. Przywracanie zablokowane, aby nie nadpisać oryginalnej pamięci.');
       window.MojBilansBackup.validate(payload);
@@ -1507,6 +1551,8 @@
     $('#closeCopy').addEventListener('click', closeCopyDialog);
     $('#copyBackdrop').addEventListener('click', e => { if (e.target === $('#copyBackdrop')) closeCopyDialog(); });
     $('#exportData').addEventListener('click', exportData);
+
+  $('#saveBackupPicker').addEventListener('click', saveBackupWithPicker);
     $('#importData').addEventListener('change', importData);
     $('#localBackupRefresh').addEventListener('click', () => listLocalCopies());
     $('#np21VerifyBackup').addEventListener('click', verifyLatestBackup);
