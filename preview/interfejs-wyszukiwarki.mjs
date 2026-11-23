@@ -42,6 +42,7 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
       const sourceLabel=item.verification==='bakery-card'?'Pieczywo · dane piekarni / sklepu':
         item.verification==='manufacturer-example'?'Wędlina · wartości orientacyjne':
         item.verification==='label-photo'?'Wartości z etykiety · konkretny EAN':
+        item.verification==='manufacturer-web'?'Dane producenta · konkretny EAN':
         item.verification==='ean-photo-macro-estimate'?'EAN ze zdjęcia · makro orientacyjne':
         item.category==='dish'?'Danie domowe · szacunek':
         item.verification==='estimated-generic'?'Produkt bazowy · szacunek':
@@ -58,6 +59,8 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
         '⚖️ Przykładowe wartości ze wskazanej karty producenta; Twój baleron może mieć inne makro. Sprawdź etykietę swojego opakowania.':
         item.verification==='label-photo'?
         '✓ Dane odczytane ze zdjęcia opakowania tego wariantu. Inne opakowania Sante mogą mieć zmieniony skład i makro.':
+        item.verification==='manufacturer-web'?
+        '✓ Makro na 100 g z oficjalnej strony producenta. Kubek ma 200 g; przed zapisem ustaw właściwą porcję.':
         item.verification==='ean-photo-macro-estimate'?
         '⚖️ EAN i smak potwierdzone zdjęciem. Kalorie oraz B/T/W są ORIENTACYJNE, przyjęte z podobnych orzeszków BakaD\'Or — to nie odczyt z tabeli tego opakowania.': 
         item.category==='dish' && item.recipeSummary?
@@ -92,6 +95,11 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
       }
       if (item.verification==='ean-photo-macro-estimate' && item.sourceUrl) {
         const link=node('a','food-off-link','Źródło szacunku — podobny produkt');
+        link.href=item.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';
+        card.append(link);
+      }
+      if (item.verification==='manufacturer-web' && item.sourceUrl) {
+        const link=node('a','food-off-link','Źródło danych producenta');
         link.href=item.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';
         card.append(link);
       }

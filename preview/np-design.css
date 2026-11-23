@@ -191,4 +191,4 @@ input,select,textarea{accent-color:var(--accent)}
 .np21-health p.np21-error,.np21-inline-save.np21-error{border-color:#a86868;background:#3e292a;color:#ffced0}
 .np21-health-actions{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
 .np21-health-actions button{min-height:44px;flex:1 1 190px}
-@media(max-width:630px){.np21-health{padding:14px}.np21-health-actions{flex-direction:column}.np21-health-actions button{width:100%}}
+@media(max-width:630px){.np21-health{padding:14px}.np21-health-actions{flex-direction:column}.np21-health-actions button{width:100%;flex:0 0 auto;min-height:44px;padding:12px 14px}}

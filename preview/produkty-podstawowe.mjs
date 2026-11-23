@@ -7,6 +7,7 @@ import { LABELED_PRODUCTS } from './produkty-z-etykiet.mjs';
 import { BALERON_REFERENCE } from './baleron.mjs';
 import { CEBULARZE } from './cebularz.mjs';
 import { BAKADOR_CHILI } from './bakador-chili.mjs';
+import { MULLER_RISO } from './muller-riso.mjs';
 /**
  * Mój Bilans – baza podstawowych produktów (wartości ORIENTACYJNE na 100 g/ml).
  * Nie jest to baza produktów konkretnych marek ani dokumentacja medyczna.
@@ -70,5 +71,6 @@ export const BASIC_FOODS = Object.freeze([
   ...LABELED_PRODUCTS,
   ...BALERON_REFERENCE,
   ...CEBULARZE,
-  ...BAKADOR_CHILI
+  ...BAKADOR_CHILI,
+  ...MULLER_RISO
 ]);
