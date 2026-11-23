@@ -753,32 +753,70 @@
     const stamp = new Date();
     const time = [stamp.getHours(), stamp.getMinutes(), stamp.getSeconds()].map(value => String(value).padStart(2, '0')).join('-');
     const name = `moj-bilans-${todayKey()}_${time}.json`;
+    let json;
     try {
       const payload = snapshot();
       window.MojBilansBackup.validate(payload);
-      const file = new File([JSON.stringify(payload, null, 2)], name, { type: 'application/json' });
-      if (!navigator.share || !navigator.canShare?.({ files: [file] })) {
-        const bytes = downloadJson(await file.text(), name);
-        setDownloadStatus(`Udostępnianie plików nie jest dostępne w tej przeglądarce. Rozpoczęto pobieranie ${name} (${sizeLabel(bytes)}). Sprawdź folder Pobrane.`);
-        return;
-      }
-      await navigator.share({ files: [file], title: 'Kopia zapasowa Mój Bilans' });
-      setDownloadStatus('Przekazano kopię do systemowego menu Androida. Sprawdź w wybranej aplikacji, czy plik został zapisany.');
+      json = JSON.stringify(payload, null, 2);
     } catch (error) {
-      if (error?.name === 'AbortError') {
-        setDownloadStatus('Udostępnianie anulowane. Dane w aplikacji pozostały bez zmian.');
-        return;
-      }
-      // Android browsers may reject file sharing even when canShare reports support.
-      // Preserve the validated JSON and provide a recoverable local download.
+      setDownloadStatus(`Nie można przygotować poprawnej kopii: ${error?.message || 'błąd danych'}.`, true);
+      return;
+    }
+
+    // Keep native picker/share calls in the original user gesture. Do not await
+    // unrelated work before invoking either browser API.
+    const file = new File([json], name, { type: 'application/json' });
+    let shareError;
+    if (typeof navigator.share === 'function') {
       try {
-        const payload = snapshot();
-        window.MojBilansBackup.validate(payload);
-        const bytes = downloadJson(JSON.stringify(payload, null, 2), name);
-        setDownloadStatus(`Android odmówił bezpośredniego udostępnienia pliku (${error?.message || 'brak uprawnień'}). Rozpoczęto bezpieczne pobieranie ${name} (${sizeLabel(bytes)}). Plik możesz zapisać na Dysku Google z folderu Pobrane; dane w aplikacji nie zostały zmienione.`);
-      } catch (fallbackError) {
-        setDownloadStatus(`Nie udało się udostępnić ani pobrać kopii: ${fallbackError?.message || 'nieznany błąd'}.`, true);
+        if (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Kopia zapasowa Mój Bilans' });
+          setDownloadStatus('Przekazano plik JSON do systemowego menu Androida. Potwierdź zapis w wybranej aplikacji.');
+          return;
+        }
+        shareError = new Error('Przeglądarka nie obsługuje udostępniania plików JSON.');
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          setDownloadStatus('Udostępnianie anulowane. Dane w aplikacji pozostały bez zmian.');
+          return;
+        }
+        shareError = error;
       }
+    }
+
+    // The system file picker can offer Google Drive as a document provider,
+    // depending on browser and Android configuration. Never assume availability.
+    if (typeof window.showSaveFilePicker === 'function') {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: name,
+          types: [{ description: 'Kopia zapasowa JSON', accept: { 'application/json': ['.json'] } }]
+        });
+        const writable = await handle.createWritable();
+        try {
+          await writable.write(json);
+          await writable.close();
+        } catch (error) {
+          await writable.abort().catch(() => {});
+          throw error;
+        }
+        setDownloadStatus(`Zapisano kopię ${name} w wybranej lokalizacji. Dane w aplikacji pozostały bez zmian.`);
+        return;
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          setDownloadStatus('Zapis anulowany. Dane w aplikacji pozostały bez zmian.');
+          return;
+        }
+        shareError = error;
+      }
+    }
+
+    try {
+      const bytes = downloadJson(json, name);
+      const reason = shareError?.message ? ` (${shareError.message})` : '';
+      setDownloadStatus(`Bezpośredni zapis na Dysku Google jest niedostępny${reason}. Rozpoczęto pobieranie ${name} (${sizeLabel(bytes)}). Otwórz plik z folderu Pobrane i użyj „Udostępnij” lub „Zapisz na Dysku”. Dane w aplikacji pozostały bez zmian.`);
+    } catch (error) {
+      setDownloadStatus(`Nie udało się pobrać kopii: ${error?.message || 'nieznany błąd'}.`, true);
     }
   }
   function restorePayload(payload) {
