@@ -1,5 +1,5 @@
 import { defaultFoodSearcher, searchBasicFoods, isBarcode } from './wyszukiwarka.mjs';
-import { loadFoodCatalog, searchFoodCatalog, importFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from './katalog-produktow.mjs';
+import { loadFoodCatalog, loadExpandedFoodCatalog, searchFoodCatalog, searchExpandedFoodCatalog, importExpandedFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from './katalog-produktow.mjs';
 
 const messages = Object.freeze({
   'too-short':'Wpisz przynajmniej 2 znaki lub zeskanuj kod EAN.',
@@ -123,35 +123,51 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
   }
   // Podczas pisania filtrujemy WYŁĄCZNIE katalogi lokalne.
   // Wyszukiwanie sieciowe działa po świadomym kliknięciu "Sprawdź OFF".
-  function showLocalSuggestions() {
-    const query=input.value.trim(),store=selectedStore();
-    if(query.length<2){
+  function deduplicate(items) {
+    const seen = new Set();
+    return items.filter(item => {
+      const key = item.code ? 'ean:' + item.code :
+        'name:' + String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pl') +
+        '|' + String(item.brand || '').toLocaleLowerCase('pl');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+  async function showLocalSuggestions() {
+    const serial = ++currentRequest;
+    const query = input.value.trim(), store = selectedStore();
+    if (query.length < 2) {
       results.replaceChildren();
-      status.textContent=messages['too-short'];
+      status.textContent = messages['too-short'];
       return;
     }
-    const local=[...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})];
-    const seen=new Set();
-    const unique=local.filter(item=>{
-      const key=item.code ? 'ean:'+item.code : 'name:'+String(item.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pl')+'|'+String(item.brand||'').toLocaleLowerCase('pl');
-      if(seen.has(key))return false;
-      seen.add(key);return true;
-    });
-    render(unique);
-    status.textContent=`Wyniki lokalne: ${unique.length}. Aby wyszukać także w Open Food Facts, kliknij „Sprawdź OFF”.`;
+    const legacy = [...searchBasicFoods(query, 30, store), ...searchFoodCatalog(query, { store })];
+    render(deduplicate(legacy));
+    status.textContent = 'Wyszukiwanie w zapisanych produktach…';
+    try {
+      const expanded = await searchExpandedFoodCatalog(query, { store });
+      if (serial !== currentRequest) return;
+      const unique = deduplicate([...legacy, ...expanded]);
+      render(unique);
+      status.textContent = `Wyniki lokalne: ${unique.length}. Aby wyszukać także w Open Food Facts, kliknij „Sprawdź OFF”.`;
+    } catch {
+      if (serial !== currentRequest) return;
+      status.textContent = `Wyniki lokalne: ${deduplicate(legacy).length}. Aby wyszukać także w Open Food Facts, kliknij „Sprawdź OFF”.`;
+    }
   }
   function onInput() {
     currentRequest++;
     clearTimeout(typingTimer);
-    if(input.value.trim().length<2){showLocalSuggestions();return;}
-    typingTimer=setTimeout(showLocalSuggestions,120);
+    if (input.value.trim().length < 2) { void showLocalSuggestions(); return; }
+    typingTimer = setTimeout(() => { void showLocalSuggestions(); }, 120);
   }
   async function handleSubmit(event){
     event?.preventDefault();
     clearTimeout(typingTimer);
     const query=input.value.trim(),serial=++currentRequest,store=selectedStore();
     if(query.length<2){render([]);status.textContent=messages['too-short'];return;}
-    const local=[...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})];
+    const local=deduplicate([...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})]);
     render(local);
     status.textContent=isBarcode(query)?'Sprawdzam kod kreskowy…':'Pokazano wyniki lokalne. Szukam też w Open Food Facts…';
     try {
@@ -165,18 +181,26 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
       status.textContent='Wyszukiwanie online nie powiodło się. Produkty offline pozostają dostępne.';
     }
   }
-  async function refreshCatalog(){
-    if(importing)return;
-    importing=true;
-    if(importBtn){importBtn.disabled=true;importBtn.textContent='Pobieram…';}
-    updateCatalogStatus('Łączę z Open Food Facts. Nie zamykaj okna…');
-    try{
-      const result=await importFoodCatalog({normalizeProduct:searcher.normalizeOffProduct,
-        onProgress:({page,count,read})=>updateCatalogStatus(`Partia ${page}: przejrzano ${read}, zaakceptowano ${count} produktów…`)});
-      updateCatalogStatus(`Zapisano ${result.items.length}/${FOOD_CATALOG_MAX} popularnych produktów OFF z Polski. Przejrzano ${result.totalSeen}; ${displayDate(result.fetchedAt)}. Sklepy według oznaczeń społeczności.`);
-      if(input.value.trim().length>=2)void handleSubmit();
-    }catch(e){updateCatalogStatus(`Pobieranie nie powiodło się: ${e?.message||'brak połączenia'}. Poprzednie produkty pozostają zapisane.`);}
-    finally{importing=false;if(importBtn){importBtn.disabled=false;importBtn.textContent='Pobierz / odśwież produkty offline';}}
+  async function refreshCatalog() {
+    if (importing) return;
+    importing = true;
+    if (importBtn) { importBtn.disabled = true; importBtn.textContent = 'Pobieram…'; }
+    updateCatalogStatus('Pobieram produkty do rozszerzonej bazy lokalnej…');
+    try {
+      const result = await importExpandedFoodCatalog({
+        normalizeProduct: searcher.normalizeOffProduct,
+        onProgress: ({ page, count, read }) =>
+          updateCatalogStatus(`Partia ${page}: przejrzano ${read}, zapisano ${count} produktów…`)
+      });
+      const catalog = await loadExpandedFoodCatalog();
+      updateCatalogStatus(`Baza lokalna: ${catalog.items.length} produktów. Nowo pobrane w tej operacji: ${result.imported}. Dane OFF wymagają sprawdzenia z etykietą.`);
+      if (input.value.trim().length >= 2) void showLocalSuggestions();
+    } catch (error) {
+      updateCatalogStatus(`Import nie powiódł się: ${error?.message || 'brak połączenia'}. Dotychczasowe produkty pozostają zapisane.`);
+    } finally {
+      importing = false;
+      if (importBtn) { importBtn.disabled = false; importBtn.textContent = 'Pobierz / odśwież produkty offline'; }
+    }
   }
   function onFilterChanged(){currentRequest++;clearTimeout(typingTimer);showLocalSuggestions();}
   form.addEventListener('submit',handleSubmit);
@@ -184,5 +208,9 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
   importBtn?.addEventListener('click',refreshCatalog);
   filter?.addEventListener('change',onFilterChanged);
   updateCatalogStatus();
+  void loadExpandedFoodCatalog().then(catalog => {
+    if (importing || !catalogStatus) return;
+    catalogStatus.textContent = `Baza lokalna: ${catalog.items.length} produktów · zapis ${catalog.persistence === 'indexeddb' ? 'IndexedDB' : 'lokalny'}. Dane OFF wymagają sprawdzenia z etykietą.`;
+  }).catch(() => {});
   return ()=>{currentRequest++;clearTimeout(typingTimer);input.removeEventListener('input',onInput);form.removeEventListener('submit',handleSubmit);importBtn?.removeEventListener('click',refreshCatalog);filter?.removeEventListener('change',onFilterChanged);};
 }

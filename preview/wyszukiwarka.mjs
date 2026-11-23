@@ -1,5 +1,5 @@
 import { BASIC_FOODS } from './produkty-podstawowe.mjs';
-import { searchFoodCatalog, filterFoodStore, extractStores } from './katalog-produktow.mjs';
+import { searchFoodCatalog, searchExpandedFoodCatalog, filterFoodStore, extractStores } from './katalog-produktow.mjs';
 import { assessNutrition } from './walidacja-zywnosci.mjs';
 
 const OFF_ORIGIN = 'https://world.openfoodfacts.org';
@@ -183,7 +183,14 @@ export function createFoodSearcher({ fetchFn = globalThis.fetch?.bind(globalThis
   async function search(query, { online = true, limit = 35, store = 'all' } = {}) {
     const text = String(query ?? '').trim(), q = normalizeText(text);
     const barcode = isBarcode(text);
-    const local = [...searchBasicFoods(text,limit,store), ...searchFoodCatalog(text,{storage:safeStorage,limit,store})];
+    // IndexedDB is an optional, local-only extension; keep existing basic foods
+    // and legacy localStorage results available even when database access fails.
+    const expanded = await searchExpandedFoodCatalog(text, { storage: safeStorage, limit, store });
+    const local = mergeResults(text, [
+      ...searchBasicFoods(text, limit, store),
+      ...searchFoodCatalog(text, { storage: safeStorage, limit, store }),
+      ...expanded
+    ], [], barcode);
     if (!barcode && q.length < 2) return { items: [], status: 'too-short', localCount: 0, remoteCount: 0 };
     // Znakowany EAN z lokalnej etykiety ma pierwszeństwo przed potencjalnie
     // inną recepturą w OFF. Pozwala skanować bez sieci i bez opóźnienia API.
