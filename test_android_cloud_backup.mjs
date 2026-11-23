@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
+const app = read('./app.js');
+const html = read('./index.html');
+assert.match(app, /async function shareBackup\(\)/);
+assert.match(app, /navigator\.canShare\?\.\(\{ files: \[file\] \}\)/);
+assert.match(app, /navigator\.share\(\{ files: \[file\]/);
+assert.match(app, /window\.MojBilansBackup\.validate\(payload\)/);
+assert.match(app, /error\?\.name === 'AbortError'/);
+assert.match(app, /downloadJson\(await file\.text\(\), name\)/);
+assert.match(app, /restorePayload\(JSON\.parse\(await file\.text\(\)\)\)/);
+assert.match(html, /id="shareBackup"/);
+assert.match(html, /id="importData"/);
+assert.match(html, /Dropbox/);
+console.log('PASS Android backup sharing and import wiring');

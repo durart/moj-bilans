@@ -745,6 +745,42 @@
       setDownloadStatus(`Nie udało się rozpocząć pobierania: ${err.message}`, true);
     }
   }
+  async function shareBackup() {
+    if (storageFault) {
+      setDownloadStatus('Nie można udostępnić kopii: błąd odczytu dziennika.', true);
+      return;
+    }
+    const stamp = new Date();
+    const time = [stamp.getHours(), stamp.getMinutes(), stamp.getSeconds()].map(value => String(value).padStart(2, '0')).join('-');
+    const name = `moj-bilans-${todayKey()}_${time}.json`;
+    try {
+      const payload = snapshot();
+      window.MojBilansBackup.validate(payload);
+      const file = new File([JSON.stringify(payload, null, 2)], name, { type: 'application/json' });
+      if (!navigator.share || !navigator.canShare?.({ files: [file] })) {
+        const bytes = downloadJson(await file.text(), name);
+        setDownloadStatus(`Udostępnianie plików nie jest dostępne w tej przeglądarce. Rozpoczęto pobieranie ${name} (${sizeLabel(bytes)}). Sprawdź folder Pobrane.`);
+        return;
+      }
+      await navigator.share({ files: [file], title: 'Kopia zapasowa Mój Bilans' });
+      setDownloadStatus('Przekazano kopię do systemowego menu Androida. Sprawdź w wybranej aplikacji, czy plik został zapisany.');
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        setDownloadStatus('Udostępnianie anulowane. Dane w aplikacji pozostały bez zmian.');
+        return;
+      }
+      // Android browsers may reject file sharing even when canShare reports support.
+      // Preserve the validated JSON and provide a recoverable local download.
+      try {
+        const payload = snapshot();
+        window.MojBilansBackup.validate(payload);
+        const bytes = downloadJson(JSON.stringify(payload, null, 2), name);
+        setDownloadStatus(`Android odmówił bezpośredniego udostępnienia pliku (${error?.message || 'brak uprawnień'}). Rozpoczęto bezpieczne pobieranie ${name} (${sizeLabel(bytes)}). Plik możesz zapisać na Dysku Google z folderu Pobrane; dane w aplikacji nie zostały zmienione.`);
+      } catch (fallbackError) {
+        setDownloadStatus(`Nie udało się udostępnić ani pobrać kopii: ${fallbackError?.message || 'nieznany błąd'}.`, true);
+      }
+    }
+  }
   function restorePayload(payload) {
        if (storageFault) throw Error('Dziennik jest nieczytelny. Przywracanie zablokowane, aby nie nadpisać oryginalnej pamięci.');
       window.MojBilansBackup.validate(payload);
@@ -1507,6 +1543,7 @@
     $('#closeCopy').addEventListener('click', closeCopyDialog);
     $('#copyBackdrop').addEventListener('click', e => { if (e.target === $('#copyBackdrop')) closeCopyDialog(); });
     $('#exportData').addEventListener('click', exportData);
+    $('#shareBackup').addEventListener('click', shareBackup);
     $('#importData').addEventListener('change', importData);
     $('#localBackupRefresh').addEventListener('click', () => listLocalCopies());
     $('#np21VerifyBackup').addEventListener('click', verifyLatestBackup);

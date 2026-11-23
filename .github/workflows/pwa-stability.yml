@@ -30,7 +30,7 @@ jobs:
       - name: Run regression tests
         run: npm test
       - name: Validate backup records and staging parity
-        run: node test_backup_validation.mjs && node test_staging_parity.mjs
+        run: node test_backup_validation.mjs && node test_android_cloud_backup.mjs && node test_staging_parity.mjs
       - name: Package isolated staging for review
         uses: actions/upload-artifact@v4
         with:
@@ -71,7 +71,7 @@ jobs:
 
   publish-preview:
     needs: [verify, browser]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'fix/version-display-2.8.1'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'feature/2.9.0-android-cloud-backup'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -79,7 +79,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: fix/version-display-2.8.1
+          ref: feature/2.9.0-android-cloud-backup
       - name: Rebuild preview from tested refactor commit
         run: node build-staging.mjs
       - name: Publish only isolated preview directory to Pages branch
@@ -90,7 +90,7 @@ jobs:
           git worktree add -B preview-release /tmp/moj-bilans-preview origin/main
           mkdir -p /tmp/moj-bilans-preview/preview
           echo "Source preview revision: $(git rev-parse HEAD)"
-          echo "Source preview version: $(grep -o 'TEST · Mój Bilans 2.8.1' preview/index.html | head -1)"
+          echo "Source preview version: $(grep -o 'TEST · Mój Bilans 2.9.0' preview/index.html | head -1)"
           rsync -a --delete preview/ /tmp/moj-bilans-preview/preview/
           sha256sum preview/index.html /tmp/moj-bilans-preview/preview/index.html
           git -C /tmp/moj-bilans-preview ls-files -v preview/index.html
@@ -108,7 +108,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "test(staging): publish verified Mój Bilans 2.8.1 preview"
+          git commit -m "test(staging): publish verified Mój Bilans 2.9.0 preview"
           git push origin HEAD:main
 
   live-preview:
@@ -122,13 +122,13 @@ jobs:
           URL="https://durart.github.io/moj-bilans/preview/"
           for attempt in {1..12}; do
             if curl --fail --silent --show-error --location "$URL" -o /tmp/bilans-preview.html &&
-               grep -q 'TEST · Mój Bilans 2.8.1' /tmp/bilans-preview.html; then
+               grep -q 'TEST · Mój Bilans 2.9.0' /tmp/bilans-preview.html; then
               break
             fi
             sleep 10
           done
-          grep -q 'TEST · Mój Bilans 2.8.1' /tmp/bilans-preview.html
+          grep -q 'TEST · Mój Bilans 2.9.0' /tmp/bilans-preview.html
           grep -q 'moj-bilans-preview' <(curl --fail --silent --show-error --location "${URL}sw.js")
-          grep -q 'moj-bilans-preview-v27' <(curl --fail --silent --show-error --location "${URL}app.js?v=2.8.1")
+          grep -q 'moj-bilans-preview-v27' <(curl --fail --silent --show-error --location "${URL}app.js?v=2.9.0")
           grep -q 'MojBilansBackup' <(curl --fail --silent --show-error --location "${URL}backup-validation.js?v=2.7.1")
           echo "PASS public staging reachable with isolated PWA, diary and backup validator"
