@@ -769,7 +769,16 @@
         setDownloadStatus('Udostępnianie anulowane. Dane w aplikacji pozostały bez zmian.');
         return;
       }
-      setDownloadStatus(`Nie udało się udostępnić kopii: ${error?.message || 'nieznany błąd'}.`, true);
+      // Android browsers may reject file sharing even when canShare reports support.
+      // Preserve the validated JSON and provide a recoverable local download.
+      try {
+        const payload = snapshot();
+        window.MojBilansBackup.validate(payload);
+        const bytes = downloadJson(JSON.stringify(payload, null, 2), name);
+        setDownloadStatus(`Android odmówił bezpośredniego udostępnienia pliku (${error?.message || 'brak uprawnień'}). Rozpoczęto bezpieczne pobieranie ${name} (${sizeLabel(bytes)}). Plik możesz zapisać na Dysku Google z folderu Pobrane; dane w aplikacji nie zostały zmienione.`);
+      } catch (fallbackError) {
+        setDownloadStatus(`Nie udało się udostępnić ani pobrać kopii: ${fallbackError?.message || 'nieznany błąd'}.`, true);
+      }
     }
   }
   function restorePayload(payload) {
