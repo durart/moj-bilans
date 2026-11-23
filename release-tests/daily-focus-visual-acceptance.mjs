@@ -31,7 +31,7 @@ try{
   await page.addInitScript(fixture=>{if(!localStorage.getItem('moj-bilans-v1'))localStorage.setItem('moj-bilans-v1',JSON.stringify(fixture))},fixture);
   await page.goto(BASE,{waitUntil:'networkidle'});
   await verify('Daily Focus branding, assets and calorie hero',async()=>{
-    assert.match(await page.title(),/Mój Bilans 2\.8\.2/);
+    assert.match(await page.title(),/Mój Bilans 2\.9\.0/);
     assert.equal(await page.locator('.df-hero #calorieRing').count(),1);
     assert.equal(await page.locator('.df-hero .df-macro').count(),3);
     assert.equal(await page.locator('.df-meal-card').count(),4);

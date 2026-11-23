@@ -34,6 +34,6 @@ assert.equal(historyTab.getAttribute('aria-current'), 'page');
 assert.equal(renders, 2);
 assert.equal(scrolls, 2);
 const html = readFileSync('index.html', 'utf8');
-assert.ok(html.indexOf('ui/navigation.js?v=2.8.0') < html.indexOf('app.js?v=2.8.1'));
+assert.ok(html.indexOf('ui/navigation.js?v=2.8.0') < html.indexOf('app.js?v=2.9.0'));
 assert.match(readFileSync('sw.js', 'utf8'), /ui\/navigation\.js\?v=2\.8\.0/);
 console.log('Page navigation, accessibility and render callback verified.');

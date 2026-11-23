@@ -16,6 +16,6 @@ assert.equal(state.selectedDate, '2026-11-22');
 assert.equal(initialize({ weightGoal: 1000, entries: {} }, defaults, today, numeric).weightGoal, 90);
 assert.deepEqual(initialize({ entries: {} }, defaults, today, numeric).entries, []);
 const html = readFileSync('index.html', 'utf8');
-assert.ok(html.indexOf('domain/diary-state.js?v=2.8.0') < html.indexOf('app.js?v=2.8.1'));
+assert.ok(html.indexOf('domain/diary-state.js?v=2.8.0') < html.indexOf('app.js?v=2.9.0'));
 assert.match(readFileSync('sw.js', 'utf8'), /domain\/diary-state\.js\?v=2\.8\.0/);
 console.log('Diary initializer compatibility and offline registration verified.');
