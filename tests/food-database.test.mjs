@@ -186,3 +186,52 @@ test('expanded import writes valid products to IndexedDB without changing localS
   assert.equal(written[0].id, valid.id);
   assert.equal(closed, 1);
 });
+
+test('expanded import preserves first page when a later OFF request fails', async () => {
+  const stored = [];
+  let closed = 0;
+  let calls = 0;
+  const db = {
+    close() { closed++; },
+    transaction() {
+      const tx = {};
+      tx.objectStore = () => ({
+        put(item) {
+          stored.push(item);
+          queueMicrotask(() => tx.oncomplete?.());
+        }
+      });
+      return tx;
+    }
+  };
+  const result = await importExpandedFoodCatalog({
+    openDatabase: async () => db,
+    maxPages: 3,
+    fetchFn: async () => {
+      calls++;
+      if (calls === 2) throw new Error('Open Food Facts HTTP 429');
+      return { ok: true, json: async () => ({
+        products: Array.from({ length: 100 }, (_, i) => ({
+          code: String(5900000000000 + i)
+        }))
+      }) };
+    },
+    normalizeProduct: raw => ({ ...valid, code: raw.code })
+  });
+  assert.equal(result.interrupted, true);
+  assert.match(result.errorMessage, /429/);
+  assert.equal(result.completedPages, 1);
+  assert.equal(result.imported, 100);
+  assert.equal(stored.length, 100);
+  assert.equal(closed, 1);
+});
+
+test('expanded import reports an error if the first page fails', async () => {
+  let closed = 0;
+  await assert.rejects(importExpandedFoodCatalog({
+    openDatabase: async () => ({ close() { closed++; } }),
+    fetchFn: async () => { throw new Error('Open Food Facts HTTP 429'); },
+    normalizeProduct: raw => raw
+  }), /429/);
+  assert.equal(closed, 1);
+});
