@@ -101,7 +101,7 @@ export async function migrateNormalizedFoodCatalog(db, catalog) {
   if (!catalog || !Array.isArray(catalog.items)) throw new TypeError('Invalid normalized catalog');
   const unique = new Map();
   for (const item of catalog.items) {
-    if (!validateFoodProduct(item) || !/^(\\d{8}|\\d{12,14})$/.test(String(item.code || ''))) {
+    if (!validateFoodProduct(item) || !/^(\d{8}|\d{12,14})$/.test(String(item.code || ''))) {
       throw new TypeError('Invalid normalized food item');
     }
     unique.set(`off:${item.code}`, { ...item, id: `off:${item.code}` });
