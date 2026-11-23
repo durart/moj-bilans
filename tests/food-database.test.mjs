@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateFoodProduct, migrateLegacyFoodCatalog, putFoodProducts } from '../food-database.mjs';
+import { loadExpandedFoodCatalog, searchExpandedFoodCatalog, FOOD_CATALOG_KEY } from '../katalog-produktow.mjs';
 
 const valid = { id: 'off:5901234567890', code: '5901234567890', name: 'Jogurt', kcal: 75, protein: 4, fat: 3, carbs: 8 };
 
@@ -48,4 +49,31 @@ test('migration does not delete or rewrite legacy storage', async () => {
   };
   const db = { transaction() { throw new Error('Empty migration must not write'); } };
   assert.equal(await migrateLegacyFoodCatalog(db, storage, ['legacy']), 0);
+});
+
+test('expanded catalog falls back to localStorage when IndexedDB is unavailable', async () => {
+  const storage = {
+    getItem(key) {
+      return key === FOOD_CATALOG_KEY
+        ? JSON.stringify({ products: [valid], fetchedAt: '2026-11-23' })
+        : null;
+    }
+  };
+  const openDatabase = async () => { throw new Error('IndexedDB unavailable'); };
+  const result = await loadExpandedFoodCatalog({ storage, openDatabase });
+  assert.equal(result.persistence, 'localstorage');
+  assert.equal(result.items.length, 1);
+  assert.equal(result.items[0].code, valid.code);
+});
+
+test('expanded search finds legacy products by EAN without IndexedDB', async () => {
+  const storage = {
+    getItem(key) {
+      return key === FOOD_CATALOG_KEY ? JSON.stringify({ products: [valid] }) : null;
+    }
+  };
+  const openDatabase = async () => { throw new Error('IndexedDB unavailable'); };
+  const matches = await searchExpandedFoodCatalog(valid.code, { storage, openDatabase });
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].id, valid.id);
 });
