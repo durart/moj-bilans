@@ -235,3 +235,55 @@ test('expanded import reports an error if the first page fails', async () => {
   }), /429/);
   assert.equal(closed, 1);
 });
+
+
+test('interrupted import resumes at next committed page without refetching page one', async () => {
+  const checkpoint = new Map();
+  const storage = {
+    getItem: key => checkpoint.get(key) ?? null,
+    setItem: (key, value) => checkpoint.set(key, value),
+    removeItem: key => checkpoint.delete(key)
+  };
+  const saved = new Map();
+  const database = {
+    close() {},
+    transaction() {
+      const tx = {};
+      tx.objectStore = () => ({
+        put(item) {
+          saved.set(item.id, item);
+          queueMicrotask(() => tx.oncomplete?.());
+        }
+      });
+      return tx;
+    }
+  };
+  const requestedPages = [];
+  let failSecondPage = true;
+  const fetchFn = async url => {
+    const page = Number(new URL(url).searchParams.get('page'));
+    requestedPages.push(page);
+    if (page === 2 && failSecondPage) throw new Error('Failed to fetch');
+    return {
+      ok: true,
+      json: async () => ({ products: Array.from({ length: 100 }, (_, i) => ({
+        code: String(5900000000000 + (page - 1) * 100 + i)
+      })) })
+    };
+  };
+  const args = {
+    openDatabase: async () => database, storage, fetchFn, maxPages: 3,
+    normalizeProduct: raw => ({ ...valid, code: raw.code })
+  };
+  const interrupted = await importExpandedFoodCatalog(args);
+  assert.equal(interrupted.interrupted, true);
+  assert.equal(interrupted.completedPages, 1);
+  assert.equal(saved.size, 100);
+  failSecondPage = false;
+  requestedPages.length = 0;
+  const resumed = await importExpandedFoodCatalog(args);
+  assert.equal(resumed.interrupted, false);
+  assert.deepEqual(requestedPages, [2, 3]);
+  assert.equal(saved.size, 300);
+  assert.equal(checkpoint.size, 0);
+});
