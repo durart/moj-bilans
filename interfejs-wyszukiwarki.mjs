@@ -208,5 +208,9 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
   importBtn?.addEventListener('click',refreshCatalog);
   filter?.addEventListener('change',onFilterChanged);
   updateCatalogStatus();
+  void loadExpandedFoodCatalog().then(catalog => {
+    if (importing || !catalogStatus) return;
+    catalogStatus.textContent = `Baza lokalna: ${catalog.items.length} produktów · zapis ${catalog.persistence === 'indexeddb' ? 'IndexedDB' : 'lokalny'}. Dane OFF wymagają sprawdzenia z etykietą.`;
+  }).catch(() => {});
   return ()=>{currentRequest++;clearTimeout(typingTimer);input.removeEventListener('input',onInput);form.removeEventListener('submit',handleSubmit);importBtn?.removeEventListener('click',refreshCatalog);filter?.removeEventListener('change',onFilterChanged);};
 }
