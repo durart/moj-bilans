@@ -22,7 +22,7 @@ const server = http.createServer(async (request, response) => {
   try {
     let bytes = await readFile(join(serving, file));
     if (serving === root && file.endsWith('/sw.js')) {
-      const cacheVersion = file.startsWith('/preview/') ? 'v300-food-import-resume-1' : 'v290';
+      const cacheVersion = file.startsWith('/preview/') ? 'v300-food-import-resume-1' : 'v300';
       bytes = Buffer.from(bytes.toString().replaceAll(cacheVersion, cacheVersion + '-rc' + workerRevision));
     }
     response.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control':'no-store' });
@@ -74,7 +74,7 @@ try {
     assert.match(await page.title(),/2.9.0/);
     console.log('Baseline errors before fixed release:', errors.splice(0));
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-v1'))),fixture);
-    assert.ok((await page.evaluate(() => caches.keys())).includes('moj-bilans-cache-v290-rc1'));
+    assert.ok((await page.evaluate(() => caches.keys())).includes('moj-bilans-cache-v300-rc1'));
   });
   await check('Offline restart with query string and complete module graph', async () => {
     await upgrade.setOffline(true);
