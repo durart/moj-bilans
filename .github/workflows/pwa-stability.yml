@@ -30,7 +30,7 @@ jobs:
       - name: Run regression tests
         run: npm test
       - name: Validate backup records and staging parity
-        run: node test_backup_validation.mjs && node test_staging_parity.mjs
+        run: node test_backup_validation.mjs && node test_android_cloud_backup.mjs && node test_staging_parity.mjs
       - name: Package isolated staging for review
         uses: actions/upload-artifact@v4
         with:
