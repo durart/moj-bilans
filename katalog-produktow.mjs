@@ -5,7 +5,7 @@
  * weryfikacji z etykietą: https://openfoodfacts.org/data
  */
 import { assessNutrition } from './walidacja-zywnosci.mjs';
-import { openFoodDatabase, getFoodProducts, migrateNormalizedFoodCatalog } from './food-database.mjs';
+import { openFoodDatabase, getFoodProducts, putFoodProducts, migrateNormalizedFoodCatalog } from './food-database.mjs';
 
 export const FOOD_CATALOG_KEY = (globalThis.location?.pathname.includes('/preview/') ? 'preview:moj-bilans:off-food-catalog:v1' : 'moj-bilans:off-food-catalog:v1');
 export const LEGACY_BIEDRONKA_KEY = (globalThis.location?.pathname.includes('/preview/') ? 'preview:moj-bilans:biedronka-off:v1' : 'moj-bilans:biedronka-off:v1');
@@ -192,4 +192,71 @@ export async function searchExpandedFoodCatalog(query, options = {}) {
     .sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name, 'pl'))
     .slice(0, limit)
     .map(result => result.item);
+}
+
+/**
+ * Import a bounded batch directly into IndexedDB without changing the legacy
+ * 100-item localStorage cache. Each accepted page is committed atomically.
+ * Existing records are preserved even when a later network request fails.
+ */
+export async function importExpandedFoodCatalog({
+  fetchFn = globalThis.fetch?.bind(globalThis),
+  normalizeProduct,
+  openDatabase = openFoodDatabase,
+  desiredCount = 500,
+  maxPages = 12,
+  timeoutMs = 15000,
+  onProgress = () => {}
+} = {}) {
+  if (typeof fetchFn !== 'function' || typeof normalizeProduct !== 'function') {
+    throw new TypeError('Missing food import dependencies');
+  }
+  const desired = Math.max(1, Math.min(1000, Math.trunc(desiredCount) || 500));
+  const pages = Math.max(1, Math.min(20, Math.trunc(maxPages) || 12));
+  const db = await openDatabase();
+  let imported = 0, scanned = 0, completedPages = 0;
+  const seen = new Set();
+  try {
+    for (let page = 1; page <= pages && imported < desired; page++) {
+      const url = new URL(OFF_SEARCH);
+      url.search = new URLSearchParams({
+        countries_tags: 'en:poland', sort_by: 'unique_scans_n',
+        page_size: '100', page: String(page), fields: OFF_FIELDS
+      }).toString();
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      let response;
+      try {
+        const result = await fetchFn(url, {
+          headers: { Accept: 'application/json' }, signal: controller.signal
+        });
+        if (!result.ok) throw new Error(`Open Food Facts HTTP ${result.status}`);
+        response = await result.json();
+      } finally {
+        clearTimeout(timer);
+      }
+      if (!Array.isArray(response?.products)) throw new Error('Invalid Open Food Facts response');
+      scanned += response.products.length;
+      const batch = [];
+      for (const raw of response.products) {
+        const normalized = normalizeProduct(raw);
+        if (!normalized || normalized.isIncomplete || normalized.isUnreliable ||
+            normalized.isEstimate || !normalized.code) continue;
+        const item = normalizedItem({ ...normalized, storeKeys: extractStores(raw) });
+        if (!item || seen.has(item.code) ||
+            (item.kcal === 0 && item.protein === 0 && item.fat === 0 && item.carbs === 0)) continue;
+        seen.add(item.code);
+        batch.push(item);
+        if (imported + batch.length >= desired) break;
+      }
+      if (batch.length) await putFoodProducts(db, batch);
+      imported += batch.length;
+      completedPages++;
+      onProgress({ page, count: imported, read: scanned });
+      if (response.products.length < 100) break;
+    }
+    return { imported, scanned, completedPages, persistence: 'indexeddb' };
+  } finally {
+    db.close();
+  }
 }
