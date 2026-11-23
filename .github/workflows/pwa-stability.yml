@@ -71,7 +71,7 @@ jobs:
 
   publish-preview:
     needs: [verify, browser]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'feature/2.9.0-android-cloud-backup'
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'feature/2.9.0-android-cloud-backup') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature/2.9.0-android-cloud-backup')
     runs-on: ubuntu-24.04
     permissions:
       contents: write
