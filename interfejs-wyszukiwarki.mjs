@@ -1,5 +1,5 @@
 import { defaultFoodSearcher, searchBasicFoods, isBarcode } from './wyszukiwarka.mjs';
-import { loadFoodCatalog, searchFoodCatalog, importFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from './katalog-produktow.mjs';
+import { loadFoodCatalog, searchFoodCatalog, searchExpandedFoodCatalog, importFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from './katalog-produktow.mjs';
 
 const messages = Object.freeze({
   'too-short':'Wpisz przynajmniej 2 znaki lub zeskanuj kod EAN.',
@@ -123,35 +123,51 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
   }
   // Podczas pisania filtrujemy WYŁĄCZNIE katalogi lokalne.
   // Wyszukiwanie sieciowe działa po świadomym kliknięciu "Sprawdź OFF".
-  function showLocalSuggestions() {
-    const query=input.value.trim(),store=selectedStore();
-    if(query.length<2){
+  function deduplicate(items) {
+    const seen = new Set();
+    return items.filter(item => {
+      const key = item.code ? 'ean:' + item.code :
+        'name:' + String(item.name || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('pl') +
+        '|' + String(item.brand || '').toLocaleLowerCase('pl');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+  async function showLocalSuggestions() {
+    const serial = ++currentRequest;
+    const query = input.value.trim(), store = selectedStore();
+    if (query.length < 2) {
       results.replaceChildren();
-      status.textContent=messages['too-short'];
+      status.textContent = messages['too-short'];
       return;
     }
-    const local=[...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})];
-    const seen=new Set();
-    const unique=local.filter(item=>{
-      const key=item.code ? 'ean:'+item.code : 'name:'+String(item.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pl')+'|'+String(item.brand||'').toLocaleLowerCase('pl');
-      if(seen.has(key))return false;
-      seen.add(key);return true;
-    });
-    render(unique);
-    status.textContent=`Wyniki lokalne: ${unique.length}. Aby wyszukać także w Open Food Facts, kliknij „Sprawdź OFF”.`;
+    const legacy = [...searchBasicFoods(query, 30, store), ...searchFoodCatalog(query, { store })];
+    render(deduplicate(legacy));
+    status.textContent = 'Wyszukiwanie w zapisanych produktach…';
+    try {
+      const expanded = await searchExpandedFoodCatalog(query, { store });
+      if (serial !== currentRequest) return;
+      const unique = deduplicate([...legacy, ...expanded]);
+      render(unique);
+      status.textContent = `Wyniki lokalne: ${unique.length}. Aby wyszukać także w Open Food Facts, kliknij „Sprawdź OFF”.`;
+    } catch {
+      if (serial !== currentRequest) return;
+      status.textContent = `Wyniki lokalne: ${deduplicate(legacy).length}. Aby wyszukać także w Open Food Facts, kliknij „Sprawdź OFF”.`;
+    }
   }
   function onInput() {
     currentRequest++;
     clearTimeout(typingTimer);
-    if(input.value.trim().length<2){showLocalSuggestions();return;}
-    typingTimer=setTimeout(showLocalSuggestions,120);
+    if (input.value.trim().length < 2) { void showLocalSuggestions(); return; }
+    typingTimer = setTimeout(() => { void showLocalSuggestions(); }, 120);
   }
   async function handleSubmit(event){
     event?.preventDefault();
     clearTimeout(typingTimer);
     const query=input.value.trim(),serial=++currentRequest,store=selectedStore();
     if(query.length<2){render([]);status.textContent=messages['too-short'];return;}
-    const local=[...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})];
+    const local=deduplicate([...searchBasicFoods(query,30,store),...searchFoodCatalog(query,{store})]);
     render(local);
     status.textContent=isBarcode(query)?'Sprawdzam kod kreskowy…':'Pokazano wyniki lokalne. Szukam też w Open Food Facts…';
     try {
