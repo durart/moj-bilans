@@ -71,7 +71,7 @@ try {
       await page.locator('#np21ReloadUpdate').click();
       await activated;
     }
-    assert.match(await page.title(),/2.9.0/);
+    assert.match(await page.title(),/3.0.0/);
     console.log('Baseline errors before fixed release:', errors.splice(0));
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-v1'))),fixture);
     assert.ok((await page.evaluate(() => caches.keys())).includes('moj-bilans-cache-v300-rc1'));
