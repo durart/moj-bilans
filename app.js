@@ -784,39 +784,56 @@
       }
     }
 
-    // The system file picker can offer Google Drive as a document provider,
-    // depending on browser and Android configuration. Never assume availability.
-    if (typeof window.showSaveFilePicker === 'function') {
-      try {
-        const handle = await window.showSaveFilePicker({
-          suggestedName: name,
-          types: [{ description: 'Kopia zapasowa JSON', accept: { 'application/json': ['.json'] } }]
-        });
-        const writable = await handle.createWritable();
-        try {
-          await writable.write(json);
-          await writable.close();
-        } catch (error) {
-          await writable.abort().catch(() => {});
-          throw error;
-        }
-        setDownloadStatus(`Zapisano kopię ${name} w wybranej lokalizacji. Dane w aplikacji pozostały bez zmian.`);
-        return;
-      } catch (error) {
-        if (error?.name === 'AbortError') {
-          setDownloadStatus('Zapis anulowany. Dane w aplikacji pozostały bez zmian.');
-          return;
-        }
-        shareError = error;
-      }
-    }
-
     try {
       const bytes = downloadJson(json, name);
       const reason = shareError?.message ? ` (${shareError.message})` : '';
       setDownloadStatus(`Bezpośredni zapis na Dysku Google jest niedostępny${reason}. Rozpoczęto pobieranie ${name} (${sizeLabel(bytes)}). Otwórz plik z folderu Pobrane i użyj „Udostępnij” lub „Zapisz na Dysku”. Dane w aplikacji pozostały bez zmian.`);
     } catch (error) {
       setDownloadStatus(`Nie udało się pobrać kopii: ${error?.message || 'nieznany błąd'}.`, true);
+    }
+  }
+  async function saveBackupWithPicker() {
+    if (storageFault) {
+      setDownloadStatus('Nie można zapisać kopii: błąd odczytu dziennika.', true);
+      return;
+    }
+    if (typeof window.showSaveFilePicker !== 'function') {
+      setDownloadStatus('Ta przeglądarka nie udostępnia systemowego wyboru miejsca zapisu. Użyj pobierania kopii JSON albo systemowego udostępniania.', true);
+      return;
+    }
+    const stamp = new Date();
+    const time = [stamp.getHours(), stamp.getMinutes(), stamp.getSeconds()].map(value => String(value).padStart(2, '0')).join('-');
+    const name = `moj-bilans-${todayKey()}_${time}.json`;
+    let json;
+    try {
+      const payload = snapshot();
+      window.MojBilansBackup.validate(payload);
+      json = JSON.stringify(payload, null, 2);
+    } catch (error) {
+      setDownloadStatus(`Nie można przygotować kopii: ${error?.message || 'błąd danych'}.`, true);
+      return;
+    }
+    try {
+      // Invoke the picker directly from this button's user gesture.
+      const handle = await window.showSaveFilePicker({
+        suggestedName: name,
+        types: [{ description: 'Kopia zapasowa JSON', accept: { 'application/json': ['.json'] } }]
+      });
+      const writable = await handle.createWritable();
+      try {
+        await writable.write(json);
+        await writable.close();
+      } catch (error) {
+        await writable.abort().catch(() => {});
+        throw error;
+      }
+      setDownloadStatus(`Zapisano kopię ${name} w wybranej lokalizacji. Dane w aplikacji pozostały bez zmian.`);
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        setDownloadStatus('Zapis anulowany. Dane w aplikacji pozostały bez zmian.');
+        return;
+      }
+      setDownloadStatus(`Nie udało się zapisać kopii przez systemowy wybór folderu: ${error?.message || 'nieznany błąd'}. Możesz pobrać JSON na telefon.`, true);
     }
   }
   function restorePayload(payload) {
@@ -1582,6 +1599,7 @@
     $('#copyBackdrop').addEventListener('click', e => { if (e.target === $('#copyBackdrop')) closeCopyDialog(); });
     $('#exportData').addEventListener('click', exportData);
     $('#shareBackup').addEventListener('click', shareBackup);
+  $('#saveBackupPicker').addEventListener('click', saveBackupWithPicker);
     $('#importData').addEventListener('change', importData);
     $('#localBackupRefresh').addEventListener('click', () => listLocalCopies());
     $('#np21VerifyBackup').addEventListener('click', verifyLatestBackup);
