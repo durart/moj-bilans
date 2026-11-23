@@ -14,7 +14,7 @@ try {
 
   const banner = page.locator('.np-env-banner');
   await banner.waitFor({ state: 'visible', timeout: 15_000 });
-  assert.match(await banner.innerText(), /TEST .* Mój Bilans 2\.8\.2/);
+  assert.match(await banner.innerText(), /TEST .* Mój Bilans 2\.9\.0/);
 
   await page.locator('#npQuickAdd').click();
   const search = page.locator('#searchName');
