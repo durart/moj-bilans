@@ -15,7 +15,7 @@ const html = readFileSync('index.html', 'utf8')
   .replace(/(<body[^>]*>)/, '$1\n  <aside class="np-env-banner" role="status" style="padding:8px;text-align:center;background:#593900;color:#fff">TEST · Mój Bilans 2.9.0 · Osobne dane testowe</aside>');
 writeFileSync('preview/index.html', html.replace('app.js?v=2.8.1', 'app.js?v=2.9.0'));
 const previewWorker = readFileSync('preview/sw.js', 'utf8')
-  .replace("PREFIX + 'v283'", "PREFIX + 'v290'")
+  .replace("PREFIX + 'v283'", "PREFIX + 'v291'")
   .replace("'./app.js?v=2.8.1'", "'./app.js?v=2.9.0'");
 writeFileSync('preview/sw.js', previewWorker);
 const manifest = JSON.parse(readFileSync('manifest.webmanifest', 'utf8'));
