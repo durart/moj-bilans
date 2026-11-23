@@ -21,7 +21,10 @@ const server = http.createServer(async (request, response) => {
   if (brokenRequiredAsset && file.endsWith('/backup-validation.js')) { failedAssetRequests++; response.writeHead(503); response.end(); return; }
   try {
     let bytes = await readFile(join(serving, file));
-    if (serving === root && file.endsWith('/sw.js')) bytes = Buffer.from(bytes.toString().replaceAll('v290','v290-rc' + workerRevision));
+    if (serving === root && file.endsWith('/sw.js')) {
+      const cacheVersion = file.startsWith('/preview/') ? 'v300-food-import-resume-1' : 'v290';
+      bytes = Buffer.from(bytes.toString().replaceAll(cacheVersion, cacheVersion + '-rc' + workerRevision));
+    }
     response.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control':'no-store' });
     response.end(bytes);
   } catch { response.writeHead(404); response.end(); }
@@ -106,7 +109,7 @@ try {
   await check('Preview uses separate diary, IndexedDB, cache and PWA scope', async () => {
     await test.evaluate(async () => { const cache = await caches.open('moj-bilans-cache-production-sentinel'); await cache.put('/production-sentinel',new Response('keep')); });
     assert.equal(await test.evaluate(() => localStorage.getItem('moj-bilans-v1')),'production-sentinel');
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v290-rc1'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v300-food-import-resume-1-rc1'));
     assert.ok((await test.evaluate(async () => (await navigator.serviceWorker.getRegistration()).scope)).endsWith('/preview/'));
     await test.waitForFunction(async () => (await indexedDB.databases()).some(db => db.name === 'moj-bilans-preview-copies-v27'));
     assert.ok(!(await test.evaluate(() => indexedDB.databases())).some(db => db.name === 'moj-bilans-kopie-lokalne-v1'));
@@ -172,6 +175,20 @@ try {
     await upload({...exported,recipes:[{...recipe,name:'Restored recipe'}]});
     await test.waitForFunction(() => JSON.parse(localStorage.getItem('moj-bilans-preview-v27')).recipes.some(row => row.name === 'Restored recipe'));
     await test.locator('.nav-item[data-page="products"]').click();
+    // Surface missing recipe UI as a deterministic integration failure, not a 30s locator timeout.
+    await test.waitForFunction(() => Boolean(document.querySelector('#recipeList')), { timeout: 5000 })
+      .catch(async () => {
+        const diagnostics = await test.evaluate(() => ({
+          recipeModule: [...document.scripts].some(script => script.src.includes('recipe-builder.mjs')),
+          recipeButton: Boolean(document.querySelector('#recipeOpen')),
+          productsPage: Boolean(document.querySelector('#page-products')),
+          insertionAnchor: Boolean(document.querySelector('#newOwnProduct')),
+          recipeApi: Boolean(window.MojBilansRecipes),
+          page: document.querySelector('.nav-item.selected')?.dataset.page,
+          scripts: [...document.scripts].filter(script => script.type === 'module').map(script => script.src)
+        }));
+        throw new Error('Recipe UI missing after restore: ' + JSON.stringify(diagnostics));
+      });
     assert.match(await test.locator('#recipeList').innerText(),/Restored recipe/);
     await test.locator('#recipeOpen').click();
     await test.locator('#recipeName').fill('Test recipe');
@@ -228,7 +245,7 @@ try {
     const navigation = test.waitForNavigation();
     await test.locator('#np21ReloadUpdate').click();
     await navigation;
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v290-rc2'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v300-food-import-resume-1-rc2'));
     assert.equal(await other.locator('#goalKcal').inputValue(),'2222');
     await other.close();
   });

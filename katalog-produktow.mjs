@@ -5,11 +5,13 @@
  * weryfikacji z etykietą: https://openfoodfacts.org/data
  */
 import { assessNutrition } from './walidacja-zywnosci.mjs';
+import { openFoodDatabase, getFoodProducts, putFoodProducts, migrateNormalizedFoodCatalog } from './food-database.mjs';
 
 export const FOOD_CATALOG_KEY = (globalThis.location?.pathname.includes('/preview/') ? 'preview:moj-bilans:off-food-catalog:v1' : 'moj-bilans:off-food-catalog:v1');
 export const LEGACY_BIEDRONKA_KEY = (globalThis.location?.pathname.includes('/preview/') ? 'preview:moj-bilans:biedronka-off:v1' : 'moj-bilans:biedronka-off:v1');
 export const FOOD_CATALOG_MAX = 100;
 const OFF_SEARCH = 'https://world.openfoodfacts.org/api/v2/search';
+const IMPORT_CURSOR_KEY = FOOD_CATALOG_KEY + ':expanded-import-cursor:v1';
 const OFF_FIELDS = 'code,product_name,product_name_pl,product_name_en,brands,stores,stores_tags,nutriments,unique_scans_n';
 
 export const STORES = Object.freeze([
@@ -136,4 +138,174 @@ export async function importFoodCatalog({
   try {storage?.setItem(FOOD_CATALOG_KEY,JSON.stringify({version:1,fetchedAt:result.fetchedAt,totalSeen,products:items}));}
   catch {throw new Error('Nie udało się zapisać produktów na urządzeniu. Sprawdź pamięć przeglądarki.');}
   return result;
+}
+
+/**
+ * Opt-in asynchronous IndexedDB bridge. The existing synchronous catalog
+ * remains the fallback until the UI is migrated and browser-tested.
+ * Never deletes IndexedDB records that are absent from the legacy cache.
+ */
+export async function loadExpandedFoodCatalog({
+  storage = globalThis.localStorage,
+  openDatabase = openFoodDatabase
+} = {}) {
+  const legacy = loadFoodCatalog(storage);
+  let db;
+  try {
+    db = await openDatabase();
+    await migrateNormalizedFoodCatalog(db, legacy);
+    const persisted = await getFoodProducts(db);
+    const byCode = new Map();
+    for (const item of persisted) {
+      const normalized = normalizedItem(item);
+      if (normalized) byCode.set(normalized.code, normalized);
+    }
+    for (const item of legacy.items) byCode.set(item.code, item);
+    return { ...legacy, items: [...byCode.values()], persistence: 'indexeddb' };
+  } catch {
+    return { ...legacy, persistence: 'localstorage' };
+  } finally {
+    db?.close?.();
+  }
+}
+
+export async function searchExpandedFoodCatalog(query, options = {}) {
+  const { items } = await loadExpandedFoodCatalog(options);
+  const q = normalize(query);
+  if (q.length < 2) return [];
+  const raw = String(query).trim();
+  const ean = /^(\d{8}|\d{12,14})$/.test(raw);
+  const terms = q.split(/\s+/);
+  const store = options.store || 'all';
+  const limit = Math.max(0, options.limit ?? 35);
+  return filterFoodStore(items, store)
+    .map(item => {
+      const name = normalize(item.name);
+      const brand = normalize(item.brand);
+      const hay = `${name} ${brand}`;
+      const score = ean ? (item.code === raw ? 500 : 0)
+        : name === q ? 200 : name.startsWith(q) ? 160
+        : hay.includes(q) ? 120
+        : terms.every(term => hay.split(/\s+/).some(word => word.startsWith(term))) ? 60 : 0;
+      return { item, score };
+    })
+    .filter(result => result.score > 0)
+    .sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name, 'pl'))
+    .slice(0, limit)
+    .map(result => result.item);
+}
+
+/**
+ * Import a bounded batch directly into IndexedDB without changing the legacy
+ * 100-item localStorage cache. Each accepted page is committed atomically.
+ * Existing records are preserved even when a later network request fails.
+ */
+export async function importExpandedFoodCatalog({
+  fetchFn = globalThis.fetch?.bind(globalThis),
+  normalizeProduct,
+  openDatabase = openFoodDatabase,
+  desiredCount = 500,
+  maxPages = 12,
+  timeoutMs = 15000,
+  storage = globalThis.localStorage,
+  onProgress = () => {}
+} = {}) {
+  if (typeof fetchFn !== 'function' || typeof normalizeProduct !== 'function') {
+    throw new TypeError('Missing food import dependencies');
+  }
+  const desired = Math.max(1, Math.min(1000, Math.trunc(desiredCount) || 500));
+  const pages = Math.max(1, Math.min(20, Math.trunc(maxPages) || 12));
+  const db = await openDatabase();
+  // The cursor is only a checkpoint, never a source of food records.
+  // Corrupt or unavailable storage must not prevent an ordinary import.
+  let startPage = 1;
+  try {
+    const cursor = JSON.parse(storage?.getItem(IMPORT_CURSOR_KEY) || 'null');
+    if (cursor?.desired === desired && cursor?.pages === pages &&
+        Number.isInteger(cursor.nextPage) && cursor.nextPage > 1 && cursor.nextPage <= pages) {
+      startPage = cursor.nextPage;
+    }
+  } catch { /* Resume is optional; food records remain in IndexedDB. */ }
+  let imported = 0, scanned = 0, completedPages = 0;
+  let interrupted = false, errorMessage = '';
+  const seen = new Set();
+  try {
+    for (let page = startPage; page <= pages && imported < desired; page++) {
+      const url = new URL(OFF_SEARCH);
+      url.search = new URLSearchParams({
+        countries_tags: 'en:poland', sort_by: 'unique_scans_n',
+        page_size: '100', page: String(page), fields: OFF_FIELDS
+      }).toString();
+      let response;
+      let requestError;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const result = await fetchFn(url.toString(), {
+            headers: { Accept: 'application/json' }, signal: controller.signal
+          });
+          if (!result.ok) {
+            const error = new Error(`Open Food Facts HTTP ${result.status}`);
+            error.status = result.status;
+            throw error;
+          }
+          response = await result.json();
+          if (!Array.isArray(response?.products)) throw new Error('Invalid Open Food Facts response');
+          requestError = null;
+          break;
+        } catch (error) {
+          requestError = error;
+          // Invalid responses and non-retryable HTTP errors cannot be fixed by retrying.
+          if (error?.message === 'Invalid Open Food Facts response' ||
+              (error?.status && error.status !== 429 && error.status < 500)) break;
+          if (attempt < 3) {
+            onProgress({ page, count: imported, read: scanned, retry: attempt });
+            await new Promise(resolve => setTimeout(resolve, 800 * attempt));
+          }
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+      if (requestError) {
+        interrupted = true;
+        errorMessage = requestError?.name === 'AbortError'
+          ? 'Przekroczono czas oczekiwania na Open Food Facts'
+          : String(requestError?.message || 'Błąd połączenia z Open Food Facts');
+        onProgress({ page, count: imported, read: scanned, interrupted: true, errorMessage });
+        break;
+      }
+      scanned += response.products.length;
+      const batch = [];
+      for (const raw of response.products) {
+        const normalized = normalizeProduct(raw);
+        if (!normalized || normalized.isIncomplete || normalized.isUnreliable ||
+            normalized.isEstimate || !normalized.code) continue;
+        const item = normalizedItem({ ...normalized, storeKeys: extractStores(raw) });
+        if (!item || seen.has(item.code) ||
+            (item.kcal === 0 && item.protein === 0 && item.fat === 0 && item.carbs === 0)) continue;
+        seen.add(item.code);
+        batch.push(item);
+        if (imported + batch.length >= desired) break;
+      }
+      if (batch.length) await putFoodProducts(db, batch);
+      imported += batch.length;
+      completedPages++;
+      // Commit the checkpoint only after IndexedDB has committed this page.
+      try { storage?.setItem(IMPORT_CURSOR_KEY, JSON.stringify({ desired, pages, nextPage: page + 1 })); }
+      catch { /* Storage quota/privacy settings do not invalidate saved products. */ }
+      onProgress({ page, count: imported, read: scanned });
+      if (response.products.length < 100) break;
+    }
+    if (!interrupted) {
+      try { storage?.removeItem(IMPORT_CURSOR_KEY); } catch { /* Optional checkpoint. */ }
+    }
+    if (interrupted && completedPages === 0) {
+      throw new Error(errorMessage);
+    }
+    return { imported, scanned, completedPages, persistence: 'indexeddb',
+      interrupted, errorMessage };
+  } finally {
+    db.close();
+  }
 }
