@@ -31,3 +31,21 @@ test('empty product writes do not open transactions', async () => {
   const db = { transaction() { throw new Error('Unexpected transaction'); } };
   assert.equal(await putFoodProducts(db, []), 0);
 });
+
+test('migration rejects records without a valid barcode before opening a transaction', async () => {
+  let writes = 0;
+  const db = { transaction() { writes++; throw new Error('Unexpected write'); } };
+  const storage = { getItem() { return JSON.stringify({ products: [{ ...valid, code: '' }] }); } };
+  await assert.rejects(migrateLegacyFoodCatalog(db, storage, ['legacy']), /invalid products/);
+  assert.equal(writes, 0);
+});
+
+test('migration does not delete or rewrite legacy storage', async () => {
+  const storage = {
+    getItem() { return JSON.stringify({ products: [] }); },
+    setItem() { throw new Error('Legacy storage must not be changed'); },
+    removeItem() { throw new Error('Legacy storage must not be changed'); }
+  };
+  const db = { transaction() { throw new Error('Empty migration must not write'); } };
+  assert.equal(await migrateLegacyFoodCatalog(db, storage, ['legacy']), 0);
+});
