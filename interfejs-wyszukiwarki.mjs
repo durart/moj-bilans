@@ -1,5 +1,5 @@
 import { defaultFoodSearcher, searchBasicFoods, isBarcode } from './wyszukiwarka.mjs';
-import { loadFoodCatalog, searchFoodCatalog, searchExpandedFoodCatalog, importFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from './katalog-produktow.mjs';
+import { loadFoodCatalog, loadExpandedFoodCatalog, searchFoodCatalog, searchExpandedFoodCatalog, importExpandedFoodCatalog, FOOD_CATALOG_MAX, storeLabel } from './katalog-produktow.mjs';
 
 const messages = Object.freeze({
   'too-short':'Wpisz przynajmniej 2 znaki lub zeskanuj kod EAN.',
@@ -181,18 +181,26 @@ export function mountFoodSearch({form,input,results,status,onSelect,onFavorite=(
       status.textContent='Wyszukiwanie online nie powiodło się. Produkty offline pozostają dostępne.';
     }
   }
-  async function refreshCatalog(){
-    if(importing)return;
-    importing=true;
-    if(importBtn){importBtn.disabled=true;importBtn.textContent='Pobieram…';}
-    updateCatalogStatus('Łączę z Open Food Facts. Nie zamykaj okna…');
-    try{
-      const result=await importFoodCatalog({normalizeProduct:searcher.normalizeOffProduct,
-        onProgress:({page,count,read})=>updateCatalogStatus(`Partia ${page}: przejrzano ${read}, zaakceptowano ${count} produktów…`)});
-      updateCatalogStatus(`Zapisano ${result.items.length}/${FOOD_CATALOG_MAX} popularnych produktów OFF z Polski. Przejrzano ${result.totalSeen}; ${displayDate(result.fetchedAt)}. Sklepy według oznaczeń społeczności.`);
-      if(input.value.trim().length>=2)void handleSubmit();
-    }catch(e){updateCatalogStatus(`Pobieranie nie powiodło się: ${e?.message||'brak połączenia'}. Poprzednie produkty pozostają zapisane.`);}
-    finally{importing=false;if(importBtn){importBtn.disabled=false;importBtn.textContent='Pobierz / odśwież produkty offline';}}
+  async function refreshCatalog() {
+    if (importing) return;
+    importing = true;
+    if (importBtn) { importBtn.disabled = true; importBtn.textContent = 'Pobieram…'; }
+    updateCatalogStatus('Pobieram produkty do rozszerzonej bazy lokalnej…');
+    try {
+      const result = await importExpandedFoodCatalog({
+        normalizeProduct: searcher.normalizeOffProduct,
+        onProgress: ({ page, count, read }) =>
+          updateCatalogStatus(`Partia ${page}: przejrzano ${read}, zapisano ${count} produktów…`)
+      });
+      const catalog = await loadExpandedFoodCatalog();
+      updateCatalogStatus(`Baza lokalna: ${catalog.items.length} produktów. Nowo pobrane w tej operacji: ${result.imported}. Dane OFF wymagają sprawdzenia z etykietą.`);
+      if (input.value.trim().length >= 2) void showLocalSuggestions();
+    } catch (error) {
+      updateCatalogStatus(`Import nie powiódł się: ${error?.message || 'brak połączenia'}. Dotychczasowe produkty pozostają zapisane.`);
+    } finally {
+      importing = false;
+      if (importBtn) { importBtn.disabled = false; importBtn.textContent = 'Pobierz / odśwież produkty offline'; }
+    }
   }
   function onFilterChanged(){currentRequest++;clearTimeout(typingTimer);showLocalSuggestions();}
   form.addEventListener('submit',handleSubmit);
