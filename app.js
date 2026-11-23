@@ -751,7 +751,7 @@
       return;
     }
     if (typeof window.showSaveFilePicker !== 'function') {
-      setDownloadStatus('Ta przeglądarka nie udostępnia systemowego wyboru miejsca zapisu. Użyj pobierania kopii JSON albo systemowego udostępniania.', true);
+      setDownloadStatus('Ta przeglądarka nie udostępnia systemowego wyboru miejsca zapisu. Użyj przycisku „Pobierz kopię na telefon (JSON)”.', true);
       return;
     }
     const stamp = new Date();
