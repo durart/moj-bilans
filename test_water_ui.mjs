@@ -14,6 +14,6 @@ render({ water:[],selectedDate:'2026-11-22',goals:{} },select,String,()=>0);
 assert.equal(elements['#waterCount'].textContent,'0 wpisów');
 assert.equal(elements['#undoWater'].disabled,true);
 const html=readFileSync('index.html','utf8');
-assert.ok(html.indexOf('ui/water.js?v=2.8.0') < html.indexOf('app.js?v=2.9.0'));
+assert.ok(html.indexOf('ui/water.js?v=2.8.0') < html.indexOf('app.js?v=3.0.0'));
 assert.match(readFileSync('sw.js','utf8'),/ui\/water\.js\?v=2\.8\.0/);
 console.log('Water UI isolated rendering tests passed.');

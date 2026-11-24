@@ -7,7 +7,7 @@ for (const [, asset] of worker.matchAll(/'\.\/([^']+)'/g)) {
   if (!file || file.endsWith('/') || ['index.html', 'manifest.webmanifest'].includes(file)) continue;
   assert.deepEqual(readFileSync('preview/' + file), readFileSync(file), file);
 }
-assert.equal(read('preview/sw.js'), worker.replace("const CACHE = PREFIX + 'v290';", "const CACHE = PREFIX + 'v300-food-import-resume-1';"));
+assert.equal(read('preview/sw.js'), worker.replace("const CACHE = PREFIX + 'v300';", "const CACHE = PREFIX + 'v300-food-import-resume-1';"));
 const cachedFiles = new Set([...worker.matchAll(/'\.\/([^']+)'/g)].map(match => match[1].split('?')[0]));
 for (const file of cachedFiles) {
   if (!/\.(?:mjs|js)$/.test(file)) continue;

@@ -15,6 +15,6 @@ assert.equal(value(301,numeric),null);
 assert.equal(value(null,numeric),null);
 assert.equal(value(101.5,numeric),101.5);
 const html=readFileSync('index.html','utf8');
-assert.ok(html.indexOf('domain/measurements.js?v=2.8.0') < html.indexOf('app.js?v=2.9.0'));
+assert.ok(html.indexOf('domain/measurements.js?v=2.8.0') < html.indexOf('app.js?v=3.0.0'));
 assert.match(readFileSync('sw.js','utf8'),/domain\/measurements\.js\?v=2\.8\.0/);
 console.log('Measurements module compatibility tests passed.');

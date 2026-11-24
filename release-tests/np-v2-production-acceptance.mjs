@@ -31,7 +31,7 @@ try{
  },{fixture,sentinel});
  await page.goto(BASE,{waitUntil:'networkidle'});
  await verify('Root URL and original PWA identity',async()=>{
-  assert.match(await page.title(),/Mój Bilans 2\.9\.0/);
+  assert.match(await page.title(),/Mój Bilans 3\.0\.0/);
   const manifest=await page.evaluate(async()=>await (await fetch(document.querySelector('link[rel=manifest]').href)).json());
   assert.equal(manifest.id,'./');assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');
   assert.equal(await page.locator('.np-env-banner').count(),0);
