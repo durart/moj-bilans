@@ -11,6 +11,6 @@ assert.equal(lastIndex(entries,'2026-11-20'),-1);
 assert.equal(lastIndex([],'2026-11-22'),-1);
 assert.equal(entries.length,3);
 const html=readFileSync('index.html','utf8');
-assert.ok(html.indexOf('domain/water.js?v=2.8.0') < html.indexOf('app.js?v=3.0.0'));
+assert.ok(html.indexOf('domain/water.js?v=2.8.0') < html.indexOf('app.js?v=3.1.0'));
 assert.match(readFileSync('sw.js','utf8'),/domain\/water\.js\?v=2\.8\.0/);
 console.log('Hydration domain tests passed.');
