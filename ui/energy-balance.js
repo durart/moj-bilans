@@ -66,6 +66,33 @@
       const number = document.createElement('strong'); number.textContent = format(value);
       card.append(title,number); root.append(card);
     }
+    const chart = get('energyChart');
+    if (summary.days.length) {
+      const caption = document.createElement('p');
+      caption.textContent = 'Spożycie (niebieski) / spalanie (pomarańczowy) · brak słupka = brak danych';
+      chart.append(caption);
+      const scale = Math.max(1,...summary.days.map(row => Math.max(row.burned,row.eaten ?? 0)));
+      for (const row of summary.days.slice(-30)) {
+        const group = document.createElement('div');
+        group.className = 'energy-chart-row';
+        const label = document.createElement('span'); label.textContent = row.date;
+        group.append(label);
+        for (const [kind,value] of [['intake',row.eaten],['burned',row.burned]]) {
+          const track = document.createElement('div'); track.className = 'energy-track';
+          track.setAttribute('aria-label',(kind === 'intake' ? 'Spożycie: ' : 'Spalanie: ') + format(value));
+          if (value !== null) {
+            const bar = document.createElement('div'); bar.className = 'energy-bar energy-' + kind;
+            bar.style.width = (value / scale * 100) + '%'; track.append(bar);
+          }
+          const number = document.createElement('small'); number.textContent = format(value);
+          group.append(track,number);
+        }
+        chart.append(group);
+      }
+      if (summary.days.length > 30) {
+        const note = document.createElement('p'); note.textContent = 'Wykres: ostatnie 30 zapisów z zakresu. Podsumowanie obejmuje cały zakres.'; chart.append(note);
+      }
+    }
     for (const row of [...summary.days].reverse()) {
       const item = document.createElement('div'); item.className = 'compact-item';
       const info = document.createElement('div');
