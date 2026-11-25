@@ -15,6 +15,6 @@ assert.strictEqual(context.goals,state.goals);
 globalThis.MojBilansSettingsUI.render({...state,weights:[]},select,key=>'#goal-'+key,validDate,numeric,ui);
 assert.equal(context.latestWeight,null);
 const html=readFileSync('index.html','utf8');
-assert.ok(html.indexOf('ui/settings.js?v=2.8.0') < html.indexOf('app.js?v=3.0.0'));
+assert.ok(html.indexOf('ui/settings.js?v=2.8.0') < html.indexOf('app.js?v=3.1.0'));
 assert.match(readFileSync('sw.js','utf8'),/ui\/settings\.js\?v=2\.8\.0/);
 console.log('Settings UI module tests passed.');

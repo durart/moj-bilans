@@ -22,7 +22,7 @@ const server = http.createServer(async (request, response) => {
   try {
     let bytes = await readFile(join(serving, file));
     if (serving === root && file.endsWith('/sw.js')) {
-      const cacheVersion = file.startsWith('/preview/') ? 'v300-food-import-resume-1' : 'v300';
+      const cacheVersion = file.startsWith('/preview/') ? 'v310-energy-balance-1' : 'v310';
       bytes = Buffer.from(bytes.toString().replaceAll(cacheVersion, cacheVersion + '-rc' + workerRevision));
     }
     response.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control':'no-store' });
@@ -44,7 +44,7 @@ const errors=[];
 try {
   const upgrade = await browser.newContext({serviceWorkers:'allow'});
   const page = await upgrade.newPage();
-  page.on('pageerror', error => errors.push(String(error)));
+  page.on('pageerror', error => errors.push(error.stack || String(error)));
   await page.addInitScript(fixture => { if (!localStorage.getItem('moj-bilans-v1')) localStorage.setItem('moj-bilans-v1',JSON.stringify(fixture)); }, fixture);
   phase = 'baseline worker registration'; console.log('RUN ' + phase);
   await page.goto(base);
@@ -71,10 +71,10 @@ try {
       await page.locator('#np21ReloadUpdate').click();
       await activated;
     }
-    assert.match(await page.title(),/3.0.0/);
+    assert.match(await page.title(),/3.1.0/);
     console.log('Baseline errors before fixed release:', errors.splice(0));
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-v1'))),fixture);
-    assert.ok((await page.evaluate(() => caches.keys())).includes('moj-bilans-cache-v300-rc1'));
+    assert.ok((await page.evaluate(() => caches.keys())).includes('moj-bilans-cache-v310-rc1'));
   });
   await check('Offline restart with query string and complete module graph', async () => {
     await upgrade.setOffline(true);
@@ -86,10 +86,34 @@ try {
     await page.locator('#searchResults .food-card').first().waitFor();
     await upgrade.setOffline(false);
   });
+  await check('Manual energy expenditure persists and supports editing and deletion', async () => {
+    await page.reload();
+    await page.locator('#modalBackdrop').waitFor({state:'hidden'});
+    await page.locator('.nav-item[data-page="history"]').click();
+    await page.locator('#energyOpen').click();
+    await page.locator('#energyDate').fill(today);
+    await page.locator('#energyResting').fill('2050');
+    await page.locator('#energyActive').fill('780');
+    await page.locator('#energyForm button[type="submit"]').click();
+    const readEnergy = () => page.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-v1')).energyExpenditure);
+    assert.deepEqual(await readEnergy(), [{date:today,restingKcal:2050,activeKcal:780,source:'manual'}]);
+    await page.reload();
+    await page.locator('.nav-item[data-page="history"]').click();
+    await page.locator('#energyOpen').click();
+    await page.locator('#energyDate').fill(today);
+    await page.locator('#energyActive').fill('800');
+    await page.locator('#energyForm button[type="submit"]').click();
+    assert.equal((await readEnergy())[0].activeKcal,800);
+    await page.locator('#energyOpen').click();
+    await page.locator('#energyDate').fill(today);
+    page.once('dialog', dialog => dialog.accept());
+    await page.locator('#energyDelete').click();
+    assert.deepEqual(await readEnergy(),[]);
+  });
   await upgrade.close();
   const context = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'allow',acceptDownloads:true});
   const test = await context.newPage();
-  test.on('pageerror', error => errors.push(String(error)));
+  test.on('pageerror', error => errors.push(error.stack || String(error)));
   let accept = true;
   test.on('dialog', dialog => accept ? dialog.accept() : dialog.dismiss());
   await test.addInitScript(fixture => {
@@ -109,7 +133,7 @@ try {
   await check('Preview uses separate diary, IndexedDB, cache and PWA scope', async () => {
     await test.evaluate(async () => { const cache = await caches.open('moj-bilans-cache-production-sentinel'); await cache.put('/production-sentinel',new Response('keep')); });
     assert.equal(await test.evaluate(() => localStorage.getItem('moj-bilans-v1')),'production-sentinel');
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v300-food-import-resume-1-rc1'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v310-energy-balance-1-rc1'));
     assert.ok((await test.evaluate(async () => (await navigator.serviceWorker.getRegistration()).scope)).endsWith('/preview/'));
     await test.waitForFunction(async () => (await indexedDB.databases()).some(db => db.name === 'moj-bilans-preview-copies-v27'));
     assert.ok(!(await test.evaluate(() => indexedDB.databases())).some(db => db.name === 'moj-bilans-kopie-lokalne-v1'));
@@ -245,7 +269,7 @@ try {
     const navigation = test.waitForNavigation();
     await test.locator('#np21ReloadUpdate').click();
     await navigation;
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v300-food-import-resume-1-rc2'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v310-energy-balance-1-rc2'));
     assert.equal(await other.locator('#goalKcal').inputValue(),'2222');
     await other.close();
   });

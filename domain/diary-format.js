@@ -9,6 +9,7 @@
   function data(state) {
     const result = {};
     for (const key of FIELDS) result[key] = state[key];
+    if (state.energyExpenditure !== undefined) result.energyExpenditure = state.energyExpenditure;
     return result;
   }
 

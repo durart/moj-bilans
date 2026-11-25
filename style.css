@@ -193,3 +193,15 @@
   .recent-item button{font-size:11px;padding:8px 9px;}
   .recent-destination-label{gap:7px;padding:8px 10px;}
 }
+
+/* Daily energy balance comparison */
+#energyChart { display: grid; gap: .65rem; }
+.energy-chart-row { display: grid; grid-template-columns: minmax(5.5rem,auto) minmax(0,1fr) auto; gap: .25rem .5rem; align-items: center; }
+.energy-chart-row > span { grid-row: span 2; font-size: .75rem; }
+.energy-chart-row > small { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.energy-track { min-width: 0; height: .65rem; border-radius: .3rem; background: rgba(128,128,128,.15); }
+.energy-bar { height: 100%; border-radius: inherit; }
+.energy-intake { background: #60a5fa; }
+.energy-burned { background: #fb923c; }
+#energySummary { margin-top: 1rem; }
+#energyDays { margin-top: 1rem; }

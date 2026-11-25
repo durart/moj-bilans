@@ -46,6 +46,7 @@
     if (payload.goals !== undefined && (!object(payload.goals) || ['kcal', 'protein', 'carbs', 'fat', 'water'].some(key =>
         payload.goals[key] !== undefined && !range(payload.goals[key], key === 'water' ? 100 : 1, ['kcal', 'water'].includes(key) ? 10000 : 1000)))) fail('cele');
     if (payload.weightGoal !== undefined && !range(payload.weightGoal, 20, 400)) fail('masa docelowa');
+    if (payload.energyExpenditure !== undefined) globalThis.MojBilansEnergy.validate(payload.energyExpenditure);
     return payload;
   }
   globalThis.MojBilansBackup = Object.freeze({ validate });
