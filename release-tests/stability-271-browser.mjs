@@ -86,6 +86,28 @@ try {
     await page.locator('#searchResults .food-card').first().waitFor();
     await upgrade.setOffline(false);
   });
+  await check('Manual energy expenditure persists and supports editing and deletion', async () => {
+    await page.locator('.nav-item[data-page="history"]').click();
+    await page.locator('#energyOpen').click();
+    await page.locator('#energyDate').fill(today);
+    await page.locator('#energyResting').fill('2050');
+    await page.locator('#energyActive').fill('780');
+    await page.locator('#energyForm button[type="submit"]').click();
+    const readEnergy = () => page.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-v1')).energyExpenditure);
+    assert.deepEqual(await readEnergy(), [{date:today,restingKcal:2050,activeKcal:780,source:'manual'}]);
+    await page.reload();
+    await page.locator('.nav-item[data-page="history"]').click();
+    await page.locator('#energyOpen').click();
+    await page.locator('#energyDate').fill(today);
+    await page.locator('#energyActive').fill('800');
+    await page.locator('#energyForm button[type="submit"]').click();
+    assert.equal((await readEnergy())[0].activeKcal,800);
+    await page.locator('#energyOpen').click();
+    await page.locator('#energyDate').fill(today);
+    page.once('dialog', dialog => dialog.accept());
+    await page.locator('#energyDelete').click();
+    assert.deepEqual(await readEnergy(),[]);
+  });
   await upgrade.close();
   const context = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'allow',acceptDownloads:true});
   const test = await context.newPage();
