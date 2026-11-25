@@ -259,9 +259,12 @@
       $('#historyShowMore').classList.add('hidden');
       $('#npHistoryChart').innerHTML = '<p class="empty-chart">Wybierz poprawny zakres dat.</p>';
       window.NPHistory24?.clear();
+      globalThis.MojBilansEnergyUI.render(null);
       return;
     }
 
+    if (storageFault) globalThis.MojBilansEnergyUI.render(null);
+    else globalThis.MojBilansEnergyUI.render(globalThis.MojBilansEnergy.summarize(state.energyExpenditure ?? [], Object.fromEntries(summary.days.filter(day => day.kcalComplete).map(day => [day.date,day.totals.kcal])), summary.from, summary.to));
     const average = summary.averages;
     $('#historyAverage').textContent = Number.isFinite(average?.kcal) ? nf.format(Math.round(average.kcal)) : '—';
     $('#historyProtein').textContent = Number.isFinite(average?.protein) ? nf1.format(average.protein) : '—';
@@ -1442,6 +1445,12 @@
   }
 
   function bind() {
+    globalThis.MojBilansEnergyUI.bind({read: () => storageFault ? [] : state.energyExpenditure ?? [], today: todayKey, refresh: renderHistory, write: rows => {
+      const previous = state;
+      state = {...state, energyExpenditure: rows};
+      if (!save()) { state = previous; return false; }
+      return true;
+    }});
     $$('.nav-item').forEach(el => el.addEventListener('click', () => showPage(el.dataset.page)));
     const defaultHistoryRange = window.MojBilansHistory.periodRange('1m');
     historyCustomFrom = defaultHistoryRange.from;
