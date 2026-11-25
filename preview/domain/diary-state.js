@@ -15,6 +15,7 @@
       measurements: Array.isArray(saved.measurements) ? saved.measurements : [],
       weightGoal: isNumber(saved.weightGoal) && Number(saved.weightGoal) >= 20 && Number(saved.weightGoal) <= 400 ? Number(saved.weightGoal) : 90,
       water: Array.isArray(saved.water) ? saved.water : [],
+      ...(saved.energyExpenditure === undefined ? {} : { energyExpenditure: saved.energyExpenditure }),
       selectedDate: todayKey()
     };
   }

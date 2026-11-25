@@ -27,6 +27,8 @@
     return result.data;
   };
   let saved = dataFromStorage();
+  try { if (saved.energyExpenditure !== undefined) globalThis.MojBilansEnergy.validate(saved.energyExpenditure); }
+  catch (error) { storageFault = 'Nieprawidłowe dane spalania. Zapis zablokowano, aby chronić dziennik.'; }
   let state = globalThis.MojBilansDiaryState.initialize(saved, DEFAULT_GOALS, todayKey, isNumber);
   let currentMeal = 'breakfast';
   // Ephemeral accordion state; never part of diary, localStorage or exported backups.
@@ -257,9 +259,12 @@
       $('#historyShowMore').classList.add('hidden');
       $('#npHistoryChart').innerHTML = '<p class="empty-chart">Wybierz poprawny zakres dat.</p>';
       window.NPHistory24?.clear();
+      globalThis.MojBilansEnergyUI.render(null);
       return;
     }
 
+    if (storageFault) globalThis.MojBilansEnergyUI.render(null);
+    else globalThis.MojBilansEnergyUI.render(globalThis.MojBilansEnergy.summarize(state.energyExpenditure ?? [], Object.fromEntries(summary.days.filter(day => day.kcalComplete).map(day => [day.date,day.totals.kcal])), summary.from, summary.to));
     const average = summary.averages;
     $('#historyAverage').textContent = Number.isFinite(average?.kcal) ? nf.format(Math.round(average.kcal)) : '—';
     $('#historyProtein').textContent = Number.isFinite(average?.protein) ? nf1.format(average.protein) : '—';
@@ -829,7 +834,7 @@
       if (payload.portions && typeof payload.portions === 'object' && !Array.isArray(payload.portions)) for (const [k, v] of Object.entries(payload.portions).slice(0, 5000)) { if (k.length <= 240 && isNumber(v) && number(v) > 0 && number(v) <= 100000 && !['__proto__','constructor','prototype'].includes(k)) Object.defineProperty(portions, k, { value: Number(v), enumerable: true, writable: true, configurable: true }); }
       const target = number(payload.weightGoal);
       const previous = state;
-      state = { ...state, goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, recipes: validateRecipes(payload.recipes), productFavorites: Array.isArray(payload.productFavorites) ? payload.productFavorites.filter(x => typeof x === 'string' && x.length <= 220).slice(0, 500) : [], weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
+      state = { ...state, energyExpenditure: payload.energyExpenditure ?? state.energyExpenditure ?? [], goals, entries, custom: products(payload.custom), recent: products(payload.recent), favorites, recipes: validateRecipes(payload.recipes), productFavorites: Array.isArray(payload.productFavorites) ? payload.productFavorites.filter(x => typeof x === 'string' && x.length <= 220).slice(0, 500) : [], weights, water, measurements, portions, weightGoal: target !== null && target >= 20 && target <= 400 ? target : 90 };
       if (!save()) { state = previous; return false; }
       renderAll(); window.dispatchEvent(new Event('moj-bilans:restored')); toast(`Przywrócono ${entries.length} wpisów`);
       return true;
@@ -1440,6 +1445,12 @@
   }
 
   function bind() {
+    globalThis.MojBilansEnergyUI.bind({read: () => storageFault ? [] : state.energyExpenditure ?? [], today: todayKey, refresh: renderHistory, write: rows => {
+      const previous = state;
+      state = {...state, energyExpenditure: rows};
+      if (!save()) { state = previous; return false; }
+      return true;
+    }});
     $$('.nav-item').forEach(el => el.addEventListener('click', () => showPage(el.dataset.page)));
     const defaultHistoryRange = window.MojBilansHistory.periodRange('1m');
     historyCustomFrom = defaultHistoryRange.from;
