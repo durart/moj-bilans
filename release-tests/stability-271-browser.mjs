@@ -87,6 +87,8 @@ try {
     await upgrade.setOffline(false);
   });
   await check('Manual energy expenditure persists and supports editing and deletion', async () => {
+    await page.reload();
+    await page.locator('#modalBackdrop').waitFor({state:'hidden'});
     await page.locator('.nav-item[data-page="history"]').click();
     await page.locator('#energyOpen').click();
     await page.locator('#energyDate').fill(today);
