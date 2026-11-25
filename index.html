@@ -133,6 +133,24 @@
           </div>
           <div class="history-coverage"><span>Dni z wpisami: <strong id="historyDays">0</strong></span><p id="historyCoverage"></p></div>
         </section>
+        <section class="panel" aria-labelledby="energyTitle">
+          <div class="section-title"><h2 id="energyTitle">Bilans energetyczny</h2></div>
+          <button id="energyOpen" type="button" class="primary-button wide" aria-expanded="false" aria-controls="energyForm">+ Dodaj spalone kalorie</button>
+          <form id="energyForm" class="product-form hidden">
+            <label class="field-label">Data<input id="energyDate" type="date" required></label>
+            <label class="field-label">Kalorie spoczynkowe (kcal)<input id="energyResting" type="number" min="1" max="20000" step="1" inputmode="numeric" required></label>
+            <label class="field-label">Kalorie aktywne (kcal)<input id="energyActive" type="number" min="0" max="20000" step="1" inputmode="numeric" required></label>
+            <p id="energyTotal" aria-live="polite">Całkowite spalanie: —</p>
+            <button type="submit" class="primary-button wide">Zapisz</button>
+            <button id="energyDelete" type="button" class="secondary-button wide hidden">Usuń wpis spalania</button>
+            <button id="energyCancel" type="button" class="flat-button">Anuluj</button>
+          </form>
+          <p id="energyStatus" role="status" aria-live="polite"></p>
+          <div id="energySummary" class="np-kpi-grid"></div>
+          <p id="energyCoverage" class="np-trend-footnote"></p>
+          <div id="energyChart" class="np-history-chart"></div>
+          <div id="energyDays" class="compact-list"></div>
+        </section>
         <section class="panel np-analytics" aria-labelledby="npAnalyticsTitle">
           <div class="np-analytics-header"><div><span class="np-eyebrow">HISTORIA 2.4 / CENTRUM ANALIZ</span><h2 id="npAnalyticsTitle">Realizacja planu kalorycznego</h2></div><span class="np-analytics-tag">Przedział celu ±10%</span></div>
           <div class="np-kpi-grid">
