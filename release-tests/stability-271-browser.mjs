@@ -22,7 +22,7 @@ const server = http.createServer(async (request, response) => {
   try {
     let bytes = await readFile(join(serving, file));
     if (serving === root && file.endsWith('/sw.js')) {
-      const cacheVersion = file.startsWith('/preview/') ? 'v310-food-import-resume-1' : 'v310';
+      const cacheVersion = file.startsWith('/preview/') ? 'v300-food-import-resume-1' : 'v310';
       bytes = Buffer.from(bytes.toString().replaceAll(cacheVersion, cacheVersion + '-rc' + workerRevision));
     }
     response.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control':'no-store' });
@@ -109,7 +109,7 @@ try {
   await check('Preview uses separate diary, IndexedDB, cache and PWA scope', async () => {
     await test.evaluate(async () => { const cache = await caches.open('moj-bilans-cache-production-sentinel'); await cache.put('/production-sentinel',new Response('keep')); });
     assert.equal(await test.evaluate(() => localStorage.getItem('moj-bilans-v1')),'production-sentinel');
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v310-food-import-resume-1-rc1'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v300-food-import-resume-1-rc1'));
     assert.ok((await test.evaluate(async () => (await navigator.serviceWorker.getRegistration()).scope)).endsWith('/preview/'));
     await test.waitForFunction(async () => (await indexedDB.databases()).some(db => db.name === 'moj-bilans-preview-copies-v27'));
     assert.ok(!(await test.evaluate(() => indexedDB.databases())).some(db => db.name === 'moj-bilans-kopie-lokalne-v1'));
@@ -245,7 +245,7 @@ try {
     const navigation = test.waitForNavigation();
     await test.locator('#np21ReloadUpdate').click();
     await navigation;
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v310-food-import-resume-1-rc2'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v300-food-import-resume-1-rc2'));
     assert.equal(await other.locator('#goalKcal').inputValue(),'2222');
     await other.close();
   });
