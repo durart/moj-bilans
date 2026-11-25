@@ -44,7 +44,7 @@ const errors=[];
 try {
   const upgrade = await browser.newContext({serviceWorkers:'allow'});
   const page = await upgrade.newPage();
-  page.on('pageerror', error => errors.push(String(error)));
+  page.on('pageerror', error => errors.push(error.stack || String(error)));
   await page.addInitScript(fixture => { if (!localStorage.getItem('moj-bilans-v1')) localStorage.setItem('moj-bilans-v1',JSON.stringify(fixture)); }, fixture);
   phase = 'baseline worker registration'; console.log('RUN ' + phase);
   await page.goto(base);
@@ -89,7 +89,7 @@ try {
   await upgrade.close();
   const context = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'allow',acceptDownloads:true});
   const test = await context.newPage();
-  test.on('pageerror', error => errors.push(String(error)));
+  test.on('pageerror', error => errors.push(error.stack || String(error)));
   let accept = true;
   test.on('dialog', dialog => accept ? dialog.accept() : dialog.dismiss());
   await test.addInitScript(fixture => {
