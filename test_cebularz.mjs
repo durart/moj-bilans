@@ -1,3 +1,4 @@
+import { cacheRevision } from './release-tests/release-contract.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { CEBULARZE } from './cebularz.mjs';
@@ -57,7 +58,7 @@ check('link and source metadata preserved in search',()=>{
 check('offline files included in Service Worker',()=>{
  const sw=fs.readFileSync('./sw.js','utf8');
  assert.ok(sw.includes("'./cebularz.mjs'"));
- assert.ok(/const CACHE = PREFIX \+ 'v310-resting-default-1'/.test(sw));
+ cacheRevision(sw);
 });
 check('correct UI source labels',()=>{
  const ui=fs.readFileSync('./interfejs-wyszukiwarki.mjs','utf8');

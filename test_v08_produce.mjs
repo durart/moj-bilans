@@ -1,3 +1,4 @@
+import { cacheRevision } from './release-tests/release-contract.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { PRODUCE_FOODS } from './owoce-warzywa.mjs';
@@ -21,5 +22,5 @@ const offlineSearcher=createFoodSearcher({fetchFn:()=>{throw new Error('no netwo
 const offlineResults=await offlineSearcher.search('pomarańcze',{online:false});
 check('wyszukiwanie wszystkich źródeł offline',()=>assert.ok(offlineResults.items.some(p=>p.name.includes('Pomarańcza'))));
 check('brak zmian schematu kopii dziennika',()=>{const app=fs.readFileSync('./app.js','utf8');assert.ok(app.includes("moj-bilans-v1"));assert.ok(app.includes('localBackup'));});
-check('Service Worker buforuje nowy moduł',()=>{const sw=fs.readFileSync('./sw.js','utf8');assert.ok(sw.includes("'./owoce-warzywa.mjs'"));assert.ok(/const CACHE = PREFIX \+ 'v310-resting-default-1'/.test(sw));});
+check('Service Worker buforuje nowy moduł',()=>{const sw=fs.readFileSync('./sw.js','utf8');assert.ok(sw.includes("'./owoce-warzywa.mjs'"));cacheRevision(sw);});
 console.log(`\n${tests} testów; owoce: ${fruits.length}, warzywa: ${vegetables.length}, razem z innymi: ${BASIC_FOODS.length}.`);
