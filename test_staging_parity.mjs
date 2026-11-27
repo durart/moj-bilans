@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { releaseVersion, cacheRevision, previewRevision } from './release-tests/release-contract.mjs';
 const read = file => readFileSync(file, 'utf8');
 const worker = read('sw.js');
 for (const [, asset] of worker.matchAll(/'\.\/([^']+)'/g)) {
@@ -7,7 +8,8 @@ for (const [, asset] of worker.matchAll(/'\.\/([^']+)'/g)) {
   if (!file || file.endsWith('/') || ['index.html', 'manifest.webmanifest'].includes(file)) continue;
   assert.deepEqual(readFileSync('preview/' + file), readFileSync(file), file);
 }
-assert.equal(read('preview/sw.js'), worker.replace("const CACHE = PREFIX + 'v310-resting-default-1';", "const CACHE = PREFIX + 'v310-resting-default-preview-1';"));
+const revision = cacheRevision(worker);
+assert.equal(read('preview/sw.js'), worker.replace("const CACHE = PREFIX + '" + revision + "';", "const CACHE = PREFIX + '" + previewRevision(revision) + "';"));
 const cachedFiles = new Set([...worker.matchAll(/'\.\/([^']+)'/g)].map(match => match[1].split('?')[0]));
 for (const file of cachedFiles) {
   if (!/\.(?:mjs|js)$/.test(file)) continue;
@@ -17,7 +19,7 @@ for (const file of cachedFiles) {
     assert.ok(cachedFiles.has(resolved), `Missing offline module dependency ${resolved} imported by ${file}`);
   }
 }
-assert.match(read('preview/index.html'), /TEST · Mój Bilans 3.1.0/);
+assert.ok(read('preview/index.html').includes('TEST · Mój Bilans ' + releaseVersion + ' · Osobne dane testowe'));
 assert.doesNotMatch(read('preview/index.html'), /(?:src|href)="\.\.\//);
 for (const file of ['index.html', 'app.js']) {
   for (const [, asset] of read(file).matchAll(/["'](\.\/[^"']+\.(?:js|mjs|css)(?:\?[^"']*)?)["']/g)) {
