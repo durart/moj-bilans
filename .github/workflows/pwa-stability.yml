@@ -122,13 +122,17 @@ jobs:
           URL="https://durart.github.io/moj-bilans/preview/"
           for attempt in {1..12}; do
             if curl --fail --silent --show-error --location "$URL" -o /tmp/bilans-preview.html &&
-               grep -q 'TEST · Mój Bilans 3.1.0' /tmp/bilans-preview.html; then
+               grep -q 'TEST · Mój Bilans 3.1.0' /tmp/bilans-preview.html &&
+               grep -q 'v310-resting-default-preview-1' <(curl --fail --silent --show-error --location "${URL}sw.js") &&
+               grep -q 'DEFAULT_RESTING_KCAL = 2318' <(curl --fail --silent --show-error --location "${URL}ui/energy-balance.js?v=3.1.0"); then
               break
             fi
             sleep 10
           done
           grep -q 'TEST · Mój Bilans 3.1.0' /tmp/bilans-preview.html
           grep -q 'moj-bilans-preview' <(curl --fail --silent --show-error --location "${URL}sw.js")
+          grep -q 'v310-resting-default-preview-1' <(curl --fail --silent --show-error --location "${URL}sw.js")
+          grep -q 'DEFAULT_RESTING_KCAL = 2318' <(curl --fail --silent --show-error --location "${URL}ui/energy-balance.js?v=3.1.0")
           grep -q 'moj-bilans-preview' <(curl --fail --silent --show-error --location "${URL}app.js?v=3.1.0")
           grep -q 'MojBilansBackup' <(curl --fail --silent --show-error --location "${URL}backup-validation.js?v=2.7.1")
           echo "PASS public staging reachable with isolated PWA, diary and backup validator"

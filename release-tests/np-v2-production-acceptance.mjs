@@ -120,7 +120,7 @@ try{
   await page.reload({waitUntil:'networkidle'});
   assert.equal(await page.locator('#npFoodCount').innerText(),'2');
   await page.waitForFunction(async()=>{
-   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-v271-stable-3');
+   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-v310-resting-default-1');
   },null,{timeout:30000});
   const reg=await page.evaluate(async()=>{
    const r=await navigator.serviceWorker.getRegistration('./');return {scope:r?.scope,script:r?.active?.scriptURL};

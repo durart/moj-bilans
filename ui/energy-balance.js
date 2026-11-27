@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  const DEFAULT_RESTING_KCAL = 2318;
   const get = id => document.getElementById(id);
   const format = value => value === null || !Number.isFinite(value) ? '—' : Math.round(value).toLocaleString('pl-PL') + ' kcal';
   function bind({read, write, today, refresh}) {
@@ -10,7 +11,7 @@
     }
     function load() {
       const row = read().find(item => item.date === date.value);
-      resting.value = row?.restingKcal ?? '';
+      resting.value = row?.restingKcal ?? DEFAULT_RESTING_KCAL;
       active.value = row?.activeKcal ?? '';
       get('energyDelete').classList.toggle('hidden', !row);
       updateTotal();
