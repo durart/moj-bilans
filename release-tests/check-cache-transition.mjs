@@ -1,0 +1,12 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { requireCacheTransition, releaseVersion } from './release-contract.mjs';
+import assert from 'node:assert/strict';
+const base = process.argv[2];
+assert.match(base ?? '', /^[0-9a-f]{40}$/);
+const git = args => execFileSync('git',args,{encoding:'utf8'});
+const previousWorker = git(['show',base+':sw.js']);
+const previousVersion = JSON.parse(git(['show',base+':package.json'])).version;
+const changed = git(['diff','--name-only','-z',base,'HEAD']).split('\0').filter(Boolean);
+requireCacheTransition(previousWorker,readFileSync('sw.js','utf8'),previousVersion,releaseVersion,changed);
+console.log('PASS cache revision transition for candidate runtime assets');

@@ -33,3 +33,18 @@ export function requireReleaseVersion(html, worker, version = releaseVersion) {
   requireCachedAsset(html, worker, 'app.js', version);
   return cacheRevision(worker, version);
 }
+
+export function requireCacheTransition(previousWorker, worker, previousVersion, version, changedPaths) {
+  const prior = cacheRevision(previousWorker, previousVersion);
+  const next = cacheRevision(worker, version);
+  const runtimePaths = new Set(['sw.js','index.html']);
+  for (const source of [previousWorker,worker]) {
+    for (const [, asset] of source.matchAll(/'\.\/([^']+)'/g)) {
+      const file = asset.split('?')[0];
+      if (file && !file.endsWith('/')) runtimePaths.add(file);
+    }
+  }
+  if (changedPaths.some(path=>runtimePaths.has(path))) {
+    assert.notEqual(next,prior,'Changed runtime assets require a fresh production cache revision');
+  }
+}
