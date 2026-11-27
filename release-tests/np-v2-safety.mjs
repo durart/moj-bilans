@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { releaseVersion, cacheRevision } from './release-contract.mjs';
 const read=p=>fs.readFileSync(p,'utf8');
 const a=read('app.js'),sw=read('sw.js'),index=read('index.html'),manifest=JSON.parse(read('manifest.webmanifest'));
 assert.match(a,/const KEY = 'moj-bilans-v1'/);
 assert.match(a,/const LOCAL_COPIES_DB = 'moj-bilans-kopie-lokalne-v1'/);
 assert.doesNotMatch(a,/moj-bilans-np-v2-v1|moj-bilans-np-v2-kopie-v1/);
 assert.match(a,/\$\$\('\[data-np-grams\]'\)\.forEach/);
-assert.match(sw,/const CACHE = PREFIX \+ 'v271-stable-3'/);
+cacheRevision(sw);
 assert.match(sw,/key\.startsWith\(PREFIX\)/);
 assert.doesNotMatch(sw,/k\.startsWith\('moj-bilans-np-v2-cache-'/);
 assert.equal(manifest.id,'./');assert.equal(manifest.scope,'./');assert.equal(manifest.start_url,'./');
@@ -22,7 +23,7 @@ assert.match(read('katalog-produktow.mjs'),/moj-bilans:biedronka-off:v1/);
 for(const [path,resource] of [
   ['np-design.css','href'],['np-trends.js','src'],['app.js','src'],['np-ui.js','src']
 ]){
-  const versioned='./'+path+'?v='+(path==='app.js'?'2.7.1':path==='np-trends.js'?'2.5.0':'np2.1.0');
+  const versioned='./'+path+'?v='+(path==='app.js'?releaseVersion:path==='np-trends.js'?'2.5.0':'np2.1.0');
   assert.ok(index.includes(resource+'="'+versioned+'"'),'HTML not versioned: '+path);
   assert.ok(sw.includes("'"+versioned+"'"),'Offline cache missing versioned asset: '+path);
 }

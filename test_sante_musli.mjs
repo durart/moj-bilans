@@ -1,3 +1,4 @@
+import { cacheRevision } from './release-tests/release-contract.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { LABELED_PRODUCTS } from './produkty-z-etykiet.mjs';
@@ -67,7 +68,7 @@ check('karta wskazuje źródło danych z etykiety',()=>{
 });
 check('PWA buforuje etykiety i zmienia wersję cache',()=>{
   assert.ok(sw.includes("'./produkty-z-etykiet.mjs'"));
-  assert.ok(/const CACHE = PREFIX \+ 'v310-resting-default-1'/.test(sw));
+  cacheRevision(sw);
 });
 check('nie zmieniono lokalnego magazynu dziennika',()=>{
   assert.ok(app.includes("const KEY = 'moj-bilans-v1'"));

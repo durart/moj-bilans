@@ -1,3 +1,4 @@
+import { cacheRevision } from './release-tests/release-contract.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { BALERON_REFERENCE } from './baleron.mjs';
@@ -50,7 +51,7 @@ check('działa offline',()=>{
 check('PWA przechowuje moduł',()=>{
  const sw=fs.readFileSync('sw.js','utf8');
  assert.ok(sw.includes("'./baleron.mjs'"));
- assert.ok(/const CACHE = PREFIX \+ 'v310-resting-default-1'/.test(sw));
+ cacheRevision(sw);
 });
 check('dziennik pozostaje nienaruszony',()=>{
  const app=fs.readFileSync('app.js','utf8');

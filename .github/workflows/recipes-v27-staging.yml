@@ -1,5 +1,7 @@
 name: Recipe v2.7 staging checks
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
     paths:
@@ -10,6 +12,8 @@ on:
       - 'preview/manifest.webmanifest'
       - '.github/workflows/recipes-v27-staging.yml'
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -18,6 +22,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Build candidate preview
+        run: node build-staging.mjs
       - name: Check JavaScript syntax
         run: |
           node --check preview/app.js
@@ -28,4 +34,5 @@ jobs:
       - name: Check staging isolation and asset references
         run: node preview/verify-staging.mjs
       - name: Run existing regression tests
+        if: github.event_name != 'pull_request'
         run: npm test

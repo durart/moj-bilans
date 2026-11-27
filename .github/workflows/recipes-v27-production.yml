@@ -1,5 +1,7 @@
 name: Mój Bilans v2.7 production smoke checks
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
     paths:
@@ -10,6 +12,8 @@ on:
       - 'sw.js'
       - '.github/workflows/recipes-v27-production.yml'
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -25,30 +29,7 @@ jobs:
           node --check interfejs-wyszukiwarki.mjs
           node --check sw.js
       - name: Verify production release invariants
-        run: |
-          node --input-type=module <<'EOF'
-          import { readFileSync, existsSync } from 'node:fs';
-          import assert from 'node:assert/strict';
-          const html=readFileSync('index.html','utf8');
-          const app=readFileSync('app.js','utf8');
-          const sw=readFileSync('sw.js','utf8');
-          const recipes=readFileSync('recipe-builder.mjs','utf8');
-          assert.ok(html.includes('src="./app.js?v=2.7.1"'));
-          assert.ok(html.includes('src="./recipe-builder.mjs?v=2.7.1"'));
-          assert.ok(html.includes('src="./pwa-updater.js?v=2.7.1"'));
-          assert.ok(app.includes("const KEY = 'moj-bilans-v1'"));
-          assert.ok(app.includes("IS_PREVIEW ? 'moj-bilans-preview-v27' : KEY"));
-          assert.ok(app.includes('productFavorites: state.productFavorites'));
-          assert.ok(app.includes('recipes: state.recipes'));
-          assert.ok(app.includes('recipes: validateRecipes(payload.recipes)'));
-          assert.ok(recipes.includes('id="recipeOpen"'));
-          assert.ok(recipes.includes('id="recipeEditor"'));
-          assert.ok(recipes.includes('favorite'));
-          assert.ok(sw.includes('v271-stable-3'));
-          assert.ok(sw.includes('./recipe-builder.mjs?v=2.7.1'));
-          const assets=[...html.matchAll(/(?:src|href)="(\.\/[^"?]+)/g)];
-          for(const match of assets) assert.ok(existsSync(match[1].slice(2)), 'Missing '+match[1]);
-          console.log('Production v2.7 smoke invariants passed');
-          EOF
+        run: node release-tests/production-smoke.mjs
       - name: Existing regression suite
+        if: github.event_name != 'pull_request'
         run: npm test

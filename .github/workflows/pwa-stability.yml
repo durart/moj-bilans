@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -30,7 +32,17 @@ jobs:
       - name: Run regression tests
         run: npm test
       - name: Validate backup records and staging parity
-        run: node test_backup_validation.mjs && node test_staging_parity.mjs
+        run: node test_backup_validation.mjs && node test_staging_parity.mjs && node preview/verify-staging.mjs
+      - name: Negative release contract checks
+        run: node --test tests/release-contract.test.mjs
+      - name: Verify cache revision for changed runtime assets
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node release-tests/check-cache-transition.mjs "$BASE_SHA"
+      - name: Confirm CI stabilization does not alter preview runtime
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'fix/ci-stabilization'
+        run: git diff --exit-code -- preview/
       - name: Package isolated staging for review
         uses: actions/upload-artifact@v4
         with:
@@ -71,7 +83,7 @@ jobs:
 
   publish-preview:
     needs: [verify, browser]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'feature/daily-energy-balance'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'feature/daily-energy-balance' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     permissions:
       contents: write

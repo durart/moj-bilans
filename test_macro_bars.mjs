@@ -1,3 +1,4 @@
+import { cacheRevision } from './release-tests/release-contract.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import './domain/nutrition.js';
@@ -64,5 +65,5 @@ check('Trzy makroskładniki w pionowej kolumnie obok koła', () => {
   assert.ok(dailyFocus.includes('width:100%'));
 });
 check('Dane użytkownika i kopie JSON bez zmiany formatu', () => assert.ok(app.includes('moj-bilans-v1')));
-check('Nowa wersja cache PWA', () => assert.ok(/const CACHE = PREFIX \+ 'v310-resting-default-1'/.test(sw)));
+check('Nowa wersja cache PWA', () => cacheRevision(sw));
 console.log(tests + ' testów wizualizacji makro zaliczonych.');

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
+import {releaseVersion} from './release-contract.mjs';
 const PORT=4189, BASE='http://127.0.0.1:'+PORT+'/';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 const d=new Date(),date=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
@@ -31,7 +32,7 @@ try{
   await page.addInitScript(fixture=>{if(!localStorage.getItem('moj-bilans-v1'))localStorage.setItem('moj-bilans-v1',JSON.stringify(fixture))},fixture);
   await page.goto(BASE,{waitUntil:'networkidle'});
   await verify('Daily Focus branding, assets and calorie hero',async()=>{
-    assert.match(await page.title(),/Mój Bilans 3\.1\.0/);
+    assert.ok((await page.title()).includes('Mój Bilans '+releaseVersion));
     assert.equal(await page.locator('.df-hero #calorieRing').count(),1);
     assert.equal(await page.locator('.df-hero .df-macro').count(),3);
     assert.equal(await page.locator('.df-meal-card').count(),4);

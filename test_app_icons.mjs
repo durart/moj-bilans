@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { cacheRevision, previewRevision } from './release-tests/release-contract.mjs';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const json = file => JSON.parse(read(file));
@@ -89,7 +90,16 @@ verify('Both offline caches contain the new icon URLs', () => {
 });
 
 verify('Production and test caches remain strictly isolated', () => {
-  assert.match(prodWorker, /v271-stable-3/);
+  const revision = cacheRevision(prodWorker);
+  const previewWorker = read('preview/sw.js');
+  assert.equal(cacheRevision(previewWorker), previewRevision(revision));
+  assert.match(previewWorker, /key\.startsWith\(PREFIX\)/);
+  assert.match(previewWorker, /IS_PREVIEW \? 'moj-bilans-preview-recipes-' : 'moj-bilans-cache-'/);
+  const preview = json('preview/manifest.webmanifest');
+  assert.equal(preview.scope, './');
+  assert.equal(preview.id, './');
+  assert.equal(preview.start_url, './');
+  assert.deepEqual(preview.icons, prod.icons);
   assert.match(testWorker, /moj-bilans-np-v2-cache-icon-large-maskable-v2/);
   assert.match(prodWorker, /key\.startsWith\(PREFIX\)/);
   assert.match(prodWorker, /IS_PREVIEW \? 'moj-bilans-preview-recipes-' : 'moj-bilans-cache-'/);

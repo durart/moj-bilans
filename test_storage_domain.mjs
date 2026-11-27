@@ -22,4 +22,18 @@ const unavailable = { getItem: () => { throw Error('denied'); } };
 assert.match(read(unavailable, 'diary').error, /denied/);
 assert.throws(() => write({ setItem: () => { throw Error('quota'); } }, 'diary', '{}'), /quota/);
 assert.throws(() => write({ setItem: () => {}, getItem: () => 'different' }, 'diary', '{}'), /Odczyt po zapisie/);
+const productionKey = 'moj-bilans-v1';
+const previewKey = 'moj-bilans-preview-v27';
+const original = JSON.stringify({entries:[{id:'production'}]});
+const preview = JSON.stringify({entries:[{id:'preview'}]});
+records.set(productionKey, original);
+write(storage, previewKey, preview);
+assert.equal(records.get(productionKey), original);
+assert.equal(records.get(previewKey), preview);
+assert.throws(() => write({
+  setItem: () => { throw new DOMException('No space', 'QuotaExceededError'); },
+  getItem: storage.getItem
+}, previewKey, '{}'), {name:'QuotaExceededError'});
+assert.equal(records.get(productionKey), original);
+assert.equal(records.get(previewKey), preview);
 console.log('Guarded persistence and non-destructive failure behavior verified.');

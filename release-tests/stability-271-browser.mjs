@@ -5,7 +5,10 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, extname } from 'node:path';
 import { chromium } from 'playwright';
+import { releaseVersion, cacheRevision, previewRevision } from './release-contract.mjs';
 const root = process.cwd();
+const rootRevision = cacheRevision(await readFile(join(root,'sw.js'),'utf8'));
+const testRevision = previewRevision(rootRevision);
 const baseline = await mkdtemp(join(tmpdir(), 'bilans-baseline-'));
 const archive = join(baseline, 'baseline.tar');
 execFileSync('git', ['archive', '--output', archive, '56f3b86163eee9bde75674fd09e412f9d9403303']);
@@ -22,7 +25,7 @@ const server = http.createServer(async (request, response) => {
   try {
     let bytes = await readFile(join(serving, file));
     if (serving === root && file.endsWith('/sw.js')) {
-      const cacheVersion = file.startsWith('/preview/') ? 'v310-resting-default-preview-1' : 'v310-resting-default-1';
+      const cacheVersion = file.startsWith('/preview/') ? testRevision : rootRevision;
       bytes = Buffer.from(bytes.toString().replaceAll(cacheVersion, cacheVersion + '-rc' + workerRevision));
     }
     response.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control':'no-store' });
@@ -71,10 +74,10 @@ try {
       await page.locator('#np21ReloadUpdate').click();
       await activated;
     }
-    assert.match(await page.title(),/3.1.0/);
+    assert.ok((await page.title()).includes('Mój Bilans '+releaseVersion));
     console.log('Baseline errors before fixed release:', errors.splice(0));
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('moj-bilans-v1'))),fixture);
-    assert.ok((await page.evaluate(() => caches.keys())).includes('moj-bilans-cache-v310-resting-default-1-rc1'));
+    assert.ok((await page.evaluate(() => caches.keys())).includes('moj-bilans-cache-'+rootRevision+'-rc1'));
   });
   await check('Offline restart with query string and complete module graph', async () => {
     await upgrade.setOffline(true);
@@ -137,7 +140,7 @@ try {
   await check('Preview uses separate diary, IndexedDB, cache and PWA scope', async () => {
     await test.evaluate(async () => { const cache = await caches.open('moj-bilans-cache-production-sentinel'); await cache.put('/production-sentinel',new Response('keep')); });
     assert.equal(await test.evaluate(() => localStorage.getItem('moj-bilans-v1')),'production-sentinel');
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v310-resting-default-preview-1-rc1'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-'+testRevision+'-rc1'));
     assert.ok((await test.evaluate(async () => (await navigator.serviceWorker.getRegistration()).scope)).endsWith('/preview/'));
     await test.waitForFunction(async () => (await indexedDB.databases()).some(db => db.name === 'moj-bilans-preview-copies-v27'));
     assert.ok(!(await test.evaluate(() => indexedDB.databases())).some(db => db.name === 'moj-bilans-kopie-lokalne-v1'));
@@ -273,7 +276,7 @@ try {
     const navigation = test.waitForNavigation();
     await test.locator('#np21ReloadUpdate').click();
     await navigation;
-    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-v310-resting-default-preview-1-rc2'));
+    assert.ok((await test.evaluate(() => caches.keys())).includes('moj-bilans-preview-recipes-'+testRevision+'-rc2'));
     assert.equal(await other.locator('#goalKcal').inputValue(),'2222');
     await other.close();
   });

@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const read = name => fs.readFileSync(new URL(name, import.meta.url), 'utf8');
+import { cacheRevision } from './release-tests/release-contract.mjs';
+const settings = read('ui/settings.js');
 const source = read('goal-calculator.js');
 const ui = read('goal-calculator-ui.js');
 const html = read('index.html');
@@ -130,7 +132,9 @@ check('current goals are never replaced automatically', () => {
   assert.doesNotMatch(source + ui, /localStorage\.|indexedDB\.|\.submit\(/);
   assert.match(ui, /target\.value = String\(value\)/);
   assert.doesNotMatch(ui, /commitMutation|saveGoals/);
-  assert.match(app, /NPGoalCalculatorUI\?\.setContext/);
+  assert.match(app, /MojBilansSettingsUI\.render\([^\n]*window\.NPGoalCalculatorUI\)/);
+  assert.match(settings, /goalCalculatorUI\?\.setContext/);
+  assert.doesNotMatch(settings, /localStorage\.|indexedDB\.|commitMutation|saveGoals/);
   assert.match(app, /const KEY = 'moj-bilans-v1'/);
 });
 check('no duplicate IDs or unreferenced assets', () => {
@@ -145,7 +149,7 @@ check('no duplicate IDs or unreferenced assets', () => {
 check('calculator scripts are loaded before app and remain offline-ready', () => {
   assert.ok(html.indexOf('goal-calculator.js') < html.indexOf('goal-calculator-ui.js'));
   assert.ok(html.indexOf('goal-calculator-ui.js') < html.indexOf('app.js?v='));
-  assert.match(cache, /v271-stable-3/);
+  cacheRevision(cache);
   assert.match(cache, /key\.startsWith\(PREFIX\)/);
 });
 console.log('Production calculator: 14 checks passed.');

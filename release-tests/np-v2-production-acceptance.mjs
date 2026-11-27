@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
+import { readFileSync } from 'node:fs';
+import { cacheRevision, releaseVersion } from './release-contract.mjs';
+const expectedCache='moj-bilans-cache-'+cacheRevision(readFileSync('sw.js','utf8'));
 const BASE='http://127.0.0.1:4179/';
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const d=new Date();
@@ -31,7 +34,7 @@ try{
  },{fixture,sentinel});
  await page.goto(BASE,{waitUntil:'networkidle'});
  await verify('Root URL and original PWA identity',async()=>{
-  assert.match(await page.title(),/Mój Bilans 3\.1\.0/);
+  assert.ok((await page.title()).includes('Mój Bilans '+releaseVersion));
   const manifest=await page.evaluate(async()=>await (await fetch(document.querySelector('link[rel=manifest]').href)).json());
   assert.equal(manifest.id,'./');assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');
   assert.equal(await page.locator('.np-env-banner').count(),0);
@@ -119,9 +122,9 @@ try{
  await verify('Reload and offline support work with original root service worker',async()=>{
   await page.reload({waitUntil:'networkidle'});
   assert.equal(await page.locator('#npFoodCount').innerText(),'2');
-  await page.waitForFunction(async()=>{
-   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes('moj-bilans-cache-v310-resting-default-1');
-  },null,{timeout:30000});
+  await page.waitForFunction(async cache=>{
+   return !!navigator.serviceWorker?.controller&&(await caches.keys()).includes(cache);
+  },expectedCache,{timeout:30000});
   const reg=await page.evaluate(async()=>{
    const r=await navigator.serviceWorker.getRegistration('./');return {scope:r?.scope,script:r?.active?.scriptURL};
   });

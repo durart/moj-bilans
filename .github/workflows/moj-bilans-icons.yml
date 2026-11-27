@@ -1,6 +1,8 @@
 name: Mój Bilans - neon app icons
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches:
       - main
@@ -39,12 +41,17 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Build candidate preview
+        run: node build-staging.mjs
       - name: Verify PNG files, manifests and isolated offline caches
         run: node test_app_icons.mjs
       - name: Verify existing diary regression suite
+        if: github.event_name != 'pull_request'
         run: npm test
       - name: Verify test app structure and history/body regressions
         run: node np-v2/test_np_v2.mjs && node np-v2/test_layout_parity.mjs && node np-v2/test_np_history_24.mjs && node np-v2/test_np_body_25.mjs
