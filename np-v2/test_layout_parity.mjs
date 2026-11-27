@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
+// Archived NP v2 design is checked against its verified production baseline, not the evolving live app.
+const baseline = 'd7c941dfcc7445f6fabef4e92adcd669276725cf';
+const readBaseline = name => execFileSync('git',['show',baseline+':'+name],{encoding:'utf8'});
 const read=name=>fs.readFileSync(new URL(name,import.meta.url),'utf8');
-const rootHtml=read('../index.html'), testHtml=read('index.html'),app=read('app.js'),sw=read('sw.js');
+const rootHtml=readBaseline('index.html'), testHtml=read('index.html'),app=read('app.js'),sw=read('sw.js');
 let passed=0;
 function check(title,fn){fn();passed++;console.log('PASS '+title);}
 const section=(html,id,next)=>{
@@ -11,12 +15,12 @@ const section=(html,id,next)=>{
 check('Journal markup matches approved production Daily Focus exactly',()=>{
  assert.equal(section(testHtml,'page-journal','page-products'),section(rootHtml,'page-journal','page-products'));
 });
-check('Products screen matches current production markup',()=>{
+check('Products screen matches the archived production baseline',()=>{
  assert.equal(section(testHtml,'page-products','page-history'),section(rootHtml,'page-products','page-history'));
 });
-check('Latest production design CSS copies are identical',()=>{
+check('Archived design CSS matches the verified production baseline',()=>{
  for(const name of ['style.css','np-design.css','daily-focus.css','premium-food-search.css'])
-   assert.equal(read(name),read('../'+name),name+' differs from production');
+   assert.equal(read(name),readBaseline(name),name+' differs from archived production baseline');
 });
 check('Test HTML includes sprint panels and source styles',()=>{
  for(const name of ['np-history-24.js','np-body-25.js','np-history-24.css','np-body-25.css', 'goal-calculator.js', 'goal-calculator-ui.js', 'goal-calculator.css',
