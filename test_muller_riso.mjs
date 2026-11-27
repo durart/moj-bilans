@@ -66,7 +66,7 @@ const ui = readFileSync('./interfejs-wyszukiwarki.mjs', 'utf8');
 const app = readFileSync('./app.js', 'utf8');
 check('Service worker includes product and updated cache', () => {
   assert.ok(sw.includes("'./muller-riso.mjs'"));
-  assert.ok(sw.includes("const CACHE = PREFIX + 'v310'"));
+  assert.ok(sw.includes("const CACHE = PREFIX + 'v310-resting-default-1'"));
 });
 check('Search UI labels the manufacturer source and exposes the link', () => {
   assert.ok(ui.includes("item.verification==='manufacturer-web'"));
