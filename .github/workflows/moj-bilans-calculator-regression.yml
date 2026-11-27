@@ -1,6 +1,8 @@
 name: Mój Bilans - production calculator regression
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches:
       - main
@@ -33,4 +35,5 @@ jobs:
       - name: Validate calculator and two-step consent flow
         run: node test_goal_calculator_production.mjs && node test_goal_calculator_ui_production.mjs
       - name: Run existing production regression suite
+        if: github.event_name != 'pull_request'
         run: npm test

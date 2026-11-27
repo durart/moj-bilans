@@ -1,5 +1,7 @@
 name: Mój Bilans v2.3 — Premium Food Search acceptance
 on:
+  pull_request:
+    branches: [main]
   push:
     branches:
       - release/premium-food-search-v2.3
@@ -28,7 +30,10 @@ jobs:
         with:
           node-version: '22'
       - name: Storage and PWA integrity, product database regressions
-        run: node release-tests/np21-prod-safety.mjs && node release-tests/np-v2-safety.mjs && npm test
+        run: node release-tests/np21-prod-safety.mjs && node release-tests/np-v2-safety.mjs
+      - name: Full regression (push and manual runs)
+        if: github.event_name != 'pull_request'
+        run: npm test
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 18
@@ -40,12 +45,16 @@ jobs:
       - name: Install Playwright and Chromium
         run: npm install --no-save --package-lock=false playwright && npx playwright install --with-deps chromium
       - name: Production safety and backup / offline regression
+        if: github.event_name != 'pull_request'
         run: node release-tests/np-v2-production-acceptance.mjs
       - name: Fault injections and data rollback
+        if: github.event_name != 'pull_request'
         run: node release-tests/stage1-data-safety-browser.mjs
       - name: Daily Focus unchanged
+        if: github.event_name != 'pull_request'
         run: node release-tests/daily-focus-visual-acceptance.mjs
       - name: Premium Food Search responsive / interaction / screenshots
+        if: github.event_name != 'pull_request'
         run: node release-tests/premium-food-search-acceptance.mjs
       - name: Isolated public preview / no production diary mutations
         run: node release-tests/premium-food-search-preview-isolation.mjs

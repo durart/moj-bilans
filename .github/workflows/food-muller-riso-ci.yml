@@ -24,6 +24,7 @@ jobs:
         with:
           node-version: '22'
       - name: Full Node regression suite
+        if: github.event_name != 'pull_request'
         run: npm test
       - name: Existing label and online/offline EAN regression
         run: node test_sante_musli.mjs
@@ -41,5 +42,7 @@ jobs:
         run: npm install --no-save --package-lock=false playwright
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Verify staging product lookup on mobile
+      - name: Build candidate preview
+        run: node build-staging.mjs
+      - name: Verify candidate product lookup on mobile
         run: node test_muller_riso_browser.mjs
